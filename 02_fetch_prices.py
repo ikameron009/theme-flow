@@ -13,7 +13,7 @@ import pandas as pd
 import yfinance as yf
 
 BASE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "")
-PERIOD = "8mo"        # 20日平均の基準+推移に十分
+PERIOD = "2y"         # 360d・年初来(YTD)表示に対応
 CHUNK = 100
 
 

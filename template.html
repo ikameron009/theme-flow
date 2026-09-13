@@ -9,9 +9,9 @@
   --ink:#111311; --ink-2:#54574f; --muted:#8a8d84;
   --grid:#e4e5de; --axis:#c7c8bf; --border:rgba(17,19,17,.10);
   --accent:#2158b8; --pos:#2158b8; --neg:#d0453f;
+  --posrgb:37,120,216; --negrgb:208,69,63;
   --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a; --s4:#eda100;
   --s5:#e87ba4; --s6:#008300; --s7:#4a3aa7; --s8:#e34948;
-  --heat0:#f0f1ee; --heat1:#cde2fb; --heat2:#86b6ef; --heat3:#3987e5; --heat4:#1c5cab; --heat5:#0d366b;
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
   color-scheme:dark;
@@ -19,9 +19,9 @@
   --ink:#f7f8f4; --ink-2:#c3c2b7; --muted:#8a8d84;
   --grid:#2a2b28; --axis:#3a3b37; --border:rgba(255,255,255,.10);
   --accent:#4f93ea; --pos:#4f93ea; --neg:#e56b66;
+  --posrgb:79,147,234; --negrgb:229,107,102;
   --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500;
   --s5:#d55181; --s6:#22a022; --s7:#9085e9; --s8:#e66767;
-  --heat0:#232420; --heat1:#183a5e; --heat2:#1c5cab; --heat3:#2a78d6; --heat4:#5598e7; --heat5:#9ec5f4;
 }}
 :root[data-theme="dark"]{
   color-scheme:dark;
@@ -29,9 +29,9 @@
   --ink:#f7f8f4; --ink-2:#c3c2b7; --muted:#8a8d84;
   --grid:#2a2b28; --axis:#3a3b37; --border:rgba(255,255,255,.10);
   --accent:#4f93ea; --pos:#4f93ea; --neg:#e56b66;
+  --posrgb:79,147,234; --negrgb:229,107,102;
   --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500;
   --s5:#d55181; --s6:#22a022; --s7:#9085e9; --s8:#e66767;
-  --heat0:#232420; --heat1:#183a5e; --heat2:#1c5cab; --heat3:#2a78d6; --heat4:#5598e7; --heat5:#9ec5f4;
 }
 *{box-sizing:border-box}
 body{margin:0;background:var(--plane);color:var(--ink);
@@ -39,53 +39,48 @@ body{margin:0;background:var(--plane);color:var(--ink);
   font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
 .wrap{max-width:1180px;margin:0 auto;padding:28px 22px 60px}
 .mono{font-family:"IBM Plex Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums}
-.disp{font-family:"Archivo","Noto Sans JP",sans-serif}
 
-/* header */
 header{display:flex;flex-wrap:wrap;align-items:flex-end;gap:16px 24px;justify-content:space-between;margin-bottom:22px}
 .eyebrow{font-family:"Archivo",sans-serif;text-transform:uppercase;letter-spacing:.14em;
   font-size:11px;font-weight:700;color:var(--accent)}
 h1{font-family:"Archivo","Noto Sans JP",sans-serif;font-weight:800;font-size:27px;
   line-height:1.12;margin:.18em 0 0;text-wrap:balance;letter-spacing:-.01em}
-.sub{color:var(--ink-2);font-size:13px;margin-top:6px;max-width:60ch}
+.sub{color:var(--ink-2);font-size:13px;margin-top:6px;max-width:62ch}
 .updated{font-size:12px;color:var(--muted);text-align:right;white-space:nowrap}
 .updated b{color:var(--ink);font-weight:600}
 
-/* stat tiles */
 .tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:22px}
 .tile{background:var(--surface);border:1px solid var(--border);border-radius:11px;padding:13px 15px}
 .tile .k{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:600}
 .tile .v{font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums;
   font-size:23px;font-weight:600;margin-top:4px;line-height:1}
 .tile .d{font-size:12px;color:var(--ink-2);margin-top:5px}
-.tile .v.big{font-family:"Archivo",sans-serif;font-size:19px;font-weight:700}
+.tile .v.big{font-family:"Archivo",sans-serif;font-size:18px;font-weight:700}
 
-/* panels */
 .panel{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px 18px 14px}
 .grid-main{display:grid;grid-template-columns:1fr 340px;gap:16px;align-items:start}
-.phead{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:10px}
+.phead{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:4px}
 .ptitle{font-family:"Archivo","Noto Sans JP",sans-serif;font-weight:700;font-size:15px}
 .phint{font-size:11.5px;color:var(--muted)}
+.pdesc{font-size:11.5px;color:var(--ink-2);margin:2px 0 12px;line-height:1.55}
 
-/* controls */
-.controls{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;align-items:center}
-.seg{display:inline-flex;background:var(--surface-2);border:1px solid var(--border);border-radius:9px;padding:3px;gap:2px}
+/* controls: 各行を分ける */
+.ctlrow{display:flex;align-items:center;gap:9px;margin-bottom:8px;flex-wrap:wrap}
+.ctl-label{font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;
+  font-weight:700;min-width:38px}
+.seg{display:inline-flex;background:var(--surface-2);border:1px solid var(--border);border-radius:9px;padding:3px;gap:2px;flex-wrap:wrap}
 .seg button{font:inherit;font-size:12.5px;border:0;background:transparent;color:var(--ink-2);
-  padding:6px 12px;border-radius:6px;cursor:pointer;font-weight:500;white-space:nowrap}
+  padding:6px 11px;border-radius:6px;cursor:pointer;font-weight:500;white-space:nowrap}
 .seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);font-weight:600;
   box-shadow:0 1px 2px rgba(0,0,0,.08)}
 .seg.small button{padding:5px 9px;font-size:12px}
-.ctl-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:600;margin-right:2px}
 
-/* legend chips */
-.legend{display:flex;flex-wrap:wrap;gap:6px 12px;margin:2px 0 8px}
-.chip{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--ink-2);cursor:pointer;
-  padding:2px 4px;border-radius:6px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 12px;margin:10px 0 6px}
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--ink-2);cursor:pointer;padding:2px 4px;border-radius:6px}
 .chip .sw{width:11px;height:11px;border-radius:3px;flex:none}
 .chip b{color:var(--ink);font-weight:600}
 
-/* ranking table */
-.rank{max-height:430px;overflow-y:auto;margin:-2px -6px 0}
+.rank{max-height:470px;overflow-y:auto;margin:-2px -6px 0}
 table.rk{width:100%;border-collapse:collapse;font-size:12.5px}
 table.rk th{position:sticky;top:0;background:var(--surface);text-align:right;
   font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;
@@ -98,14 +93,13 @@ table.rk tr.on td{background:color-mix(in srgb,var(--accent) 9%,var(--surface))}
 .nm{display:flex;align-items:center;gap:7px}
 .nm .sw{width:9px;height:9px;border-radius:2px;flex:none;outline:1px solid var(--border)}
 .nm .sw.off{background:var(--surface-2)!important}
-.nm .t{font-weight:500;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:120px}
+.nm .t{font-weight:500;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:118px}
 .num{font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
 .pos{color:var(--pos)} .neg{color:var(--neg)}
-.sbar{position:relative;height:16px;width:74px}
+.sbar{position:relative;height:16px;width:70px}
 .sbar .mid{position:absolute;left:50%;top:0;bottom:0;width:1px;background:var(--axis)}
 .sbar i{position:absolute;top:3px;height:10px;border-radius:2px}
 
-/* svg chart */
 .chartbox{width:100%;position:relative}
 svg{display:block;width:100%;height:auto;overflow:visible}
 .gl{stroke:var(--grid);stroke-width:1}
@@ -122,21 +116,19 @@ svg{display:block;width:100%;height:auto;overflow:visible}
 .tip .row .nm2{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:110px}
 .tip .row .val{font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums;font-weight:600}
 
-/* heatmap */
 .hm-wrap{margin-top:16px}
-.hm-scroll{overflow-x:auto;padding-bottom:4px}
-.hlegend{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--muted);margin-top:8px}
-.hscale{display:flex;height:10px;width:150px;border-radius:3px;overflow:hidden;border:1px solid var(--border)}
+.hm-scroll{overflow:auto;max-height:640px;padding-bottom:4px}
+.hlegend{display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--ink-2);margin-top:10px;flex-wrap:wrap}
+.hscale{display:flex;height:11px;width:180px;border-radius:3px;overflow:hidden;border:1px solid var(--border)}
 .hscale i{flex:1}
 
-.foot{margin-top:22px;font-size:11.5px;color:var(--muted);line-height:1.65;border-top:1px solid var(--border);padding-top:14px}
+.foot{margin-top:22px;font-size:11.5px;color:var(--muted);line-height:1.7;border-top:1px solid var(--border);padding-top:14px}
 .foot b{color:var(--ink-2);font-weight:600}
-.tabtoggle{margin-left:auto}
 
 @media (max-width:860px){
   .grid-main{grid-template-columns:1fr}
   .tiles{grid-template-columns:repeat(2,1fr)}
-  .rank{max-height:320px}
+  .rank{max-height:340px}
 }
 </style>
 
@@ -145,7 +137,7 @@ svg{display:block;width:100%;height:auto;overflow:visible}
     <div>
       <div class="eyebrow">Japan Equities · Thematic Money Flow</div>
       <h1>日本株 テーマ別 資金フロー</h1>
-      <div class="sub">株探テーマの構成銘柄を横断集計。売買代金（＝終値×出来高）でどのテーマに資金が入っているかを時系列で追う。</div>
+      <div class="sub">株探テーマの構成銘柄を横断集計。売買代金（＝終値×出来高）で、どこから資金が抜け、どこへ入っているかを時系列で追う。</div>
     </div>
     <div class="updated">最終更新 <b id="u-date">–</b><br><span id="u-univ">–</span></div>
   </header>
@@ -158,7 +150,9 @@ svg{display:block;width:100%;height:auto;overflow:visible}
         <div class="ptitle" id="chart-title">売買代金の推移</div>
         <div class="phint" id="chart-hint"></div>
       </div>
-      <div class="controls">
+      <div class="pdesc" id="chart-desc"></div>
+
+      <div class="ctlrow">
         <span class="ctl-label">指標</span>
         <div class="seg" id="metric">
           <button data-m="index" aria-pressed="true">売買代金 指数</button>
@@ -166,14 +160,28 @@ svg{display:block;width:100%;height:auto;overflow:visible}
           <button data-m="share" aria-pressed="false">シェア %</button>
           <button data-m="ret" aria-pressed="false">株価(騰落)</button>
         </div>
-        <span class="ctl-label" style="margin-left:6px">期間</span>
+      </div>
+      <div class="ctlrow">
+        <span class="ctl-label">期間</span>
         <div class="seg small" id="range">
           <button data-r="40" aria-pressed="false">40d</button>
           <button data-r="80" aria-pressed="false">80d</button>
           <button data-r="120" aria-pressed="true">120d</button>
-          <button data-r="999" aria-pressed="false">全</button>
+          <button data-r="180" aria-pressed="false">180d</button>
+          <button data-r="240" aria-pressed="false">240d</button>
+          <button data-r="360" aria-pressed="false">360d</button>
+          <button data-r="ytd" aria-pressed="false">年初来</button>
         </div>
       </div>
+      <div class="ctlrow">
+        <span class="ctl-label">平滑</span>
+        <div class="seg small" id="smooth">
+          <button data-w="1" aria-pressed="false">1日</button>
+          <button data-w="5" aria-pressed="true">5日</button>
+          <button data-w="10" aria-pressed="false">10日</button>
+        </div>
+      </div>
+
       <div class="legend" id="legend"></div>
       <div class="chartbox">
         <svg id="chart" viewBox="0 0 720 380" preserveAspectRatio="xMidYMid meet"></svg>
@@ -184,18 +192,19 @@ svg{display:block;width:100%;height:auto;overflow:visible}
     <div class="panel">
       <div class="phead">
         <div class="ptitle">資金の初動 ランキング</div>
-        <div class="phint">クリックで表示</div>
+        <div class="phint">行クリックで表示</div>
       </div>
-      <div class="controls" style="margin-bottom:6px">
+      <div class="pdesc" id="rank-desc"></div>
+      <div class="ctlrow" style="margin-bottom:6px">
         <div class="seg small" id="sortby">
           <button data-s="surge" aria-pressed="true">売買代金 急増</button>
-          <button data-s="share_chg" aria-pressed="false">シェア上昇</button>
+          <button data-s="share_chg" aria-pressed="false">シェア変化</button>
         </div>
       </div>
       <div class="rank">
         <table class="rk" id="rk">
           <thead><tr>
-            <th class="l">テーマ</th><th id="th-metric">急増率</th><th>直近</th><th>20d</th>
+            <th class="l">テーマ</th><th id="th-metric">急増率</th><th>流出入</th><th>株価20d</th>
           </tr></thead>
           <tbody id="rk-body"></tbody>
         </table>
@@ -206,21 +215,28 @@ svg{display:block;width:100%;height:auto;overflow:visible}
   <div class="panel hm-wrap">
     <div class="phead">
       <div class="ptitle">資金ローテーション・マップ（テーマ × 週）</div>
-      <div class="phint">売買代金指数（1月＝100）を週次平均。濃いほど資金が集中</div>
+      <div class="phint">上＝今ホットなテーマ順</div>
+    </div>
+    <div class="pdesc">
+      各テーマの週次シェアを「自テーマの平常時と比べて何倍動いたか（z-score）」で色分け。
+      <b style="color:var(--pos)">青＝資金が入っている（平常以上）</b>、
+      <b style="color:var(--neg)">赤＝資金が抜けている（平常以下）</b>。
+      左→右で時間。ある行が右へ行くほど青くなれば「今そのテーマに資金が集中」、赤くなれば「資金が離れた」。
     </div>
     <div class="hm-scroll"><svg id="heat" preserveAspectRatio="xMinYMin meet"></svg></div>
-    <div class="hlegend hlegend">
-      <span class="hlegend">少</span>
+    <div class="hlegend">
+      <span class="neg">資金流出</span>
       <div class="hscale" id="hscale"></div>
-      <span>多</span>
-      <span style="margin-left:10px">数値=1月比の売買代金指数</span>
+      <span class="pos">資金流入</span>
+      <span style="margin-left:auto;color:var(--muted)">濃さ＝平常からの乖離（z-score）</span>
     </div>
   </div>
 
   <div class="foot">
     <b>データ</b>：株探テーマ（テーマ→銘柄）× yfinance（日次 終値・出来高）。対象<span id="f-univ"></span>。売買代金＝終値×出来高で近似。<br>
-    <b>指標の読み方</b>：「売買代金 指数」は各テーマの5日平均売買代金を期間初日＝100で指数化（規模差を除き伸びを比較）。「シェア%」は対象銘柄の総売買代金に占める割合（テーマは重複を含むため合計は100%を超える。水準でなく変化を見る）。「急増率」＝直近5日平均÷その前20日平均−1。<br>
-    <b>注意</b>：売買代金は資金流入の近似であり売り・買いの方向は区別しない。投資判断は自己責任で。
+    <b>指標</b>：<b>売買代金 指数</b>＝各テーマの売買代金を期間初日＝100で指数化（規模差を除き伸びを比較）／<b>実額 億円</b>＝その期間の売買代金そのもの／<b>シェア%</b>＝対象銘柄の総売買代金に占める割合（テーマ重複ありで合計は100%超・変化を見る）／<b>株価(騰落)</b>＝構成銘柄の等加重リターン指数（初日=100）。<br>
+    <b>ランキング</b>：<b>急増率</b>＝直近5日平均売買代金 ÷ その前20営業日平均 −1（起点＝直近約1か月のベースライン）。<b>シェア変化</b>＝直近5日平均シェア − 20営業日前の5日平均シェア（資金ローテーションの向き）。<br>
+    <b>注意</b>：売買代金は資金流入の近似で売り・買いの方向は区別しない。本サイトは情報提供のみで投資助言ではありません。投資判断は自己責任で。
   </div>
 </div>
 
@@ -234,221 +250,186 @@ const sign=x=>x==null?'–':(x>=0?'+':'')+fmt(x,1);
 
 const themes=DATA.themes, dates=DATA.dates, N=dates.length;
 const byName=Object.fromEntries(themes.map(t=>[t.name,t]));
+const latestYear=dates[N-1].slice(0,4);
 
-let state={metric:'index', range:120, sort:'surge', selected:[]};
-
-// default selection: top 8 by surge
-state.selected = [...themes].filter(t=>t.surge!=null)
-  .sort((a,b)=>b.surge-a.surge).slice(0,8).map(t=>t.name);
+let state={metric:'index', range:120, smooth:5, sort:'surge', selected:[]};
+state.selected=[...themes].filter(t=>t.surge!=null).sort((a,b)=>b.surge-a.surge).slice(0,8).map(t=>t.name);
 
 const METRIC={
-  index:{key:'turnover_ma',arr:'turnover_index',title:'売買代金の推移',unit:'',hint:'各テーマ 5日平均売買代金・期間初日=100',rebased:true},
-  oku:{key:'turnover_ma',arr:'turnover_ma',title:'売買代金 実額の推移',unit:'億円',hint:'5日平均・単位=億円',rebased:false},
-  share:{key:'share_ma',arr:'share_ma',title:'売買代金シェアの推移',unit:'%',hint:'総売買代金に占める割合（5日平均）',rebased:false},
-  ret:{key:'ret_index',arr:'ret_index',title:'株価（等加重）の推移',unit:'',hint:'構成銘柄 等加重・期間初日=100',rebased:true}
+  index:{src:'turnover_oku',rebased:true,unit:'',title:'売買代金の推移（指数）',
+    desc:'各テーマの売買代金を「表示期間の初日＝100」で指数化。規模の違うテーマ同士を"伸び"で比較できる。'},
+  oku:{src:'turnover_oku',rebased:false,unit:'億円',title:'売買代金の推移（実額）',
+    desc:'テーマ構成銘柄の売買代金合計（億円）。実際にどれだけの資金が動いているかの規模。'},
+  share:{src:'share',rebased:false,unit:'%',title:'売買代金シェアの推移',
+    desc:'対象全銘柄の総売買代金に占める割合。資金配分の移り変わり＝ローテーション。'},
+  ret:{src:'ret_index',rebased:true,unit:'',title:'株価（等加重）の推移',
+    desc:'構成銘柄の等加重リターン指数（初日=100）。売買代金＝出来高とは別に「株価が上がったか」。'},
 };
 
-function colorFor(name){
-  const i=state.selected.indexOf(name);
-  return i<0?null:SERIES()[i%8];
+function movAvg(a,w){
+  if(w<=1) return a.slice();
+  const out=new Array(a.length); let s=0;
+  for(let i=0;i<a.length;i++){s+=a[i]; if(i>=w)s-=a[i-w]; out[i]=s/Math.min(i+1,w);}
+  return out;
 }
 function rangeIdx(){
-  const r=Math.min(state.range,N);
-  return [N-r, N];
+  if(state.range==='ytd'){
+    let s=dates.findIndex(d=>d>=latestYear+'-01-01'); if(s<0)s=0; return [s,N];
+  }
+  const r=Math.min(+state.range,N); return [N-r,N];
 }
-// rebase a slice so first point of visible window = 100 (for index/ret metrics)
 function seriesData(t){
   const m=METRIC[state.metric];
-  let a=t[m.arr].slice();
-  const [s,e]=rangeIdx();
-  a=a.slice(s,e);
-  if(m.rebased){
-    const b=a[0]||1; a=a.map(v=>v/b*100);
-  }
+  let a=movAvg(t[m.src], state.smooth);
+  const [s,e]=rangeIdx(); a=a.slice(s,e);
+  if(m.rebased){const b=a[0]||1; a=a.map(v=>v/b*100);}
   return a;
 }
 
-// ---------- line chart ----------
-const CW=720, CH=380, ML=46, MR=14, MT=14, MB=28;
+const CW=720,CH=380,ML=48,MR=14,MT=14,MB=28;
 function drawChart(){
   const m=METRIC[state.metric];
   $('#chart-title').textContent=m.title;
-  $('#chart-hint').textContent=m.hint;
+  $('#chart-desc').textContent=m.desc;
+  $('#chart-hint').textContent=(state.range==='ytd'?'年初来':state.range+'日')+' ・ '+state.smooth+'日平滑';
   const [s,e]=rangeIdx();
   const xs=dates.slice(s,e);
   const sel=state.selected.map(n=>byName[n]).filter(Boolean);
   const cols=SERIES();
-  let series=sel.map((t,i)=>({name:t.name,color:cols[i%8],vals:seriesData(t)}));
-  // y-domain
+  const series=sel.map((t,i)=>({name:t.name,color:cols[i%8],vals:seriesData(t)}));
   let lo=Infinity,hi=-Infinity;
   series.forEach(sr=>sr.vals.forEach(v=>{if(v<lo)lo=v;if(v>hi)hi=v;}));
   if(!isFinite(lo)){lo=0;hi=1;}
   if(m.rebased){lo=Math.min(lo,100);hi=Math.max(hi,100);}
   const pad=(hi-lo)*0.08||1; lo-=pad; hi+=pad;
-  if(m.metric!=='ret'&&m.unit==='%'){lo=Math.max(0,lo);}
+  if(m.unit==='%'&&m.metric!=='ret')lo=Math.max(0,lo);
   const n=xs.length;
   const X=i=>ML+(CW-ML-MR)*(n<=1?0:i/(n-1));
   const Y=v=>MT+(CH-MT-MB)*(1-(v-lo)/(hi-lo));
-
-  const ticks=5, tv=[];
-  for(let k=0;k<=ticks;k++){tv.push(lo+(hi-lo)*k/ticks);}
   let g='';
-  tv.forEach(v=>{const y=Y(v);
+  for(let k=0;k<=5;k++){const v=lo+(hi-lo)*k/5,y=Y(v);
     g+=`<line class="gl" x1="${ML}" y1="${y.toFixed(1)}" x2="${CW-MR}" y2="${y.toFixed(1)}"/>`;
-    g+=`<text class="axl" x="${ML-6}" y="${(y+3.5).toFixed(1)}" text-anchor="end">${m.rebased?Math.round(v):fmt(v, m.unit==='%'?1:0)}</text>`;
-  });
-  // baseline 100 emphasize
+    g+=`<text class="axl" x="${ML-6}" y="${(y+3.5).toFixed(1)}" text-anchor="end">${m.rebased?Math.round(v):fmt(v,m.unit==='%'?1:0)}</text>`;}
   if(m.rebased){const y=Y(100);g+=`<line x1="${ML}" y1="${y.toFixed(1)}" x2="${CW-MR}" y2="${y.toFixed(1)}" stroke="var(--axis)" stroke-width="1"/>`;}
-  // x ticks: month starts
   let lastMonth='';
-  xs.forEach((d,i)=>{const mo=d.slice(0,7);
-    if(mo!==lastMonth){lastMonth=mo;const x=X(i);
-      g+=`<text class="axl" x="${x.toFixed(1)}" y="${CH-8}" text-anchor="middle">${d.slice(5).replace('-','/')}</text>`;
-    }});
-  // lines
-  series.forEach(sr=>{
-    let p=''; sr.vals.forEach((v,i)=>{p+=(i?'L':'M')+X(i).toFixed(1)+' '+Y(v).toFixed(1)+' ';});
+  xs.forEach((d,i)=>{const mo=d.slice(0,7);if(mo!==lastMonth){lastMonth=mo;const x=X(i);
+    g+=`<text class="axl" x="${x.toFixed(1)}" y="${CH-8}" text-anchor="middle">${d.slice(2,7).replace('-','/')}</text>`;}});
+  series.forEach(sr=>{let p='';sr.vals.forEach((v,i)=>{p+=(i?'L':'M')+X(i).toFixed(1)+' '+Y(v).toFixed(1)+' ';});
     g+=`<path class="ln" d="${p}" stroke="${sr.color}"/>`;
     const li=sr.vals.length-1;
-    g+=`<circle cx="${X(li).toFixed(1)}" cy="${Y(sr.vals[li]).toFixed(1)}" r="3.2" fill="${sr.color}"/>`;
-  });
-  // crosshair group
+    g+=`<circle cx="${X(li).toFixed(1)}" cy="${Y(sr.vals[li]).toFixed(1)}" r="3.2" fill="${sr.color}"/>`;});
   g+=`<g id="cg" style="opacity:0"><line class="cross" id="cx" y1="${MT}" y2="${CH-MB}"/></g>`;
   $('#chart').innerHTML=g;
-  $('#chart').__ctx={series,xs,X,Y,n,lo,hi};
+  $('#chart').__ctx={series,xs,X,n};
   drawLegend();
 }
 function drawLegend(){
   const cols=SERIES();
   $('#legend').innerHTML=state.selected.map((nm,i)=>{
-    const t=byName[nm];const c=cols[i%8];
-    return `<span class="chip" data-nm="${nm}"><span class="sw" style="background:${c}"></span><b>${nm}</b></span>`;
+    return `<span class="chip" data-nm="${nm}"><span class="sw" style="background:${cols[i%8]}"></span><b>${nm}</b></span>`;
   }).join('')||'<span class="phint">右のランキングからテーマを選択</span>';
   $$('#legend .chip').forEach(ch=>ch.onclick=()=>toggle(ch.dataset.nm));
 }
-
-// tooltip
 function bindTip(){
-  const svg=$('#chart'), tip=$('#tip'), cg=()=>svg.querySelector('#cg'), cx=()=>svg.querySelector('#cx');
+  const svg=$('#chart'),tip=$('#tip');
+  const cg=()=>svg.querySelector('#cg'),cx=()=>svg.querySelector('#cx');
   svg.addEventListener('mousemove',ev=>{
-    const ctx=svg.__ctx; if(!ctx)return;
-    const r=svg.getBoundingClientRect();
-    const px=(ev.clientX-r.left)/r.width*CW;
-    if(px<ML||px>CW-MR){hideTip();return;}
-    let i=Math.round((px-ML)/(CW-ML-MR)*(ctx.n-1));
-    i=Math.max(0,Math.min(ctx.n-1,i));
-    const xpix=ctx.X(i);
-    cg().style.opacity=1; cx().setAttribute('x1',xpix); cx().setAttribute('x2',xpix);
+    const ctx=svg.__ctx;if(!ctx)return;
+    const r=svg.getBoundingClientRect(),px=(ev.clientX-r.left)/r.width*CW;
+    if(px<ML||px>CW-MR){hide();return;}
+    let i=Math.round((px-ML)/(CW-ML-MR)*(ctx.n-1));i=Math.max(0,Math.min(ctx.n-1,i));
+    const xpix=ctx.X(i);cg().style.opacity=1;cx().setAttribute('x1',xpix);cx().setAttribute('x2',xpix);
     const m=METRIC[state.metric];
-    const rows=ctx.series.map(sr=>({name:sr.name,color:sr.color,v:sr.vals[i]}))
-      .sort((a,b)=>b.v-a.v);
+    const rows=ctx.series.map(sr=>({name:sr.name,color:sr.color,v:sr.vals[i]})).sort((a,b)=>b.v-a.v);
     tip.innerHTML=`<div class="td">${ctx.xs[i]}</div>`+rows.map(rw=>
       `<div class="row"><span class="l"><span class="sw" style="background:${rw.color}"></span><span class="nm2">${rw.name}</span></span>`+
       `<span class="val">${m.rebased?fmt(rw.v,1):fmt(rw.v,m.unit==='%'?2:0)}${m.unit}</span></div>`).join('');
     tip.style.opacity=1;
-    const tw=tip.offsetWidth, xpx=xpix/CW*r.width;
-    tip.style.left=Math.min(r.width-tw-4,Math.max(4,xpx+12))+'px';
-    tip.style.top='8px';
+    const tw=tip.offsetWidth,xpx=xpix/CW*r.width;
+    tip.style.left=Math.min(r.width-tw-4,Math.max(4,xpx+12))+'px';tip.style.top='8px';
   });
-  svg.addEventListener('mouseleave',hideTip);
-  function hideTip(){tip.style.opacity=0;const c=cg();if(c)c.style.opacity=0;}
+  svg.addEventListener('mouseleave',hide);
+  function hide(){tip.style.opacity=0;const c=cg();if(c)c.style.opacity=0;}
 }
 
-// ---------- ranking table ----------
 function drawRank(){
   const key=state.sort;
-  $('#th-metric').textContent = key==='surge'?'急増率':'シェア変化';
+  $('#th-metric').textContent=key==='surge'?'急増率':'シェア変化';
+  $('#rank-desc').textContent = key==='surge'
+    ? '売買代金の「直近5日平均 ÷ その前20日平均 −1」。資金が今まさに集中し始めたテーマが上位。'
+    : '資金配分シェアが20営業日前より何pt増減したか。プラス＝資金流入、マイナス＝流出。';
   const rows=[...themes].filter(t=>t[key]!=null).sort((a,b)=>b[key]-a[key]);
   const maxAbs=Math.max(...rows.map(t=>Math.abs(t[key])),1);
   const cols=SERIES();
   $('#rk-body').innerHTML=rows.map(t=>{
-    const on=state.selected.includes(t.name);
-    const ci=state.selected.indexOf(t.name);
+    const on=state.selected.includes(t.name),ci=state.selected.indexOf(t.name);
     const sw=on?`background:${cols[ci%8]}`:'';
-    const val=t[key], w=Math.abs(val)/maxAbs*36;
-    const bar=val>=0
-      ? `<i style="left:50%;width:${w}px;background:var(--pos)"></i>`
-      : `<i style="right:50%;width:${w}px;background:var(--neg)"></i>`;
+    const val=t[key],w=Math.abs(val)/maxAbs*32;
+    const bar=val>=0?`<i style="left:50%;width:${w}px;background:var(--pos)"></i>`
+                    :`<i style="right:50%;width:${w}px;background:var(--neg)"></i>`;
     const unit=key==='surge'?'%':'pt';
     return `<tr class="${on?'on':''}" data-nm="${t.name}">
       <td><div class="nm"><span class="sw ${on?'':'off'}" style="${sw}"></span><span class="t" title="${t.name}（${t.n}銘柄）">${t.name}</span></div></td>
       <td class="num ${val>=0?'pos':'neg'}">${sign(val)}${unit}</td>
       <td><div class="sbar"><div class="mid"></div>${bar}</div></td>
       <td class="num ${t.ret_20d>=0?'pos':'neg'}">${sign(t.ret_20d)}%</td>
-    </tr>`;
-  }).join('');
+    </tr>`;}).join('');
   $$('#rk-body tr').forEach(tr=>tr.onclick=()=>toggle(tr.dataset.nm));
 }
-
 function toggle(nm){
   const i=state.selected.indexOf(nm);
-  if(i>=0) state.selected.splice(i,1);
-  else{ if(state.selected.length>=8){state.selected.shift();} state.selected.push(nm); }
-  drawChart(); drawRank();
+  if(i>=0)state.selected.splice(i,1);
+  else{if(state.selected.length>=8)state.selected.shift();state.selected.push(nm);}
+  drawChart();drawRank();
 }
 
-// ---------- heatmap ----------
 function drawHeat(){
   const rows=[...themes].filter(t=>t.surge!=null).sort((a,b)=>b.surge-a.surge);
-  // weekly buckets of 5 trading days on turnover_index
-  const step=5, buckets=[];
-  for(let i=0;i<N;i+=step){buckets.push([i,Math.min(i+step,N)]);}
-  const labels=buckets.map(b=>dates[b[0]].slice(5).replace('-','/'));
-  const cell=22, rh=19, lblW=118, topH=20;
-  const W=lblW+buckets.length*cell+8, H=topH+rows.length*rh+6;
-  const heat=[cssv('--heat0'),cssv('--heat1'),cssv('--heat2'),cssv('--heat3'),cssv('--heat4'),cssv('--heat5')];
-  const lo=70, hi=180; // clamp of index
-  const col=v=>{const t=Math.max(0,Math.min(1,(v-lo)/(hi-lo)));const p=t*(heat.length-1);
-    return heat[Math.round(p)];};
+  const weeks=DATA.weeks, cell=15, rh=17, lblW=132, topH=22;
+  const W=lblW+weeks.length*cell+8, H=topH+rows.length*rh+6;
+  const pr=cssv('--posrgb'),nr=cssv('--negrgb');
+  const col=z=>{const a=Math.min(1,Math.abs(z)/2)*0.92+0.05;
+    return z>=0?`rgba(${pr},${a.toFixed(2)})`:`rgba(${nr},${a.toFixed(2)})`;};
   let g='';
-  // col labels (every other)
-  buckets.forEach((b,j)=>{ if(j%2===0){const x=lblW+j*cell+cell/2;
-    g+=`<text class="axl" x="${x}" y="${topH-6}" text-anchor="middle" font-size="9">${labels[j]}</text>`;}});
-  rows.forEach((t,r)=>{
-    const y=topH+r*rh;
-    g+=`<text x="${lblW-6}" y="${y+rh/2+3}" text-anchor="end" font-size="11" fill="var(--ink-2)" font-family="Noto Sans JP">${t.name}</text>`;
-    buckets.forEach((b,j)=>{
-      const seg=t.turnover_index.slice(b[0],b[1]);
-      const v=seg.reduce((a,c)=>a+c,0)/seg.length;
-      const x=lblW+j*cell;
-      g+=`<rect x="${x}" y="${y}" width="${cell-2}" height="${rh-2}" rx="2" fill="${col(v)}"><title>${t.name} ${labels[j]}: ${Math.round(v)}</title></rect>`;
-    });
+  weeks.forEach((w,j)=>{if(j%4===0){const x=lblW+j*cell+cell/2;
+    g+=`<text class="axl" x="${x}" y="${topH-7}" text-anchor="middle" font-size="9">${w.slice(2,7).replace('-','/')}</text>`;}});
+  rows.forEach((t,r)=>{const y=topH+r*rh;
+    g+=`<text x="${lblW-6}" y="${y+rh/2+3}" text-anchor="end" font-size="10.5" fill="var(--ink-2)" font-family="Noto Sans JP">${t.name}</text>`;
+    (t.heat||[]).forEach((z,j)=>{const x=lblW+j*cell;
+      g+=`<rect x="${x}" y="${y}" width="${cell-2}" height="${rh-2}" rx="2" fill="${col(z)}"><title>${t.name} ${weeks[j]}: z=${z}</title></rect>`;});
   });
-  const svg=$('#heat');
-  svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
-  svg.setAttribute('width',W); svg.setAttribute('height',H);
-  svg.innerHTML=g;
-  $('#hscale').innerHTML=heat.map(c=>`<i style="background:${c}"></i>`).join('');
+  const svg=$('#heat');svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
+  svg.setAttribute('width',W);svg.setAttribute('height',H);svg.innerHTML=g;
+  const steps=[-2,-1.2,-0.5,0,0.5,1.2,2];
+  $('#hscale').innerHTML=steps.map(z=>`<i style="background:${col(z)}"></i>`).join('');
 }
 
-// ---------- tiles ----------
 function drawTiles(){
   const top=[...themes].filter(t=>t.surge!=null).sort((a,b)=>b.surge-a.surge)[0];
-  const rot=[...themes].filter(t=>t.share_chg!=null).sort((a,b)=>b.share_chg-a.share_chg)[0];
-  const totalOku=themes.reduce((a,t)=>a+ (t.latest_turnover_oku||0),0);
+  const out=[...themes].filter(t=>t.share_chg!=null).sort((a,b)=>a.share_chg-b.share_chg)[0];
   $('#tiles').innerHTML=`
    <div class="tile"><div class="k">追跡テーマ</div><div class="v">${DATA.n_themes}</div><div class="d">対象 ${DATA.n_stocks.toLocaleString()} 銘柄</div></div>
    <div class="tile"><div class="k">資金 最流入テーマ</div><div class="v big">${top.name}</div><div class="d pos">急増率 ${sign(top.surge)}%</div></div>
-   <div class="tile"><div class="k">シェア最上昇</div><div class="v big">${rot.name}</div><div class="d pos">${sign(rot.share_chg)}pt</div></div>
-   <div class="tile"><div class="k">期間</div><div class="v" style="font-size:15px">${DATA.start}</div><div class="d">〜 ${DATA.updated}</div></div>`;
+   <div class="tile"><div class="k">資金 最流出テーマ</div><div class="v big">${out.name}</div><div class="d neg">${sign(out.share_chg)}pt</div></div>
+   <div class="tile"><div class="k">データ期間</div><div class="v" style="font-size:15px">${DATA.start}</div><div class="d">〜 ${DATA.updated}</div></div>`;
   $('#u-date').textContent=DATA.updated;
   $('#u-univ').textContent=`${DATA.n_themes}テーマ / ${DATA.n_stocks.toLocaleString()}銘柄`;
   $('#f-univ').textContent=`${DATA.n_themes}テーマ・${DATA.n_stocks.toLocaleString()}銘柄`;
 }
 
-// ---------- wire controls ----------
 $('#metric').onclick=e=>{const b=e.target.closest('button');if(!b)return;
   state.metric=b.dataset.m;$$('#metric button').forEach(x=>x.setAttribute('aria-pressed',x===b));drawChart();};
 $('#range').onclick=e=>{const b=e.target.closest('button');if(!b)return;
-  state.range=+b.dataset.r;$$('#range button').forEach(x=>x.setAttribute('aria-pressed',x===b));drawChart();};
+  state.range=b.dataset.r==='ytd'?'ytd':+b.dataset.r;$$('#range button').forEach(x=>x.setAttribute('aria-pressed',x===b));drawChart();};
+$('#smooth').onclick=e=>{const b=e.target.closest('button');if(!b)return;
+  state.smooth=+b.dataset.w;$$('#smooth button').forEach(x=>x.setAttribute('aria-pressed',x===b));drawChart();};
 $('#sortby').onclick=e=>{const b=e.target.closest('button');if(!b)return;
   state.sort=b.dataset.s;$$('#sortby button').forEach(x=>x.setAttribute('aria-pressed',x===b));drawRank();};
 
-// theme change re-render (colors from CSS vars)
 const mq=window.matchMedia('(prefers-color-scheme:dark)');
 mq.addEventListener?.('change',()=>{drawChart();drawRank();drawHeat();});
 new MutationObserver(()=>{drawChart();drawRank();drawHeat();})
   .observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
 
-drawTiles(); drawChart(); bindTip(); drawRank(); drawHeat();
+drawTiles();drawChart();bindTip();drawRank();drawHeat();
 </script>
