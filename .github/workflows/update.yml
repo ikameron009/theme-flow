@@ -31,8 +31,8 @@ jobs:
       - name: Install deps
         run: pip install -r requirements.txt
 
-      - name: 01 テーマ→銘柄マッピング（失敗時はcommit済みcsvを使用）
-        run: python 01_scrape_themes.py || echo "theme scrape failed; fall back to committed themes_map.csv"
+      # 注: 01(株探スクレイプ)はクラウドIPから弾かれやすいためCIでは実行しない。
+      # コミット済みの themes_map.csv を使う。テーマ更新はローカルで 01 を回して push。
 
       - name: 02 価格・出来高取得（yfinance）
         run: python 02_fetch_prices.py

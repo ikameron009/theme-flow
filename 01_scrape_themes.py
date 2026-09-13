@@ -92,6 +92,10 @@ def main():
         time.sleep(0.8)
 
     out = os.path.join(BASE, "themes_map.csv")
+    # 取得が極端に少ない場合(ブロック等)は既存csvを上書きしない
+    if len(all_rows) < 200 and os.path.exists(out):
+        print(f"[WARN] 取得 {len(all_rows)} 行と少ないため既存 themes_map.csv を維持(上書きせず)", file=sys.stderr)
+        return
     with open(out, "w", newline="", encoding="utf-8-sig") as f:
         w = csv.writer(f)
         w.writerow(["theme", "code", "name", "market"])

@@ -1,4 +1,5 @@
-yfinance>=0.2.40
+yfinance>=0.2.50
+curl_cffi>=0.7          # yfinanceがブラウザ偽装でYahooのIPブロックを回避するのに使用
 pandas>=2.0
 requests>=2.31
 beautifulsoup4>=4.12

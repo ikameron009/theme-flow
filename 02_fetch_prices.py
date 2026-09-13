@@ -54,6 +54,11 @@ def main():
         print(f"  {i//CHUNK+1}/{-(-len(tickers)//CHUNK)}  取得 {ok}/{len(chunk)}")
         time.sleep(1.0)
 
+    if len(closes) < 50:
+        raise SystemExit(
+            f"[FATAL] yfinanceからの取得が {len(closes)} 銘柄しかありません。"
+            "Yahoo側のブロック/障害の可能性。ビルドを中止(前回の公開サイトを維持)。")
+
     close = pd.DataFrame(closes).sort_index()
     volume = pd.DataFrame(vols).sort_index()
     # 共通のindexに揃える
