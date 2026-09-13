@@ -1,22 +1,23 @@
 # -*- coding: utf-8 -*-
 """
-Step 3: テーマ別に日次集計し、ブラウザ用 theme_flow.json を出力。
-日次の生データを出し、平滑(1/5/10日)・指数化・期間切替はフロント側で処理する。
-
-各テーマ:
-  turnover_oku : 日次 売買代金合計(億円)
-  share        : 日次 総売買代金に占める割合(%)  [資金配分]
-  ret_index    : 構成銘柄 等加重リターン指数(全期間初日=100)
-  heat         : 週次 シェアのz-score(自テーマ平均比) [ローテーションマップ用]
-ランキング:
-  surge     : 直近5日平均売買代金 / その前20日平均 - 1 (%)   [資金の初動]
-  share_chg : 直近5日平均シェア - 20営業日前の5日平均シェア (pt) [ローテーション]
+Step 3: テーマ別に日次集計＋銘柄要約を出し theme_flow.json を出力。
+- 日次生データ(turnover_oku/share/ret_index)を出力。平滑・指数化・z-scoreはフロントで計算
+- テーマにカテゴリを付与(並べ替え・グループ用)
+- テーマクリック用に構成銘柄(売買代金上位50)の要約＋週次スパークラインを出力
+- サイズ抑制のため日次配列は直近 KEEP_DAYS にトリム(指標は全期間で計算)
 """
 import json, os
 import numpy as np
 import pandas as pd
 
 BASE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "")
+KEEP_DAYS = 370          # 360d/年初来の表示に十分
+SPARK_WEEKS = 26         # 銘柄スパークライン(週次)
+TOP_STOCKS = 50          # テーマあたり銘柄数上限(売買代金上位)
+
+CATORDER = ["半導体・電子","AI・ソフト・データ","通信","モビリティ","ロボット・FA・機械",
+            "防衛・宇宙","エネルギー","素材・資源","ヘルスケア・バイオ","金融・不動産",
+            "消費・小売・インバウンド","産業・インフラ","その他成長"]
 
 m = pd.read_csv(BASE + "themes_map.csv", dtype=str)
 close = pd.read_pickle(BASE + "close.pkl")
@@ -24,77 +25,97 @@ turn = pd.read_pickle(BASE + "turnover.pkl")
 
 avail = set(close.columns)
 dates = close.index
-total_turn = turn.sum(axis=1)               # 市場全体(対象銘柄)の総売買代金
-
-# 週次バケット(5営業日)
 N = len(dates)
-STEP = 5
-buckets = [(i, min(i + STEP, N)) for i in range(0, N, STEP)]
-weeks = [dates[b0].strftime("%Y-%m-%d") for b0, _ in buckets]
+total_turn = turn.sum(axis=1)
+K = min(KEEP_DAYS, N)
+
+name_of = dict(zip(m["code"], m["name"]))
+cat_of_theme = dict(zip(m["theme"], m["category"]))
+
+def surge_of(s):
+    if len(s) < 25: return None
+    b = s.iloc[-25:-5].mean()
+    return round(float(s.iloc[-5:].mean() / b - 1) * 100, 1) if b > 0 else None
+
+def ret20_of(c):
+    s = close[c].dropna()
+    if len(s) < 21: return None
+    return round(float(s.iloc[-1] / s.iloc[-21] - 1) * 100, 1)
+
+# 週次バケット(直近SPARK_WEEKS週=5営業日刻み)
+def weekly_turn(code, weeks=SPARK_WEEKS):
+    s = (close[code] * 0).add(turn[code], fill_value=0) / 1e8  # 億円
+    days = weeks * 5
+    seg = s.iloc[-days:]
+    out = []
+    for i in range(0, len(seg), 5):
+        w = seg.iloc[i:i+5]
+        out.append(round(float(w.mean()), 1) if len(w) else 0.0)
+    return out
 
 themes = sorted(m["theme"].unique())
 out_themes = []
+member_codes = set()
 
 for th in themes:
     codes = [c for c in m.loc[m["theme"] == th, "code"].unique() if c in avail]
     if len(codes) < 3:
         continue
     t_turn = turn[codes].sum(axis=1)
-    share = (t_turn / total_turn * 100.0)
+    share = t_turn / total_turn * 100.0
     turn_oku = t_turn / 1e8
-
-    rets = close[codes].pct_change()
-    ew = rets.mean(axis=1).fillna(0)
+    ew = close[codes].pct_change().mean(axis=1).fillna(0)
     ret_index = (1 + ew).cumprod() * 100
 
-    # 週次シェアの z-score (自テーマ平均比) → ローテーションマップ
-    wk_share = np.array([share.iloc[b0:b1].mean() for b0, b1 in buckets])
-    mu, sd = wk_share.mean(), wk_share.std()
-    z = (wk_share - mu) / sd if sd > 1e-9 else wk_share * 0.0
-
-    # ランキング指標
-    if len(t_turn) >= 25:
-        recent5 = t_turn.iloc[-5:].mean()
-        base20 = t_turn.iloc[-25:-5].mean()
-        surge = (recent5 / base20 - 1) * 100 if base20 > 0 else np.nan
-        share_chg = share.iloc[-5:].mean() - share.iloc[-25:-20].mean()
-    else:
-        surge = share_chg = np.nan
+    # 構成銘柄: 直近5日平均売買代金の上位
+    latest = (turn[codes].iloc[-5:].mean() / 1e8).sort_values(ascending=False)
+    top = list(latest.index[:TOP_STOCKS])
+    member_codes.update(top)
 
     out_themes.append({
         "name": th,
+        "cat": cat_of_theme.get(th, "その他成長"),
         "n": len(codes),
-        "turnover_oku": [round(float(x), 1) for x in turn_oku.values],
-        "share": [round(float(x), 3) for x in share.values],
-        "ret_index": [round(float(x), 2) for x in ret_index.values],
-        "heat": [round(float(x), 2) for x in z],
-        "latest_turnover_oku": round(float(turn_oku.iloc[-5:].mean()), 1),
-        "surge": round(float(surge), 1) if pd.notna(surge) else None,
-        "share_chg": round(float(share_chg), 3) if pd.notna(share_chg) else None,
+        "turnover_oku": [round(float(x), 1) for x in turn_oku.values[-K:]],
+        "share": [round(float(x), 3) for x in share.values[-K:]],
+        "ret_index": [round(float(x), 2) for x in ret_index.values[-K:]],
+        "surge": surge_of(t_turn),
+        "share_chg": round(float(share.iloc[-5:].mean() - share.iloc[-25:-20].mean()), 3) if N >= 25 else None,
         "latest_share": round(float(share.iloc[-5:].mean()), 3),
-        "ret_20d": round(float(ret_index.iloc[-1] / ret_index.iloc[-21] - 1) * 100, 1) if len(ret_index) > 21 else None,
+        "latest_turnover_oku": round(float(turn_oku.iloc[-5:].mean()), 1),
+        "ret_20d": round(float(ret_index.iloc[-1] / ret_index.iloc[-21] - 1) * 100, 1) if N > 21 else None,
+        "members": top,
     })
+
+# 銘柄要約(members のみ)
+stocks = {}
+for c in member_codes:
+    stocks[c] = {
+        "name": name_of.get(c, c),
+        "to": round(float(turn[c].iloc[-5:].mean() / 1e8), 1),
+        "surge": surge_of(turn[c]),
+        "ret20": ret20_of(c),
+        "spark": weekly_turn(c),
+    }
 
 payload = {
     "updated": str(dates.max().date()),
-    "start": str(dates.min().date()),
-    "dates": [d.strftime("%Y-%m-%d") for d in dates],
-    "weeks": weeks,
+    "start": str(dates[-K].date()),
+    "dates": [d.strftime("%Y-%m-%d") for d in dates[-K:]],
+    "categories": [c for c in CATORDER if any(t["cat"] == c for t in out_themes)],
     "n_stocks": int(len(avail)),
     "n_themes": len(out_themes),
     "themes": out_themes,
+    "stocks": stocks,
 }
 
 with open(BASE + "theme_flow.json", "w", encoding="utf-8") as f:
     json.dump(payload, f, ensure_ascii=False, separators=(",", ":"))
 
 sz = os.path.getsize(BASE + "theme_flow.json")
-print(f"themes={len(out_themes)} dates={N} weeks={len(weeks)} stocks={len(avail)}  json={sz/1024:.0f}KB")
+print(f"themes={len(out_themes)} stocks(univ)={len(avail)} members={len(stocks)} days={K}  json={sz/1024/1024:.2f}MB")
 rank = sorted([t for t in out_themes if t["surge"] is not None], key=lambda x: x["surge"], reverse=True)
 print("\n=== 売買代金 急増率トップ10 ===")
 for t in rank[:10]:
-    print(f"  {t['name']:16s} surge {t['surge']:+6.1f}%  share {t['latest_share']:.2f}%  ({t['n']}銘柄)")
-print("\n=== シェア低下ワースト5(資金流出) ===")
-for t in sorted([x for x in out_themes if x['share_chg'] is not None], key=lambda x: x['share_chg'])[:5]:
-    print(f"  {t['name']:16s} share {t['share_chg']:+.3f}pt")
+    print(f"  {t['name']:16s} [{t['cat']}] surge {t['surge']:+6.1f}%  ({t['n']}銘柄)")
 print("\nsaved theme_flow.json")

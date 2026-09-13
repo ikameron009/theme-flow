@@ -1,0 +1,207 @@
+対象 3412 銘柄を取得...
+HTTP Error 404: {"quoteSummary":{"result":null,"error":{"code":"Not Found","description":"Quote not found for symbol: 1771.T"}}}
+HTTP Error 404: {"quoteSummary":{"result":null,"error":{"code":"Not Found","description":"Quote not found for symbol: 1449.T"}}}
+$1832.T: possibly delisted; no price data found  (period=2y) (Yahoo error = "No data found, symbol may be delisted")
+$1771.T: possibly delisted; no price data found  (period=2y) (Yahoo error = "No data found, symbol may be delisted")
+$1738.T: possibly delisted; no price data found  (period=2y) (Yahoo error = "No data found, symbol may be delisted")
+$1449.T: possibly delisted; no price data found  (period=2y) (Yahoo error = "No data found, symbol may be delisted")
+$1777.T: possibly delisted; no price data found  (period=2y) (Yahoo error = "No data found, symbol may be delisted")
+
+5 Failed downloads:
+['1832.T', '1771.T', '1738.T', '1449.T', '1777.T']: possibly delisted; no price data found  (period=2y) (Yahoo error = "No data found, symbol may be delisted")
+  1/35  取得 95/100
+$1869.T: possibly delisted; no price data found  (period=2y) (Yahoo error = "No data found, symbol may be delisted")
+$2137.T: possibly delisted; no price data found  (period=2y) (Yahoo error = "No data found, symbol may be delisted")
+$2058.T: possibly delisted; no price data found  (period=2y) (Yahoo error = "No data found, symbol may be delisted")
+$1999.T: possibly delisted; no price data found  (period=2y) (Yahoo error = "No data found, symbol may be delisted")
+$1892.T: possibly delisted; no price data found  (period=2y) (Yahoo error = "No data found, symbol may be delisted")
+
+5 Failed downloads:
+['1869.T', '2137.T', '2058.T', '1999.T', '1892.T']: possibly delisted; no price data found  (period=2y) (Yahoo error = "No data found, symbol may be delisted")
+  2/35  取得 95/100
+$2467.T: possibly delisted; no price data found  (period=2y) (Yahoo error = "No data found, symbol may be delisted")
+
+1 Failed download:
+['2467.T']: possibly delisted; no price data found  (period=2y) (Yahoo error = "No data found, symbol may be delisted")
+  3/35  取得 99/100
+$2902.T: possibly delisted; no price data found  (period=2y) (Yahoo error = "No data found, symbol may be delisted")
+
+1 Failed download:
+['2902.T']: possibly delisted; no price data found  (period=2y) (Yahoo error = "No data found, symbol may be delisted")
+  4/35  取得 99/100
+$2976.T: possibly delisted; no price data found  (period=2y) (Yahoo error = "No data found, symbol may be delisted")
+$2928.T: possibly delisted; no price data found  (period=2y) (Yahoo error = "No data found, symbol may be delisted")
+$2974.T: possibly delisted; no price data found  (period=2y) (Yahoo error = "No data found, symbol may be delisted")
+$3047.T: possibly delisted; no price data found  (period=2y) (Yahoo error = "No data found, symbol may be delisted")
+$3032.T: possibly delisted; no price data found  (period=2y) (Yahoo error = "No data found, symbol may be delisted")
+$3055.T: possibly delisted; no price data found  (period=2y) (Yahoo error = "No data found, symbol may be delisted")
+$3066.T: possibly delisted; no price data found  (period=2y) (Yahoo error = "No data found, symbol may be delisted")
+
+7 Failed downloads:
+['2976.T', '2928.T', '2974.T', '3047.T', '3032.T', '3055.T', '3066.T']: possibly delisted; no price data found  (period=2y) (Yahoo error = "No data found, symbol may be delisted")
+  5/35  取得 93/100
+$3260.T: possibly delisted; no price data found  (period=2y) (Yahoo error = "No data found, symbol may be delisted")
+
+1 Failed download:
+['3260.T']: possibly delisted; no price data found  (period=2y) (Yahoo error = "No data found, symbol may be delisted")
+  6/35  取得 99/100
+$3384.T: possibly delisted; no price data found  (period=2y) (Yahoo error = "No data found, symbol may be delisted")
+$3504.T: possibly delisted; no price data found  (period=2y) (Yahoo error = "No data found, symbol may be delisted")
+$3442.T: possibly delisted; no price data found  (period=2y) (Yahoo error = "No data found, symbol may be delisted")
+
+3 Failed downloads:
+['3384.T', '3504.T', '3442.T']: possibly delisted; no price data found  (period=2y) (Yahoo error = "No data found, symbol may be delisted")
+  7/35  取得 97/100
+$3775.T: possibly delisted; no price data found  (period=2y) (Yahoo error = "No data found, symbol may be delisted")
+$3739.T: possibly delisted; no price data found  (period=2y) (Yahoo error = "No data found, symbol may be delisted")
+
+2 Failed downloads:
+['3775.T', '3739.T']: possibly delisted; no price data found  (period=2y) (Yahoo error = "No data found, symbol may be delisted")
+  8/35  取得 98/100
+$3849.T: possibly delisted; no price data found  (period=2y) (Yahoo error = "No data found, symbol may be delisted")
+$3977.T: possibly delisted; no price data found  (period=2y) (Yahoo error = "No data found, symbol may be delisted")
+$3808.T: possibly delisted; no price data found  (period=2y) (Yahoo error = "No data found, symbol may be delisted")
+
+3 Failed downloads:
+['3849.T', '3977.T', '3808.T']: possibly delisted; no price data found  (period=2y) (Yahoo error = "No data found, symbol may be delisted")
+  9/35  取得 97/100
+$4018.T: possibly delisted; no price data found  (period=2y) (Yahoo error = "No data found, symbol may be delisted")
+
+1 Failed download:
+['4018.T']: possibly delisted; no price data found  (period=2y) (Yahoo error = "No data found, symbol may be delisted")
+  10/35  取得 99/100
+$4250.T: possibly delisted; no price data found  (period=2y) (Yahoo error = "No data found, symbol may be delisted")
+
+1 Failed download:
+['4250.T']: possibly delisted; no price data found  (period=2y) (Yahoo error = "No data found, symbol may be delisted")
+  11/35  取得 99/100
+  12/35  取得 100/100
+  13/35  取得 100/100
+$4827.T: possibly delisted; no price data found  (period=2y) (Yahoo error = "No data found, symbol may be delisted")
+
+1 Failed download:
+['4827.T']: possibly delisted; no price data found  (period=2y) (Yahoo error = "No data found, symbol may be delisted")
+  14/35  取得 99/100
+$5075.T: possibly delisted; no price data found  (period=2y) (Yahoo error = "No data found, symbol may be delisted")
+$4995.T: possibly delisted; no price data found  (period=2y) (Yahoo error = "No data found, symbol may be delisted")
+$5039.T: possibly delisted; no price data found  (period=2y) (Yahoo error = "No data found, symbol may be delisted")
+
+3 Failed downloads:
+['5075.T', '4995.T', '5039.T']: possibly delisted; no price data found  (period=2y) (Yahoo error = "No data found, symbol may be delisted")
+  15/35  取得 97/100
+$5343.T: possibly delisted; no price data found  (period=2y) (Yahoo error = "No data found, symbol may be delisted")
+$5386.T: possibly delisted; no price data found  (period=2y) (Yahoo error = "No data found, symbol may be delisted")
+$5530.T: possibly delisted; no price data found  (period=2y) (Yahoo error = "No data found, symbol may be delisted")
+$5607.T: possibly delisted; no price data found  (period=2y) (Yahoo error = "No data found, symbol may be delisted")
+$5579.T: possibly delisted; no price data found  (period=2y) (Yahoo error = "No data found, symbol may be delisted")
+
+5 Failed downloads:
+['5343.T', '5386.T', '5530.T', '5607.T', '5579.T']: possibly delisted; no price data found  (period=2y) (Yahoo error = "No data found, symbol may be delisted")
+  16/35  取得 95/100
+$5839.T: possibly delisted; no price data found  (period=2y) (Yahoo error = "No data found, symbol may be delisted")
+$5979.T: possibly delisted; no price data found  (period=2y) (Yahoo error = "No data found, symbol may be delisted")
+$5953.T: possibly delisted; no price data found  (period=2y) (Yahoo error = "No data found, symbol may be delisted")
+
+3 Failed downloads:
+['5839.T', '5979.T', '5953.T']: possibly delisted; no price data found  (period=2y) (Yahoo error = "No data found, symbol may be delisted")
+  17/35  取得 97/100
+$6111.T: possibly delisted; no price data found  (period=2y) (Yahoo error = "No data found, symbol may be delisted")
+$6142.T: possibly delisted; no price data found  (period=2y) (Yahoo error = "No data found, symbol may be delisted")
+$6076.T: possibly delisted; no price data found  (period=2y) (Yahoo error = "No data found, symbol may be delisted")
+$6025.T: possibly delisted; no price data found  (period=2y) (Yahoo error = "No data found, symbol may be delisted")
+
+4 Failed downloads:
+['6111.T', '6142.T', '6076.T', '6025.T']: possibly delisted; no price data found  (period=2y) (Yahoo error = "No data found, symbol may be delisted")
+  18/35  取得 96/100
+  19/35  取得 100/100
+$6439.T: possibly delisted; no price data found  (period=2y) (Yahoo error = "No data found, symbol may be delisted")
+
+1 Failed download:
+['6439.T']: possibly delisted; no price data found  (period=2y) (Yahoo error = "No data found, symbol may be delisted")
+  20/35  取得 99/100
+$6565.T: possibly delisted; no price data found  (period=2y) (Yahoo error = "No data found, symbol may be delisted")
+$6623.T: possibly delisted; no price data found  (period=2y) (Yahoo error = "No data found, symbol may be delisted")
+$6655.T: possibly delisted; no price data found  (period=2y) (Yahoo error = "No data found, symbol may be delisted")
+
+3 Failed downloads:
+['6565.T', '6623.T', '6655.T']: possibly delisted; no price data found  (period=2y) (Yahoo error = "No data found, symbol may be delisted")
+  21/35  取得 97/100
+$6846.T: possibly delisted; no price data found  (period=2y) (Yahoo error = "No data found, symbol may be delisted")
+
+1 Failed download:
+['6846.T']: possibly delisted; no price data found  (period=2y) (Yahoo error = "No data found, symbol may be delisted")
+  22/35  取得 99/100
+  23/35  取得 100/100
+$7227.T: possibly delisted; no price data found  (period=2y) (Yahoo error = "No data found, symbol may be delisted")
+
+1 Failed download:
+['7227.T']: possibly delisted; no price data found  (period=2y) (Yahoo error = "No data found, symbol may be delisted")
+  24/35  取得 99/100
+$7488.T: possibly delisted; no price data found  (period=2y) (Yahoo error = "No data found, symbol may be delisted")
+$7441.T: possibly delisted; no price data found  (period=2y) (Yahoo error = "No data found, symbol may be delisted")
+$7485.T: possibly delisted; no price data found  (period=2y) (Yahoo error = "No data found, symbol may be delisted")
+
+3 Failed downloads:
+['7488.T', '7441.T', '7485.T']: possibly delisted; no price data found  (period=2y) (Yahoo error = "No data found, symbol may be delisted")
+  25/35  取得 97/100
+  26/35  取得 100/100
+$7870.T: possibly delisted; no price data found  (period=2y) (Yahoo error = "No data found, symbol may be delisted")
+$7950.T: possibly delisted; no price data found  (period=2y) (Yahoo error = "No data found, symbol may be delisted")
+
+2 Failed downloads:
+['7870.T', '7950.T']: possibly delisted; no price data found  (period=2y) (Yahoo error = "No data found, symbol may be delisted")
+  27/35  取得 98/100
+$8145.T: possibly delisted; no price data found  (period=2y) (Yahoo error = "No data found, symbol may be delisted")
+$8071.T: possibly delisted; no price data found  (period=2y) (Yahoo error = "No data found, symbol may be delisted")
+
+2 Failed downloads:
+['8145.T', '8071.T']: possibly delisted; no price data found  (period=2y) (Yahoo error = "No data found, symbol may be delisted")
+  28/35  取得 98/100
+$8398.T: possibly delisted; no price data found  (period=2y) (Yahoo error = "No data found, symbol may be delisted")
+$8559.T: possibly delisted; no price data found  (period=2y) (Yahoo error = "No data found, symbol may be delisted")
+$8554.T: possibly delisted; no price data found  (period=2y) (Yahoo error = "No data found, symbol may be delisted")
+
+3 Failed downloads:
+['8398.T', '8559.T', '8554.T']: possibly delisted; no price data found  (period=2y) (Yahoo error = "No data found, symbol may be delisted")
+  29/35  取得 97/100
+$8594.T: possibly delisted; no price data found  (period=2y) (Yahoo error = "No data found, symbol may be delisted")
+$8560.T: possibly delisted; no price data found  (period=2y) (Yahoo error = "No data found, symbol may be delisted")
+
+2 Failed downloads:
+['8594.T', '8560.T']: possibly delisted; no price data found  (period=2y) (Yahoo error = "No data found, symbol may be delisted")
+  30/35  取得 98/100
+$9035.T: possibly delisted; no price data found  (period=2y) (Yahoo error = "No data found, symbol may be delisted")
+$9170.T: possibly delisted; no price data found  (period=2y) (Yahoo error = "No data found, symbol may be delisted")
+$9027.T: possibly delisted; no price data found  (period=2y) (Yahoo error = "No data found, symbol may be delisted")
+$9085.T: possibly delisted; no price data found  (period=2y) (Yahoo error = "No data found, symbol may be delisted")
+$9040.T: possibly delisted; no price data found  (period=2y) (Yahoo error = "No data found, symbol may be delisted")
+
+5 Failed downloads:
+['9035.T', '9170.T', '9027.T', '9085.T', '9040.T']: possibly delisted; no price data found  (period=2y) (Yahoo error = "No data found, symbol may be delisted")
+  31/35  取得 95/100
+$9402.T: possibly delisted; no price data found  (period=2y) (Yahoo error = "No data found, symbol may be delisted")
+$9407.T: possibly delisted; no price data found  (period=2y) (Yahoo error = "No data found, symbol may be delisted")
+$9357.T: possibly delisted; no price data found  (period=2y) (Yahoo error = "No data found, symbol may be delisted")
+$9359.T: possibly delisted; no price data found  (period=2y) (Yahoo error = "No data found, symbol may be delisted")
+
+4 Failed downloads:
+['9402.T', '9407.T', '9357.T', '9359.T']: possibly delisted; no price data found  (period=2y) (Yahoo error = "No data found, symbol may be delisted")
+  32/35  取得 96/100
+$9471.T: possibly delisted; no price data found  (period=2y) (Yahoo error = "No data found, symbol may be delisted")
+$9643.T: possibly delisted; no price data found  (period=2y) (Yahoo error = "No data found, symbol may be delisted")
+$9664.T: possibly delisted; no price data found  (period=2y) (Yahoo error = "No data found, symbol may be delisted")
+
+3 Failed downloads:
+['9471.T', '9643.T', '9664.T']: possibly delisted; no price data found  (period=2y) (Yahoo error = "No data found, symbol may be delisted")
+  33/35  取得 97/100
+$9942.T: possibly delisted; no price data found  (period=2y) (Yahoo error = "No data found, symbol may be delisted")
+
+1 Failed download:
+['9942.T']: possibly delisted; no price data found  (period=2y) (Yahoo error = "No data found, symbol may be delisted")
+  34/35  取得 99/100
+  35/35  取得 12/12
+
+取得完了: 3335 銘柄 x 488 営業日
+期間: 2024-09-11 -> 2026-09-11
+欠損(価格取れず): 77 銘柄
+saved close.pkl / volume.pkl / turnover.pkl
