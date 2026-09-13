@@ -1,0 +1,58 @@
+name: Update theme flow
+
+on:
+  schedule:
+    # 07:30 UTC = 16:30 JST（日本market引け後）平日
+    - cron: '30 7 * * 1-5'
+  workflow_dispatch:        # 手動実行ボタン
+  push:
+    branches: [ main ]      # push時にも一度ビルド（初回確認用）
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+
+      - name: Install deps
+        run: pip install -r requirements.txt
+
+      - name: 01 テーマ→銘柄マッピング（失敗時はcommit済みcsvを使用）
+        run: python 01_scrape_themes.py || echo "theme scrape failed; fall back to committed themes_map.csv"
+
+      - name: 02 価格・出来高取得（yfinance）
+        run: python 02_fetch_prices.py
+
+      - name: 03 テーマ別集計
+        run: python 03_aggregate.py
+
+      - name: 04 index.html 生成
+        run: python 04_build_html.py
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

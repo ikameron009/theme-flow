@@ -1,0 +1,16 @@
+# 生成物(ワークフローが毎回作り直す)
+*.pkl
+site/
+theme_flow.json
+index.html
+template_filled.html
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# OS
+.DS_Store
+Thumbs.db
