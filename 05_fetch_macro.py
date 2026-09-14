@@ -13,15 +13,14 @@ import yfinance as yf
 BASE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "")
 PERIOD = "2y"
 
-def to_naive(df):
-    """DatetimeIndexをtz-naiveに安全正規化(既にnaiveでも例外にしない)。"""
-    if len(df):
-        idx = pd.to_datetime(df.index)
-        if getattr(idx, "tz", None) is not None:
-            idx = idx.tz_localize(None)
-        df = df.copy()
-        df.index = idx
-    return df
+def norm_series(c):
+    """Seriesのindexをtz-naive・日付正規化(DataFrame構築時のtz混在join失敗を防ぐ)。"""
+    idx = pd.to_datetime(c.index)
+    if getattr(idx, "tz", None) is not None:
+        idx = idx.tz_localize(None)
+    c = c.copy()
+    c.index = idx.normalize()
+    return c
 
 # (ticker, 名称, カテゴリ, level%表示か)  cat: Indices/Rates/Energy/Metals/Grains/Softs/FX/RatesPx/Aux
 UNIV = [
@@ -69,7 +68,7 @@ def main():
                 try:
                     c = df[t]["Close"].dropna()
                     if len(c):
-                        closes[t] = c
+                        closes[t] = norm_series(c)
                 except Exception:
                     pass
         time.sleep(1.5)
@@ -80,19 +79,20 @@ def main():
         try:
             h = yf.Ticker(t).history(period=PERIOD)
             if len(h):
-                closes[t] = h["Close"].dropna()
+                closes[t] = norm_series(h["Close"].dropna())
         except Exception:
             print(f"  [miss] {t}", file=sys.stderr)
         time.sleep(0.4)
 
-    # commit済み macro_close.pkl(ベースライン)は絶対に触らない。
-    # 取れた分だけ macro_fresh.pkl に書き、06でベースラインに重ねる(破損分離)。
-    fresh = to_naive(pd.DataFrame(closes).sort_index())
+    # commit済み macro_close.csv(ベースライン)は絶対に触らない。
+    # 取れた分だけ macro_fresh.csv に書き、06でベースラインに重ねる(破損分離)。
+    # CSVにするのは pyarrow等の依存を排し、どの環境でも読めるようにするため。
+    fresh = pd.DataFrame(closes).sort_index()
     if fresh.shape[1] < 5:
         print(f"[WARN] fresh {fresh.shape[1]}銘柄のみ・書き込みスキップ(ベースライン使用)", file=sys.stderr)
         return
-    fresh.to_pickle(BASE + "macro_fresh.pkl")
-    print(f"新規 {fresh.shape[1]}/{len(tickers)} 銘柄 x {fresh.shape[0]}日 → macro_fresh.pkl "
+    fresh.to_csv(BASE + "macro_fresh.csv")
+    print(f"新規 {fresh.shape[1]}/{len(tickers)} 銘柄 x {fresh.shape[0]}日 → macro_fresh.csv "
           f"{fresh.index.min().date()}->{fresh.index.max().date()}")
 
 if __name__ == "__main__":

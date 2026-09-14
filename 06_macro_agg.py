@@ -38,25 +38,24 @@ UNIV = [
 CATS = [("Indices","株価指数"),("Rates","金利(利回り%)"),("Energy","エネルギー"),
         ("Metals","貴金属・鉱物"),("Grains","穀物"),("Softs","ソフト・畜産"),("FX","通貨")]
 
-def to_naive(df):
-    idx = pd.to_datetime(df.index)
-    if getattr(idx, "tz", None) is not None:
-        idx = idx.tz_localize(None)
-    df = df.copy(); df.index = idx
+def read_close_csv(path):
+    df = pd.read_csv(path, index_col=0)
+    idx = pd.to_datetime(df.index, utc=True).tz_localize(None)
+    df.index = idx
     return df[~df.index.duplicated(keep="last")].sort_index()
 
-if not os.path.exists(BASE + "macro_close.pkl"):
+if not os.path.exists(BASE + "macro_close.csv"):
     with open(BASE + "macro.json", "w", encoding="utf-8") as f:
         json.dump({"updated": "", "start": "", "dates": [], "cats": [],
                    "ratesPx": [], "inst": {}, "ratios": []}, f, ensure_ascii=False)
-    print("[WARN] macro_close.pkl 無し → 空 macro.json を出力(世界タブは休止)")
+    print("[WARN] macro_close.csv 無し → 空 macro.json を出力(世界タブは休止)")
     raise SystemExit(0)
 
-# ベースライン(commit済み) + fresh(CI取得分)を重ねる
-close = to_naive(pd.read_pickle(BASE + "macro_close.pkl"))
-if os.path.exists(BASE + "macro_fresh.pkl"):
+# ベースライン(commit済みCSV) + fresh(CI取得CSV)を重ねる
+close = read_close_csv(BASE + "macro_close.csv")
+if os.path.exists(BASE + "macro_fresh.csv"):
     try:
-        fr = to_naive(pd.read_pickle(BASE + "macro_fresh.pkl"))
+        fr = read_close_csv(BASE + "macro_fresh.csv")
         idx = close.index.union(fr.index)
         close = close.reindex(idx)
         for t in fr.columns:
