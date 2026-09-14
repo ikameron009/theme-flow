@@ -236,6 +236,31 @@ table.sp .sc{font-size:9.5px;color:var(--muted);font-family:"IBM Plex Mono",mono
     </div>
   </div>
 
+  <div class="panel">
+    <div class="phead"><div class="ptitle">売買代金・出来高 ランキング Top100</div><div class="phint">行クリックで順位推移</div></div>
+    <div class="pdesc">
+      最新1日の<b>売買代金</b>／<b>出来高</b>でのTop100（追跡ユニバース内）。<b>代金/時価</b>＝1日の売買代金÷時価総額×100(%)＝資金回転率。
+      行をクリックすると、その銘柄がTop100内でどう順位を動かしてきたか（直近120営業日）を下のバンプチャートに表示します。
+    </div>
+    <div class="ctlrow"><span class="ctl-label">基準</span>
+      <div class="seg small" id="rkmetric">
+        <button data-m="to" aria-pressed="true">売買代金</button>
+        <button data-m="vol" aria-pressed="false">出来高</button>
+      </div></div>
+    <div class="rank" style="max-height:520px"><table class="rk" id="rktbl">
+      <thead><tr>
+        <th class="l" style="width:36px">順位</th><th class="l">銘柄</th>
+        <th>売買代金<br>(億)</th><th>時価総額<br>(億)</th><th>代金/時価<br>(%)</th><th>前日</th><th style="text-align:center">順位推移</th>
+      </tr></thead><tbody id="rktbody"></tbody></table></div>
+    <div style="margin-top:14px">
+      <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:2px">
+        <div class="ptitle" style="font-size:14px">順位の推移（直近120日）<span id="rkselname" style="color:var(--accent)"></span></div>
+        <div class="phint">縦軸=順位（上=1位）・101位以下は圏外</div>
+      </div>
+      <div class="chartbox"><svg id="rkbump" viewBox="0 0 720 300" preserveAspectRatio="xMidYMid meet"></svg></div>
+    </div>
+  </div>
+
   <div class="foot">
     <b>データ</b>：株探テーマ（テーマ→銘柄）× yfinance（日次 終値・出来高）。対象<span id="f-univ"></span>。売買代金＝終値×出来高で近似。<br>
     <b>指標</b>：<b>売買代金 指数</b>＝各テーマの売買代金を表示期間初日＝100で指数化／<b>実額 億円</b>＝売買代金そのもの／<b>シェア%</b>＝対象銘柄の総売買代金に占める割合（テーマ重複ありで合計は100%超・変化を見る）／<b>株価(騰落)</b>＝構成銘柄の等加重リターン指数（初日=100）。<br>
@@ -387,6 +412,49 @@ function drawStock(){
   $$('#stockpanel th[data-k]').forEach(h=>h.onclick=()=>{state.spSort=h.dataset.k;drawStock();});
 }
 
+/* ---------- rankings (leaderboard + bump) ---------- */
+const RK=DATA.rankings;
+state.rkMetric='to'; state.rkSel=null;
+function rkTop(){return state.rkMetric==='to'?RK.top_to:RK.top_vol;}
+function rkSeries(code){const s=RK.stocks[code];return state.rkMetric==='to'?s.rt:s.rv;}
+function rkDelta(code){const s=RK.stocks[code];return state.rkMetric==='to'?s.d_to:s.d_vol;}
+function rankMini(arr){const w=64,h=16,cl=v=>Math.min(105,v);
+  let p='';arr.forEach((r,i)=>{const x=arr.length<2?0:i/(arr.length-1)*w,y=(cl(r)-1)/104*(h-3)+1.5;p+=(i?'L':'M')+x.toFixed(1)+' '+y.toFixed(1)+' ';});
+  return`<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" style="display:block;margin:0 auto"><path d="${p}" fill="none" stroke="var(--accent)" stroke-width="1.3" opacity="0.8"/></svg>`;}
+function rkChip(d){if(d==null)return'<span style="color:var(--muted)">NEW</span>';if(d>0)return`<span class="pos">▲${d}</span>`;if(d<0)return`<span class="neg">▼${-d}</span>`;return'<span style="color:var(--muted)">—</span>';}
+function drawRkList(){
+  const top=rkTop();
+  $('#rktbody').innerHTML=top.map((code,i)=>{const s=RK.stocks[code],on=code===state.rkSel;
+    return `<tr class="${on?'on':''}" data-code="${code}">
+      <td class="num" style="text-align:left;font-weight:500;${on?'color:var(--accent)':''}">${i+1}</td>
+      <td><span class="nm"><span class="t" title="${s.name}">${s.name}</span></span><span class="nm cat">${code}</span></td>
+      <td class="num">${fmt(s.to,1)}</td>
+      <td class="num">${s.mcap!=null?s.mcap.toLocaleString():'–'}</td>
+      <td class="num">${s.ratio!=null?s.ratio.toFixed(2):'–'}</td>
+      <td class="num">${rkChip(rkDelta(code))}</td>
+      <td>${rankMini(rkSeries(code))}</td></tr>`;}).join('');
+  $$('#rktbody tr').forEach(tr=>tr.onclick=()=>{state.rkSel=tr.dataset.code;drawRkList();drawRkBump();});
+}
+function drawRkBump(){
+  const days=RK.days,n=days.length,top=rkTop();
+  const W=720,H=300,L=32,R=110,T=14,B=22,MAXR=105;
+  const X=i=>L+(n<=1?0:i/(n-1))*(W-L-R),Y=r=>T+(Math.min(MAXR,r)-1)/(MAXR-1)*(H-T-B);
+  let g='';
+  [1,20,40,60,80,100].forEach(r=>{g+=`<line class="gl" x1="${L}" y1="${Y(r).toFixed(1)}" x2="${W-R}" y2="${Y(r).toFixed(1)}"/>`;
+    g+=`<text class="axl" x="${L-6}" y="${(Y(r)+3).toFixed(1)}" text-anchor="end">${r}</text>`;});
+  let lm='';days.forEach((d,i)=>{const mo=d.slice(0,7);if(mo!==lm){lm=mo;g+=`<text class="axl" x="${X(i).toFixed(1)}" y="${H-7}" text-anchor="middle">${d.slice(2,7).replace('-','/')}</text>`;}});
+  top.slice(0,20).forEach(code=>{if(code===state.rkSel)return;const a=rkSeries(code);let p='';a.forEach((r,i)=>p+=(i?'L':'M')+X(i).toFixed(1)+' '+Y(r).toFixed(1)+' ');
+    g+=`<path d="${p}" fill="none" stroke="var(--muted)" stroke-width="1.1" opacity="0.22"/>`;});
+  const sel=state.rkSel||top[0],s=RK.stocks[sel],a=rkSeries(sel);let p='';a.forEach((r,i)=>p+=(i?'L':'M')+X(i).toFixed(1)+' '+Y(r).toFixed(1)+' ');
+  g+=`<path d="${p}" fill="none" stroke="#2a78d6" stroke-width="2.4" stroke-linejoin="round"/>`;
+  const lr=a[a.length-1];
+  g+=`<circle cx="${X(n-1).toFixed(1)}" cy="${Y(lr).toFixed(1)}" r="3.2" fill="#2a78d6" stroke="var(--surface)" stroke-width="1.5"/>`;
+  g+=`<text x="${(X(n-1)+8).toFixed(1)}" y="${(Y(lr)+4).toFixed(1)}" font-size="11" font-weight="500" fill="#2a78d6" font-family="Noto Sans JP">${s.name} ${lr>100?'圏外':lr+'位'}</text>`;
+  $('#rkbump').innerHTML=g;
+  $('#rkselname').textContent=' — '+s.name;
+}
+function drawRk(){if(!state.rkSel)state.rkSel=rkTop()[0];drawRkList();drawRkBump();}
+
 /* ---------- tiles ---------- */
 function drawTiles(){
   const top=[...themes].filter(t=>t.surge!=null).sort((a,b)=>b.surge-a.surge)[0];
@@ -409,11 +477,12 @@ seg('sortby',b=>{state.sort=b.dataset.s;drawRank();});
 seg('rows',b=>{state.rows=+b.dataset.n;drawHeat();});
 seg('gran',b=>{state.gran=b.dataset.g;drawHeat();});
 seg('hsort',b=>{state.hsort=b.dataset.h;drawHeat();});
+seg('rkmetric',b=>{state.rkMetric=b.dataset.m;state.rkSel=null;drawRk();});
 
 const mq=window.matchMedia('(prefers-color-scheme:dark)');
 mq.addEventListener?.('change',()=>{drawChart();drawRank();drawHeat();drawStock();});
-new MutationObserver(()=>{drawChart();drawRank();drawHeat();drawStock();}).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+new MutationObserver(()=>{drawChart();drawRank();drawHeat();drawStock();drawRkBump();}).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
 
 state.mapTheme=state.selected[0]||themes[0]?.name||null;
-drawTiles();drawChart();bindTip();drawRank();drawHeat();drawStock();
+drawTiles();drawChart();bindTip();drawRank();drawHeat();drawStock();drawRk();
 </script>

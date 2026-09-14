@@ -5,6 +5,9 @@ theme_flow.json
 index.html
 template_filled.html
 
+# 作業ログ
+*.log
+
 # Python
 __pycache__/
 *.pyc

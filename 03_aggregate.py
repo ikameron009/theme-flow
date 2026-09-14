@@ -14,6 +14,8 @@ BASE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "")
 KEEP_DAYS = 370          # 360d/年初来の表示に十分
 SPARK_WEEKS = 26         # 銘柄スパークライン(週次)
 TOP_STOCKS = 50          # テーマあたり銘柄数上限(売買代金上位)
+RANK_DAYS = 120          # ランキング順位系列(バンプ)の日数
+TOPN = 100               # Top100
 
 CATORDER = ["半導体・電子","AI・ソフト・データ","通信","モビリティ","ロボット・FA・機械",
             "防衛・宇宙","エネルギー","素材・資源","ヘルスケア・バイオ","金融・不動産",
@@ -22,6 +24,13 @@ CATORDER = ["半導体・電子","AI・ソフト・データ","通信","モビ�
 m = pd.read_csv(BASE + "themes_map.csv", dtype=str)
 close = pd.read_pickle(BASE + "close.pkl")
 turn = pd.read_pickle(BASE + "turnover.pkl")
+vol = pd.read_pickle(BASE + "volume.pkl")
+
+# 発行済株式数(時価総額用)。無ければ時価総額=None
+shares = {}
+if os.path.exists(BASE + "shares.csv"):
+    _sh = pd.read_csv(BASE + "shares.csv", dtype={"code": str})
+    shares = dict(zip(_sh["code"], _sh["shares"]))
 
 avail = set(close.columns)
 dates = close.index
@@ -98,6 +107,50 @@ for c in member_codes:
         "spark": weekly_turn(c),
     }
 
+# ---------- ランキング(Top100・順位推移バンプ) ----------
+RD = min(RANK_DAYS, N)
+to_win = turn.iloc[-RD:]
+vo_win = vol.iloc[-RD:]
+to_rank = to_win.rank(axis=1, ascending=False, method="min")
+vo_rank = vo_win.rank(axis=1, ascending=False, method="min")
+rank_dates = [d.strftime("%Y-%m-%d") for d in to_win.index]
+
+last_to = turn.iloc[-1]
+last_vo = vol.iloc[-1]
+top_to = list(last_to.dropna().sort_values(ascending=False).head(TOPN).index)
+top_vol = list(last_vo.dropna().sort_values(ascending=False).head(TOPN).index)
+rankset = list(dict.fromkeys(top_to + top_vol))   # 表示候補(現Top100の和集合)
+
+def ser_int(s):
+    return [int(x) if pd.notna(x) else 9999 for x in s]
+
+rk_stocks = {}
+for c in rankset:
+    sh = shares.get(c)
+    px = float(close[c].iloc[-1]) if c in close and pd.notna(close[c].iloc[-1]) else None
+    mcap = (px * sh) if (sh and px) else None          # 円
+    to_yen = float(last_to[c]) if pd.notna(last_to[c]) else 0.0
+    ratio = (to_yen / mcap * 100) if mcap else None     # 代金/時価 (%)
+    rt_prev = to_rank[c].iloc[-2] if RD >= 2 else None
+    rv_prev = vo_rank[c].iloc[-2] if RD >= 2 else None
+    rk_stocks[c] = {
+        "name": name_of.get(c, c),
+        "to": round(to_yen / 1e8, 1),                   # 売買代金 億円(1日)
+        "mcap": round(mcap / 1e8) if mcap else None,    # 時価総額 億円
+        "ratio": round(ratio, 2) if ratio is not None else None,
+        "d_to": int(rt_prev - to_rank[c].iloc[-1]) if pd.notna(rt_prev) else None,
+        "d_vol": int(rv_prev - vo_rank[c].iloc[-1]) if pd.notna(rv_prev) else None,
+        "rt": ser_int(to_rank[c]),
+        "rv": ser_int(vo_rank[c]),
+    }
+
+rankings = {
+    "days": rank_dates,
+    "top_to": top_to,
+    "top_vol": top_vol,
+    "stocks": rk_stocks,
+}
+
 payload = {
     "updated": str(dates.max().date()),
     "start": str(dates[-K].date()),
@@ -107,6 +160,7 @@ payload = {
     "n_themes": len(out_themes),
     "themes": out_themes,
     "stocks": stocks,
+    "rankings": rankings,
 }
 
 with open(BASE + "theme_flow.json", "w", encoding="utf-8") as f:
