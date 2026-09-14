@@ -73,43 +73,97 @@ def fetch_mof():
     return df
 
 
-def fetch_foreign():
-    """先進国10Y(日次): ユーロ圏(ECB)・ドイツ(Bundesbank)。FREDは不達のため不使用。
-    米国は^TNX(yfinance)、日本はMOFを別途使うのでここでは独・ユーロ圏のみ。"""
+def _ecb(url):
+    """ECB csvdata: TIME_PERIOD/OBS_VALUE を Series で返す。"""
     import csv as _csv
+    r = requests.get(url, headers=H, timeout=30)
+    if r.status_code != 200:
+        return None
+    rd = list(_csv.reader(io.StringIO(r.text)))
+    hdr = rd[0]
+    ti, vi = hdr.index("TIME_PERIOD"), hdr.index("OBS_VALUE")
+    s = {}
+    for row in rd[1:]:
+        if len(row) > vi and row[ti]:
+            try:
+                s[pd.Timestamp(row[ti])] = float(row[vi])
+            except Exception:
+                pass
+    return pd.Series(s) if s else None
+
+
+def _bundesbank():
+    r = requests.get("https://api.statistiken.bundesbank.de/rest/download/BBSIS/"
+                     "D.I.ZST.ZI.EUR.S1311.B.A604.R10XX.R.A.A._Z._Z.A?format=csv&lang=en",
+                     headers=H, timeout=30)
+    if r.status_code != 200:
+        return None
+    s = {}
+    for l in r.text.split("\n"):
+        c = [x.strip().strip('"') for x in l.split(",")]
+        if len(c) >= 2 and len(c[0]) == 10 and c[0][4] == "-":
+            try:
+                s[pd.Timestamp(c[0])] = float(c[1])
+            except Exception:
+                pass
+    return pd.Series(s) if s else None
+
+
+def _boe():
+    r = requests.get("https://www.bankofengland.co.uk/boeapps/database/_iadb-fromshowcolumns.asp"
+                     "?csv.x=yes&Datefrom=01/Jan/2023&Dateto=now&SeriesCodes=IUDMNZC&CSVF=TN&UsingCodes=Y",
+                     headers=H, timeout=30)
+    if r.status_code != 200:
+        return None
+    s = {}
+    for l in r.text.split("\n"):
+        c = [x.strip() for x in l.split(",")]
+        if len(c) >= 2:
+            try:
+                s[pd.to_datetime(c[0], format="%d %b %Y")] = float(c[1])
+            except Exception:
+                pass
+    return pd.Series(s) if s else None
+
+
+def _boc():
+    r = requests.get("https://www.bankofcanada.ca/valet/observations/"
+                     "BD.CDN.10YR.DQ.YLD/csv?start_date=2023-01-01", headers=H, timeout=30)
+    if r.status_code != 200:
+        return None
+    s = {}
+    for l in r.text.split("\n"):
+        c = [x.strip().strip('"') for x in l.split(",")]
+        if len(c) >= 2 and len(c[0]) == 10 and c[0][4] == "-":
+            try:
+                s[pd.Timestamp(c[0])] = float(c[1])
+            except Exception:
+                pass
+    return pd.Series(s) if s else None
+
+
+def fetch_foreign():
+    """主要先進国(G7)＋ユーロ圏の10Y。米・日は別途(^TNX/MOF)。
+    独=Bundesbank, ユーロ圏=ECB YC, 英=BoE, 加=BoC(日次)/ 仏・伊=ECB-IRS(月次)。
+    FRED・stooqは環境問わず不達のため不使用。"""
+    IRS = "https://data-api.ecb.europa.eu/service/data/IRS/M.{c}.L.L40.CI.0000.{cur}.N.Z?lastNObservations=48&format=csvdata"
+    getters = {
+        "eu10": lambda: _ecb("https://data-api.ecb.europa.eu/service/data/YC/"
+                             "B.U2.EUR.4F.G_N_A.SV_C_YM.SR_10Y?lastNObservations=800&format=csvdata"),
+        "de10": _bundesbank,
+        "gb10": _boe,
+        "ca10": _boc,
+        "fr10": lambda: _ecb(IRS.format(c="FR", cur="EUR")),
+        "it10": lambda: _ecb(IRS.format(c="IT", cur="EUR")),
+    }
     out = {}
-    # ECB ユーロ圏10Y
-    try:
-        r = requests.get("https://data-api.ecb.europa.eu/service/data/YC/"
-                         "B.U2.EUR.4F.G_N_A.SV_C_YM.SR_10Y?lastNObservations=800&format=csvdata",
-                         headers=H, timeout=30)
-        if r.status_code == 200:
-            rd = list(_csv.reader(io.StringIO(r.text)))
-            hdr = rd[0]; ti = hdr.index("TIME_PERIOD"); vi = hdr.index("OBS_VALUE")
-            s = {}
-            for row in rd[1:]:
-                if len(row) > vi and row[ti]:
-                    try: s[pd.Timestamp(row[ti])] = float(row[vi])
-                    except Exception: pass
-            if s: out["eu10"] = pd.Series(s)
-    except Exception as e:
-        print(f"  ECB: {e}", file=sys.stderr)
-    # Bundesbank ドイツ10Y
-    try:
-        r = requests.get("https://api.statistiken.bundesbank.de/rest/download/BBSIS/"
-                         "D.I.ZST.ZI.EUR.S1311.B.A604.R10XX.R.A.A._Z._Z.A?format=csv&lang=en",
-                         headers=H, timeout=30)
-        if r.status_code == 200:
-            s = {}
-            for l in r.text.split("\n"):
-                c = [x.strip().strip('"') for x in l.split(",")]
-                d = c[0]
-                if len(d) == 10 and d[4] == "-":
-                    try: s[pd.Timestamp(d)] = float(c[1])
-                    except Exception: pass
-            if s: out["de10"] = pd.Series(s)
-    except Exception as e:
-        print(f"  Bundesbank: {e}", file=sys.stderr)
+    for k, fn in getters.items():
+        try:
+            s = fn()
+            if s is not None and len(s):
+                out[k] = s
+        except Exception as e:
+            print(f"  {k}: {e}", file=sys.stderr)
     if not out:
         return None
     return pd.DataFrame(out).sort_index()
