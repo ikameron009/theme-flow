@@ -41,19 +41,45 @@ UNIV = [
 def main():
     tickers = [u[0] for u in UNIV]
     print(f"クロスアセット {len(tickers)} 銘柄を取得...")
-    df = yf.download(tickers, period=PERIOD, auto_adjust=False, progress=False,
-                     group_by="ticker", threads=True)
     closes = {}
-    for t in tickers:
+    CH = 15
+    for i in range(0, len(tickers), CH):
+        chunk = tickers[i:i + CH]
+        df = None
+        for attempt in (1, 2, 3):
+            try:
+                df = yf.download(chunk, period=PERIOD, auto_adjust=False, progress=False,
+                                 group_by="ticker", threads=True)
+                break
+            except Exception as e:
+                print(f"  chunk {i} attempt {attempt}: {e}", file=sys.stderr)
+                time.sleep(3)
+        if df is not None:
+            for t in chunk:
+                try:
+                    c = df[t]["Close"].dropna()
+                    if len(c):
+                        closes[t] = c
+                except Exception:
+                    pass
+        time.sleep(1.5)
+
+    # 取れなかったものは個別 history で再取得
+    missing = [t for t in tickers if t not in closes]
+    for t in missing:
         try:
-            c = df[t]["Close"].dropna()
-            if len(c):
-                closes[t] = c
+            h = yf.Ticker(t).history(period=PERIOD)
+            if len(h):
+                closes[t] = h["Close"].dropna()
         except Exception:
             print(f"  [miss] {t}", file=sys.stderr)
+        time.sleep(0.4)
+
     close = pd.DataFrame(closes).sort_index()
-    if close.shape[1] < 30:
+    if close.shape[1] < 20:
         raise SystemExit(f"[FATAL] 取得 {close.shape[1]} 銘柄のみ。中止。")
+    # タイムゾーン差異を除去(pickleの一貫性)
+    close.index = pd.to_datetime(close.index).tz_localize(None)
     close.to_pickle(BASE + "macro_close.pkl")
     print(f"取得 {close.shape[1]}/{len(tickers)} 銘柄 x {close.shape[0]}日  {close.index.min().date()}->{close.index.max().date()}")
 

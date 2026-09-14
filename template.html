@@ -574,6 +574,7 @@ function lineChart(svgId,tipId,series,xs,opt){
 }
 function legendHTML(id,series){document.getElementById(id).innerHTML=series.map(s=>`<span class="chip"><span class="sw" style="background:${s.color}"></span><b>${s.name}</b></span>`).join('');}
 function drawMacro(){
+  if(!MACRO.cats.length){$('#mclegend').innerHTML='<span class="phint">クロスアセットのデータ取得に失敗したため、今回は休止中です（次回更新で復帰します）。</span>';$('#mcchart').innerHTML='';return;}
   const cols=SERIES(),[s,e]=mslice(),xs=MDATES.slice(s,e),cat=state.mcCat;
   const perLbl=['1M','3M','6M','12M','24M'][[21,63,126,252,520].indexOf(state.mcPer)]||'';
   let series=[],opt={base100:true,unit:'',tipdec:1};
@@ -591,6 +592,7 @@ function drawMacro(){
   legendHTML('mclegend',series);lineChart('mcchart','mctip',series,xs,opt);
 }
 function drawRatios(){
+  if(!MACRO.ratios.length){$('#rtlegend').innerHTML='';$('#rtchart').innerHTML='';$('#rtdesc').innerHTML='';return;}
   const cols=SERIES(),[s,e]=mslice(),xs=MDATES.slice(s,e);
   const series=MACRO.ratios.map((r,i)=>({name:r.label,color:cols[i%8],vals:rebase(r.series.slice(s,e))}));
   legendHTML('rtlegend',series);lineChart('rtchart','rttip',series,xs,{base100:true,unit:'',tipdec:1,h:340});

@@ -38,6 +38,14 @@ UNIV = [
 CATS = [("Indices","株価指数"),("Rates","金利(利回り%)"),("Energy","エネルギー"),
         ("Metals","貴金属・鉱物"),("Grains","穀物"),("Softs","ソフト・畜産"),("FX","通貨")]
 
+if not os.path.exists(BASE + "macro_close.pkl"):
+    # 取得失敗時は空のmacro.jsonを出力し、ビルド(日本株タブ)は継続
+    with open(BASE + "macro.json", "w", encoding="utf-8") as f:
+        json.dump({"updated": "", "start": "", "dates": [], "cats": [],
+                   "ratesPx": [], "inst": {}, "ratios": []}, f, ensure_ascii=False)
+    print("[WARN] macro_close.pkl 無し → 空 macro.json を出力(世界タブは休止)")
+    raise SystemExit(0)
+
 close = pd.read_pickle(BASE + "macro_close.pkl")
 close = close.tail(KEEP)
 dates = [d.strftime("%Y-%m-%d") for d in close.index]
