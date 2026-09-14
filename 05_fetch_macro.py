@@ -85,38 +85,15 @@ def main():
             print(f"  [miss] {t}", file=sys.stderr)
         time.sleep(0.4)
 
+    # commit済み macro_close.pkl(ベースライン)は絶対に触らない。
+    # 取れた分だけ macro_fresh.pkl に書き、06でベースラインに重ねる(破損分離)。
     fresh = to_naive(pd.DataFrame(closes).sort_index())
-    n_fresh = fresh.shape[1]
-
-    # クラウドでは先物/指数(^)が弾かれやすい。取れなかった分は
-    # commit済み macro_close.pkl で補完(マージ)し、常にフル表示を維持。
-    prev = None
-    if os.path.exists(BASE + "macro_close.pkl"):
-        try:
-            prev = to_naive(pd.read_pickle(BASE + "macro_close.pkl"))
-        except Exception as e:
-            print(f"  prev読込失敗: {e}", file=sys.stderr)
-
-    if prev is not None and len(fresh):
-        idx = prev.index.union(fresh.index)
-        close = prev.reindex(idx)
-        for t in fresh.columns:            # 取れた列は最新で上書き/追加
-            close[t] = fresh[t].reindex(idx)
-        close = close.sort_index()
-    elif prev is not None:
-        close = prev
-    else:
-        close = fresh
-
-    # commit済みより悪い(列減)pklは書かない=世界タブを壊さない
-    if prev is not None and close.shape[1] < prev.shape[1]:
-        close = prev
-    if close.shape[1] < 20:
-        print(f"[WARN] {close.shape[1]}銘柄のみ・既存維持し中止", file=sys.stderr)
+    if fresh.shape[1] < 5:
+        print(f"[WARN] fresh {fresh.shape[1]}銘柄のみ・書き込みスキップ(ベースライン使用)", file=sys.stderr)
         return
-    close.to_pickle(BASE + "macro_close.pkl")
-    print(f"新規{n_fresh}/{len(tickers)} → マージ後 {close.shape[1]}銘柄 x {close.shape[0]}日 "
-          f"{close.index.min().date()}->{close.index.max().date()}")
+    fresh.to_pickle(BASE + "macro_fresh.pkl")
+    print(f"新規 {fresh.shape[1]}/{len(tickers)} 銘柄 x {fresh.shape[0]}日 → macro_fresh.pkl "
+          f"{fresh.index.min().date()}->{fresh.index.max().date()}")
 
 if __name__ == "__main__":
     try:

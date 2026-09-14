@@ -38,19 +38,33 @@ UNIV = [
 CATS = [("Indices","株価指数"),("Rates","金利(利回り%)"),("Energy","エネルギー"),
         ("Metals","貴金属・鉱物"),("Grains","穀物"),("Softs","ソフト・畜産"),("FX","通貨")]
 
+def to_naive(df):
+    idx = pd.to_datetime(df.index)
+    if getattr(idx, "tz", None) is not None:
+        idx = idx.tz_localize(None)
+    df = df.copy(); df.index = idx
+    return df[~df.index.duplicated(keep="last")].sort_index()
+
 if not os.path.exists(BASE + "macro_close.pkl"):
-    # 取得失敗時は空のmacro.jsonを出力し、ビルド(日本株タブ)は継続
     with open(BASE + "macro.json", "w", encoding="utf-8") as f:
         json.dump({"updated": "", "start": "", "dates": [], "cats": [],
                    "ratesPx": [], "inst": {}, "ratios": []}, f, ensure_ascii=False)
     print("[WARN] macro_close.pkl 無し → 空 macro.json を出力(世界タブは休止)")
     raise SystemExit(0)
 
-close = pd.read_pickle(BASE + "macro_close.pkl")
-close.index = pd.to_datetime(close.index)
-if getattr(close.index, "tz", None) is not None:
-    close.index = close.index.tz_localize(None)
-close = close[~close.index.duplicated(keep="last")].sort_index()
+# ベースライン(commit済み) + fresh(CI取得分)を重ねる
+close = to_naive(pd.read_pickle(BASE + "macro_close.pkl"))
+if os.path.exists(BASE + "macro_fresh.pkl"):
+    try:
+        fr = to_naive(pd.read_pickle(BASE + "macro_fresh.pkl"))
+        idx = close.index.union(fr.index)
+        close = close.reindex(idx)
+        for t in fr.columns:
+            close[t] = fr[t].reindex(idx)
+        close = close.sort_index()
+        print(f"fresh {fr.shape[1]}銘柄をベースラインに重ね済み")
+    except Exception as e:
+        print(f"[WARN] fresh重ね失敗・ベースライン使用: {e}")
 close = close.tail(KEEP)
 dates = [d.strftime("%Y-%m-%d") for d in close.index]
 
