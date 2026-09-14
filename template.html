@@ -302,7 +302,7 @@ table.sp .sc{font-size:9.5px;color:var(--muted);font-family:"IBM Plex Mono",mono
         <div class="seg small" id="mccat">
           <button data-c="all" aria-pressed="true">すべて</button>
           <button data-c="Indices" aria-pressed="false">株価指数</button>
-          <button data-c="Rates" aria-pressed="false">金利</button>
+          <button data-c="Rates" aria-pressed="false">米国金利</button>
           <button data-c="Energy" aria-pressed="false">エネルギー</button>
           <button data-c="Metals" aria-pressed="false">貴金属・鉱物</button>
           <button data-c="Grains" aria-pressed="false">穀物</button>
@@ -582,7 +582,7 @@ function drawMacro(){
   $('#mc-hint').textContent=perLbl+' ・ native通貨・初日=100';
   if(cat==='all'){
     MACRO.cats.forEach((c,i)=>{const mem=c.key==='Rates'?MACRO.ratesPx:c.members;
-      series.push({name:c.key==='Rates'?'金利(債券)':c.label,color:cols[i%8],vals:avgSeries(mem,s,e)});});
+      series.push({name:c.key==='Rates'?'米国債(価格)':c.label,color:cols[i%8],vals:avgSeries(mem,s,e)});});
   }else if(cat==='Rates'){
     opt={base100:false,unit:'%',tipdec:2};$('#mc-hint').textContent=perLbl+' ・利回り(%)';
     MACRO.cats.find(c=>c.key==='Rates').members.forEach((t,i)=>series.push({name:MI[t].name,color:cols[i%8],vals:MI[t].close.slice(s,e)}));
@@ -610,7 +610,7 @@ function drawTiles(){
    <div class="tile"><div class="k">追跡テーマ</div><div class="v">${DATA.n_themes}</div><div class="d">対象 ${DATA.n_stocks.toLocaleString()} 銘柄</div></div>
    <div class="tile"><div class="k">資金 最流入テーマ</div><div class="v big">${top.name}</div><div class="d pos">急増率 ${sign(top.surge)}%</div></div>
    <div class="tile"><div class="k">資金 最流出テーマ</div><div class="v big">${out.name}</div><div class="d neg">${sign(out.share_chg)}pt</div></div>
-   <div class="tile"><div class="k">データ期間</div><div class="v" style="font-size:15px">${DATA.start}</div><div class="d">〜 ${DATA.updated}</div></div>`;
+   <div class="tile"><div class="k">データ期間</div><div class="v" style="font-size:16px">${DATA.updated}</div><div class="d">${DATA.start}〜</div></div>`;
   $('#u-date').textContent=DATA.updated;$('#u-univ').textContent=`${DATA.n_themes}テーマ / ${DATA.n_stocks.toLocaleString()}銘柄`;
   $('#f-univ').textContent=`${DATA.n_themes}テーマ・${DATA.n_stocks.toLocaleString()}銘柄`;
 }
