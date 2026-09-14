@@ -100,11 +100,15 @@ if os.path.exists(BASE + "jp_yields.csv"):
     for c in ["jp2", "jp5", "jp10", "jp30"]:
         if c in jy.columns:
             add_yield(c, JPNAME[c], jy[c]); jp_members.append(c)
-FGNAME = {"us10": "米国10年", "jp10": "日本10年", "de10": "ドイツ10年",
-          "gb10": "英国10年", "fr10": "フランス10年", "ca10": "カナダ10年"}
+# 先進国10Y比較: 米国(^TNX)・日本(MOF jp10)・ドイツ/ユーロ圏(ECB・Bundesbank)
+if "^TNX" in inst:
+    world_members.append("^TNX")          # 米国10年金利(既存)
+if "jp10" in inst:
+    world_members.append("jp10")          # 日本10年(MOF)
+FGNAME = {"de10": "ドイツ10年", "eu10": "ユーロ圏10年"}
 if os.path.exists(BASE + "foreign_yields.csv"):
     fy = pd.read_csv(BASE + "foreign_yields.csv", index_col=0, parse_dates=True)
-    for c in ["us10", "jp10", "de10", "gb10", "fr10", "ca10"]:
+    for c in ["de10", "eu10"]:
         if c in fy.columns:
             add_yield("w_" + c, FGNAME[c], fy[c]); world_members.append("w_" + c)
 

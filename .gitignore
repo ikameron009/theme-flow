@@ -4,7 +4,6 @@ site/
 theme_flow.json
 macro.json
 macro_fresh.csv
-foreign_yields.csv
 index.html
 template_filled.html
 
