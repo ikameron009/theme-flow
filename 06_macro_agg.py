@@ -86,6 +86,30 @@ for key, label in CATS:
     cats.append({"key": key, "label": label, "members": members})
 ratesPx = [u[0] for u in UNIV if u[2] == "RatesPx" and u[0] in inst]
 
+# ---------- 金利: 米国(既存^) / 日本(MOF) / 先進国(FRED) ----------
+def add_yield(key, name, s):
+    s = s.reindex(close.index).ffill()
+    inst[key] = {"name": name, "cat": "RatesX", "level": 1,
+                 "close": [round(float(x), 3) if pd.notna(x) else None for x in s.values]}
+
+us_members = [u[0] for u in UNIV if u[2] == "Rates" and u[0] in inst]
+jp_members, world_members = [], []
+JPNAME = {"jp2": "日本2年", "jp5": "日本5年", "jp10": "日本10年", "jp30": "日本30年"}
+if os.path.exists(BASE + "jp_yields.csv"):
+    jy = pd.read_csv(BASE + "jp_yields.csv", index_col=0, parse_dates=True)
+    for c in ["jp2", "jp5", "jp10", "jp30"]:
+        if c in jy.columns:
+            add_yield(c, JPNAME[c], jy[c]); jp_members.append(c)
+FGNAME = {"us10": "米国10年", "jp10": "日本10年", "de10": "ドイツ10年",
+          "gb10": "英国10年", "fr10": "フランス10年", "ca10": "カナダ10年"}
+if os.path.exists(BASE + "foreign_yields.csv"):
+    fy = pd.read_csv(BASE + "foreign_yields.csv", index_col=0, parse_dates=True)
+    for c in ["us10", "jp10", "de10", "gb10", "fr10", "ca10"]:
+        if c in fy.columns:
+            add_yield("w_" + c, FGNAME[c], fy[c]); world_members.append("w_" + c)
+
+rateGroups = {"us": us_members, "jp": jp_members, "world": world_members}
+
 def ser(t):
     return close[t].reindex(close.index).ffill()
 
@@ -109,6 +133,7 @@ payload = {
     "dates": dates,
     "cats": cats,
     "ratesPx": ratesPx,
+    "rateGroups": rateGroups,
     "inst": inst,
     "ratios": ratios,
 }

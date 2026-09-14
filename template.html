@@ -320,6 +320,12 @@ table.sp .sc{font-size:9.5px;color:var(--muted);font-family:"IBM Plex Mono",mono
           <button data-p="252" aria-pressed="false">12M</button>
           <button data-p="520" aria-pressed="false">24M</button>
         </div></div>
+      <div class="ctlrow" id="ratesub-row" hidden><span class="ctl-label">国</span>
+        <div class="seg small" id="ratesub">
+          <button data-r="us" aria-pressed="true">米国</button>
+          <button data-r="jp" aria-pressed="false">日本</button>
+          <button data-r="world" aria-pressed="false">先進国(10Y)</button>
+        </div></div>
       <div class="legend" id="mclegend"></div>
       <div class="chartbox"><svg id="mcchart" viewBox="0 0 720 380" preserveAspectRatio="xMidYMid meet"></svg><div class="tip" id="mctip"></div></div>
     </div>
@@ -610,7 +616,9 @@ function drawRk(){if(!state.rkSel)state.rkSel=rkTop()[0];drawRkList();drawRkBump
 const MACRO=__MACRO__;
 const MI=MACRO.inst, MDATES=MACRO.dates, MN=MDATES.length;
 const CATLABEL=Object.fromEntries(MACRO.cats.map(c=>[c.key,c.label]));
-state.mcCat='all'; state.mcPer=126; state.worldDrawn=false;
+state.mcCat='all'; state.mcPer=126; state.worldDrawn=false; state.rateSub='us';
+const RGROUPS=MACRO.rateGroups||{us:[],jp:[],world:[]};
+const RSUBLABEL={us:'米国金利',jp:'日本金利',world:'主要先進国 10年金利'};
 function mslice(){const p=Math.min(state.mcPer,MN);return [MN-p,MN];}
 function rebase(a){const b=a.find(v=>v!=null)||1;return a.map(v=>v==null?null:v/b*100);}
 function avgSeries(ts,s,e){const L=e-s,out=new Array(L).fill(0),cnt=new Array(L).fill(0);
@@ -650,14 +658,17 @@ function drawMacro(){
   const cols=SERIES(),[s,e]=mslice(),xs=MDATES.slice(s,e),cat=state.mcCat;
   const perLbl=['1M','3M','6M','12M','24M'][[21,63,126,252,520].indexOf(state.mcPer)]||'';
   let series=[],opt={base100:true,unit:'',tipdec:1};
-  $('#mc-title').textContent=cat==='all'?'クロスアセット・パフォーマンス（カテゴリ平均）':'クロスアセット：'+CATLABEL[cat];
+  const rrow=$('#ratesub-row');if(rrow)rrow.hidden=(cat!=='Rates');
+  $('#mc-title').textContent=cat==='all'?'クロスアセット・パフォーマンス（カテゴリ平均）':(cat==='Rates'?'金利：'+RSUBLABEL[state.rateSub]:'クロスアセット：'+CATLABEL[cat]);
   $('#mc-hint').textContent=perLbl+' ・ native通貨・初日=100';
   if(cat==='all'){
     MACRO.cats.forEach((c,i)=>{const mem=c.key==='Rates'?MACRO.ratesPx:c.members;
       series.push({name:c.key==='Rates'?'米国債(価格)':c.label,color:cols[i%8],vals:avgSeries(mem,s,e)});});
   }else if(cat==='Rates'){
     opt={base100:false,unit:'%',tipdec:2};$('#mc-hint').textContent=perLbl+' ・利回り(%)';
-    MACRO.cats.find(c=>c.key==='Rates').members.forEach((t,i)=>series.push({name:MI[t].name,color:cols[i%8],vals:MI[t].close.slice(s,e)}));
+    const mem=(RGROUPS[state.rateSub]||[]).filter(t=>MI[t]);
+    if(!mem.length){$('#mclegend').innerHTML='<span class="phint">'+(state.rateSub==='world'?'主要先進国データは取得できていません（次回更新で復帰）。':'データがありません。')+'</span>';$('#mcchart').innerHTML='';return;}
+    mem.forEach((t,i)=>series.push({name:MI[t].name,color:cols[i%8],vals:MI[t].close.slice(s,e)}));
   }else{
     MACRO.cats.find(c=>c.key===cat).members.forEach((t,i)=>series.push({name:MI[t].name,color:cols[i%8],vals:rebase(MI[t].close.slice(s,e))}));
   }
@@ -701,6 +712,7 @@ seg('rkrows',b=>{state.rkRows=+b.dataset.n;drawRkBump();});
 $('#tabbar').onclick=e=>{const b=e.target.closest('button');if(b)switchTab(b.dataset.t);};
 seg('mccat',b=>{state.mcCat=b.dataset.c;drawMacro();});
 seg('mcper',b=>{state.mcPer=+b.dataset.p;drawMacro();drawRatios();});
+seg('ratesub',b=>{state.rateSub=b.dataset.r;drawMacro();});
 document.getElementById('rktbl').querySelectorAll('th.srt').forEach(th=>th.onclick=()=>{
   const k=th.dataset.k;
   if(state.rkSort.k===k)state.rkSort.dir=state.rkSort.dir==='asc'?'desc':'asc';

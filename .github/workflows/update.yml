@@ -46,6 +46,9 @@ jobs:
       - name: 05 クロスアセット取得(世界のお金の流れ・失敗しても継続)
         run: python 05_fetch_macro.py || echo "macro fetch failed; 世界タブは今回休止"
 
+      - name: 08 金利取得(日本MOF・先進国FRED・失敗しても継続)
+        run: python 08_fetch_rates.py || echo "rates fetch failed"
+
       - name: 06 クロスアセット集計(失敗時は空jsonでビルド継続)
         run: |
           python 06_macro_agg.py || python -c "import json;open('macro.json','w',encoding='utf-8').write(json.dumps({'updated':'','start':'','dates':[],'cats':[],'ratesPx':[],'inst':{},'ratios':[]},ensure_ascii=False))"
