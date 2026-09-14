@@ -47,6 +47,10 @@ if not os.path.exists(BASE + "macro_close.pkl"):
     raise SystemExit(0)
 
 close = pd.read_pickle(BASE + "macro_close.pkl")
+close.index = pd.to_datetime(close.index)
+if getattr(close.index, "tz", None) is not None:
+    close.index = close.index.tz_localize(None)
+close = close[~close.index.duplicated(keep="last")].sort_index()
 close = close.tail(KEEP)
 dates = [d.strftime("%Y-%m-%d") for d in close.index]
 

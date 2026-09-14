@@ -13,6 +13,16 @@ import yfinance as yf
 BASE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "")
 PERIOD = "2y"
 
+def to_naive(df):
+    """DatetimeIndexをtz-naiveに安全正規化(既にnaiveでも例外にしない)。"""
+    if len(df):
+        idx = pd.to_datetime(df.index)
+        if getattr(idx, "tz", None) is not None:
+            idx = idx.tz_localize(None)
+        df = df.copy()
+        df.index = idx
+    return df
+
 # (ticker, 名称, カテゴリ, level%表示か)  cat: Indices/Rates/Energy/Metals/Grains/Softs/FX/RatesPx/Aux
 UNIV = [
     ("ES=F","S&P500","Indices",0),("NQ=F","NASDAQ100","Indices",0),("YM=F","NYダウ","Indices",0),
@@ -75,34 +85,42 @@ def main():
             print(f"  [miss] {t}", file=sys.stderr)
         time.sleep(0.4)
 
-    fresh = pd.DataFrame(closes).sort_index()
-    if len(fresh):
-        fresh.index = pd.to_datetime(fresh.index).tz_localize(None)
+    fresh = to_naive(pd.DataFrame(closes).sort_index())
     n_fresh = fresh.shape[1]
 
     # クラウドでは先物/指数(^)が弾かれやすい。取れなかった分は
     # commit済み macro_close.pkl で補完(マージ)し、常にフル表示を維持。
     prev = None
     if os.path.exists(BASE + "macro_close.pkl"):
-        prev = pd.read_pickle(BASE + "macro_close.pkl")
-        prev.index = pd.to_datetime(prev.index).tz_localize(None)
+        try:
+            prev = to_naive(pd.read_pickle(BASE + "macro_close.pkl"))
+        except Exception as e:
+            print(f"  prev読込失敗: {e}", file=sys.stderr)
 
     if prev is not None and len(fresh):
         idx = prev.index.union(fresh.index)
-        merged = prev.reindex(idx)
+        close = prev.reindex(idx)
         for t in fresh.columns:            # 取れた列は最新で上書き/追加
-            merged[t] = fresh[t].reindex(idx)
-        close = merged.sort_index()
+            close[t] = fresh[t].reindex(idx)
+        close = close.sort_index()
     elif prev is not None:
         close = prev
     else:
         close = fresh
 
+    # commit済みより悪い(列減)pklは書かない=世界タブを壊さない
+    if prev is not None and close.shape[1] < prev.shape[1]:
+        close = prev
     if close.shape[1] < 20:
-        raise SystemExit(f"[FATAL] 取得 {close.shape[1]} 銘柄のみ・補完不可。中止。")
+        print(f"[WARN] {close.shape[1]}銘柄のみ・既存維持し中止", file=sys.stderr)
+        return
     close.to_pickle(BASE + "macro_close.pkl")
-    print(f"取得(新規) {n_fresh}/{len(tickers)} 銘柄 / マージ後 {close.shape[1]} 銘柄 x {close.shape[0]}日  "
+    print(f"新規{n_fresh}/{len(tickers)} → マージ後 {close.shape[1]}銘柄 x {close.shape[0]}日 "
           f"{close.index.min().date()}->{close.index.max().date()}")
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception as e:
+        # 失敗しても既存pklを保持しビルドは継続
+        print(f"[WARN] macro取得エラー(既存pkl維持): {e}", file=sys.stderr)
