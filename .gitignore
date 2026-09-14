@@ -1,5 +1,6 @@
 # 生成物(ワークフローが毎回作り直す)
 *.pkl
+!macro_close.pkl
 site/
 theme_flow.json
 macro.json

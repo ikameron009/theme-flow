@@ -75,13 +75,34 @@ def main():
             print(f"  [miss] {t}", file=sys.stderr)
         time.sleep(0.4)
 
-    close = pd.DataFrame(closes).sort_index()
+    fresh = pd.DataFrame(closes).sort_index()
+    if len(fresh):
+        fresh.index = pd.to_datetime(fresh.index).tz_localize(None)
+    n_fresh = fresh.shape[1]
+
+    # クラウドでは先物/指数(^)が弾かれやすい。取れなかった分は
+    # commit済み macro_close.pkl で補完(マージ)し、常にフル表示を維持。
+    prev = None
+    if os.path.exists(BASE + "macro_close.pkl"):
+        prev = pd.read_pickle(BASE + "macro_close.pkl")
+        prev.index = pd.to_datetime(prev.index).tz_localize(None)
+
+    if prev is not None and len(fresh):
+        idx = prev.index.union(fresh.index)
+        merged = prev.reindex(idx)
+        for t in fresh.columns:            # 取れた列は最新で上書き/追加
+            merged[t] = fresh[t].reindex(idx)
+        close = merged.sort_index()
+    elif prev is not None:
+        close = prev
+    else:
+        close = fresh
+
     if close.shape[1] < 20:
-        raise SystemExit(f"[FATAL] 取得 {close.shape[1]} 銘柄のみ。中止。")
-    # タイムゾーン差異を除去(pickleの一貫性)
-    close.index = pd.to_datetime(close.index).tz_localize(None)
+        raise SystemExit(f"[FATAL] 取得 {close.shape[1]} 銘柄のみ・補完不可。中止。")
     close.to_pickle(BASE + "macro_close.pkl")
-    print(f"取得 {close.shape[1]}/{len(tickers)} 銘柄 x {close.shape[0]}日  {close.index.min().date()}->{close.index.max().date()}")
+    print(f"取得(新規) {n_fresh}/{len(tickers)} 銘柄 / マージ後 {close.shape[1]} 銘柄 x {close.shape[0]}日  "
+          f"{close.index.min().date()}->{close.index.max().date()}")
 
 if __name__ == "__main__":
     main()
