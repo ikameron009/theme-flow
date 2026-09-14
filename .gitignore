@@ -2,6 +2,7 @@
 *.pkl
 site/
 theme_flow.json
+macro.json
 index.html
 template_filled.html
 

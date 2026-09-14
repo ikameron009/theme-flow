@@ -40,6 +40,12 @@ jobs:
       - name: 03 テーマ別集計
         run: python 03_aggregate.py
 
+      - name: 05 クロスアセット取得(世界のお金の流れ)
+        run: python 05_fetch_macro.py
+
+      - name: 06 クロスアセット集計
+        run: python 06_macro_agg.py
+
       - name: 04 index.html 生成
         run: python 04_build_html.py
 

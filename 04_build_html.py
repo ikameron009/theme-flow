@@ -13,8 +13,10 @@ with open(os.path.join(BASE, "template.html"), encoding="utf-8") as f:
     tpl = f.read()
 with open(os.path.join(BASE, "theme_flow.json"), encoding="utf-8") as f:
     data = f.read()
+with open(os.path.join(BASE, "macro.json"), encoding="utf-8") as f:
+    macro = f.read()
 
-out = tpl.replace("__DATA__", data)
+out = tpl.replace("__DATA__", data).replace("__MACRO__", macro)
 dst = os.path.join(SITE, "index.html")
 with open(dst, "w", encoding="utf-8") as f:
     f.write(out)

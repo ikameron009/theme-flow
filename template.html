@@ -34,6 +34,7 @@
   --s5:#d55181; --s6:#22a022; --s7:#9085e9; --s8:#e66767;
 }
 *{box-sizing:border-box}
+[hidden]{display:none!important}
 body{margin:0;background:var(--plane);color:var(--ink);
   font-family:"Noto Sans JP",system-ui,-apple-system,"Segoe UI",sans-serif;
   font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
@@ -47,6 +48,9 @@ h1{font-family:"Archivo","Noto Sans JP",sans-serif;font-weight:800;font-size:27p
 .updated{font-size:12px;color:var(--muted);text-align:right;white-space:nowrap}
 .updated b{color:var(--ink);font-weight:600}
 
+.tabbar{display:inline-flex;background:var(--surface-2);border:1px solid var(--border);border-radius:11px;padding:4px;gap:3px;margin-bottom:20px}
+.tabbar button{font:inherit;font-size:14px;font-weight:500;border:0;background:transparent;color:var(--ink-2);padding:9px 18px;border-radius:8px;cursor:pointer}
+.tabbar button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.1)}
 .tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:22px}
 .tile{background:var(--surface);border:1px solid var(--border);border-radius:11px;padding:13px 15px}
 .tile .k{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:600}
@@ -154,6 +158,12 @@ table.sp .sc{font-size:9.5px;color:var(--muted);font-family:"IBM Plex Mono",mono
     <div class="updated">最終更新 <b id="u-date">–</b><br><span id="u-univ">–</span></div>
   </header>
 
+  <div class="tabbar" id="tabbar">
+    <button data-t="jp" aria-pressed="true">日本株 テーマ別資金フロー</button>
+    <button data-t="world" aria-pressed="false">世界のお金の流れ</button>
+  </div>
+
+  <div id="tab-jp">
   <div class="tiles" id="tiles"></div>
 
   <div class="grid-main">
@@ -281,6 +291,49 @@ table.sp .sc{font-size:9.5px;color:var(--muted);font-family:"IBM Plex Mono",mono
     <b>指標</b>：<b>売買代金 指数</b>＝各テーマの売買代金を表示期間初日＝100で指数化／<b>実額 億円</b>＝売買代金そのもの／<b>シェア%</b>＝対象銘柄の総売買代金に占める割合（テーマ重複ありで合計は100%超・変化を見る）／<b>株価(騰落)</b>＝構成銘柄の等加重リターン指数（初日=100）。<br>
     <b>ランキング</b>：<b>急増率</b>＝直近5日平均売買代金 ÷ その前20営業日平均 −1。<b>シェア変化</b>＝直近5日平均シェア − 20営業日前の5日平均シェア。<br>
     <b>注意</b>：売買代金は資金流入の近似で売り・買いの方向は区別しない。本サイトは情報提供のみで投資助言ではありません。投資判断は自己責任で。
+  </div>
+  </div>
+
+  <div id="tab-world" hidden>
+    <div class="panel">
+      <div class="phead"><div class="ptitle" id="mc-title">クロスアセット・パフォーマンス</div><div class="phint" id="mc-hint"></div></div>
+      <div class="pdesc" id="mc-desc">Finviz futures準拠の全資産クラスを横断。各資産のnative通貨建てで、選択期間の初日＝100に指数化した推移。「すべて」は7カテゴリの平均、カテゴリ選択で構成銘柄を表示。金利カテゴリのみ利回り(%)そのもの。</div>
+      <div class="ctlrow"><span class="ctl-label">分類</span>
+        <div class="seg small" id="mccat">
+          <button data-c="all" aria-pressed="true">すべて</button>
+          <button data-c="Indices" aria-pressed="false">株価指数</button>
+          <button data-c="Rates" aria-pressed="false">金利</button>
+          <button data-c="Energy" aria-pressed="false">エネルギー</button>
+          <button data-c="Metals" aria-pressed="false">貴金属・鉱物</button>
+          <button data-c="Grains" aria-pressed="false">穀物</button>
+          <button data-c="Softs" aria-pressed="false">ソフト・畜産</button>
+          <button data-c="FX" aria-pressed="false">通貨</button>
+        </div></div>
+      <div class="ctlrow"><span class="ctl-label">期間</span>
+        <div class="seg small" id="mcper">
+          <button data-p="21" aria-pressed="false">1M</button>
+          <button data-p="63" aria-pressed="false">3M</button>
+          <button data-p="126" aria-pressed="true">6M</button>
+          <button data-p="252" aria-pressed="false">12M</button>
+          <button data-p="520" aria-pressed="false">24M</button>
+        </div></div>
+      <div class="legend" id="mclegend"></div>
+      <div class="chartbox"><svg id="mcchart" viewBox="0 0 720 380" preserveAspectRatio="xMidYMid meet"></svg><div class="tip" id="mctip"></div></div>
+    </div>
+
+    <div class="panel">
+      <div class="phead"><div class="ptitle">資金移動の比率</div><div class="phint">選択期間の初日＝100</div></div>
+      <div class="pdesc">2つの資産の比＝資金の「移動」が最も鮮明に出る指標。上の期間トグルと連動。</div>
+      <div class="legend" id="rtlegend"></div>
+      <div class="chartbox"><svg id="rtchart" viewBox="0 0 720 340" preserveAspectRatio="xMidYMid meet"></svg><div class="tip" id="rttip"></div></div>
+      <div id="rtdesc" style="margin-top:10px;font-size:12px;color:var(--ink-2);line-height:1.7"></div>
+    </div>
+
+    <div class="foot">
+      <b>データ</b>：yfinance（先物・指数・ETF・為替の日次終値）。Finviz futuresの構成に準拠（鉄鉱石・鋼材・石炭等の一部は代替/省略）。<br>
+      <b>指標</b>：native通貨建て・選択期間初日=100の指数（金利は利回り%）。「すべて」は各カテゴリの構成銘柄を等加重平均。金利のカテゴリ平均は米国債価格（ZT/ZF/ZN/ZB）を使用。<br>
+      <b>注意</b>：EOD（引け後）更新でリアルタイムではない。先物は連続限月。情報提供のみで投資助言ではありません。
+    </div>
   </div>
 </div>
 
@@ -481,6 +534,72 @@ function drawRkBump(){
 }
 function drawRk(){if(!state.rkSel)state.rkSel=rkTop()[0];drawRkList();drawRkBump();}
 
+/* ---------- world: cross-asset ---------- */
+const MACRO=__MACRO__;
+const MI=MACRO.inst, MDATES=MACRO.dates, MN=MDATES.length;
+const CATLABEL=Object.fromEntries(MACRO.cats.map(c=>[c.key,c.label]));
+state.mcCat='all'; state.mcPer=126; state.worldDrawn=false;
+function mslice(){const p=Math.min(state.mcPer,MN);return [MN-p,MN];}
+function rebase(a){const b=a.find(v=>v!=null)||1;return a.map(v=>v==null?null:v/b*100);}
+function avgSeries(ts,s,e){const L=e-s,out=new Array(L).fill(0),cnt=new Array(L).fill(0);
+  ts.forEach(t=>{const c=MI[t];if(!c)return;const rb=rebase(c.close.slice(s,e));rb.forEach((v,i)=>{if(v!=null){out[i]+=v;cnt[i]++;}});});
+  return out.map((v,i)=>cnt[i]?v/cnt[i]:null);}
+function lineChart(svgId,tipId,series,xs,opt){
+  const CW=720,CH=opt.h||380,ML=opt.ml||46,MR=14,MT=14,MB=28;
+  let lo=Infinity,hi=-Infinity;series.forEach(sr=>sr.vals.forEach(v=>{if(v==null)return;if(v<lo)lo=v;if(v>hi)hi=v;}));
+  if(!isFinite(lo)){lo=0;hi=1;}if(opt.base100){lo=Math.min(lo,100);hi=Math.max(hi,100);}
+  const pad=(hi-lo)*0.08||1;lo-=pad;hi+=pad;
+  const n=xs.length,X=i=>ML+(CW-ML-MR)*(n<=1?0:i/(n-1)),Y=v=>MT+(CH-MT-MB)*(1-(v-lo)/(hi-lo));
+  let g='';
+  for(let k=0;k<=5;k++){const v=lo+(hi-lo)*k/5,y=Y(v);
+    g+=`<line class="gl" x1="${ML}" y1="${y.toFixed(1)}" x2="${CW-MR}" y2="${y.toFixed(1)}"/>`;
+    g+=`<text class="axl" x="${ML-6}" y="${(y+3.5).toFixed(1)}" text-anchor="end">${opt.dec?v.toFixed(opt.dec):Math.round(v)}</text>`;}
+  if(opt.base100){const y=Y(100);g+=`<line x1="${ML}" y1="${y.toFixed(1)}" x2="${CW-MR}" y2="${y.toFixed(1)}" stroke="var(--axis)"/>`;}
+  let lm='';xs.forEach((d,i)=>{const mo=d.slice(0,7);if(mo!==lm){lm=mo;g+=`<text class="axl" x="${X(i).toFixed(1)}" y="${CH-8}" text-anchor="middle">${d.slice(2,7).replace('-','/')}</text>`;}});
+  series.forEach(sr=>{let p='',st=false;sr.vals.forEach((v,i)=>{if(v==null)return;p+=(st?'L':'M')+X(i).toFixed(1)+' '+Y(v).toFixed(1)+' ';st=true;});
+    g+=`<path class="ln" d="${p}" stroke="${sr.color}"/>`;
+    for(let i=sr.vals.length-1;i>=0;i--){if(sr.vals[i]!=null){g+=`<circle cx="${X(i).toFixed(1)}" cy="${Y(sr.vals[i]).toFixed(1)}" r="3" fill="${sr.color}"/>`;break;}}});
+  g+=`<g class="cg" style="opacity:0"><line class="cross cx" y1="${MT}" y2="${CH-MB}"/></g>`;
+  const svg=document.getElementById(svgId);svg.innerHTML=g;
+  svg.__ctx={series,xs,X,n,CW,ML,MR,unit:opt.unit||'',dec:opt.tipdec!=null?opt.tipdec:1};
+  svg.onmousemove=ev=>{const ctx=svg.__ctx;if(!ctx)return;const r=svg.getBoundingClientRect(),px=(ev.clientX-r.left)/r.width*ctx.CW;const tip=document.getElementById(tipId);
+    const cg=svg.querySelector('.cg'),cx=svg.querySelector('.cx');
+    if(px<ctx.ML||px>ctx.CW-ctx.MR){tip.style.opacity=0;if(cg)cg.style.opacity=0;return;}
+    let i=Math.round((px-ctx.ML)/(ctx.CW-ctx.ML-ctx.MR)*(ctx.n-1));i=Math.max(0,Math.min(ctx.n-1,i));
+    cg.style.opacity=1;cx.setAttribute('x1',ctx.X(i));cx.setAttribute('x2',ctx.X(i));
+    const rows=ctx.series.map(sr=>({name:sr.name,color:sr.color,v:sr.vals[i]})).filter(x=>x.v!=null).sort((a,b)=>b.v-a.v);
+    tip.innerHTML=`<div class="td">${ctx.xs[i]}</div>`+rows.map(rw=>`<div class="row"><span class="l"><span class="sw" style="background:${rw.color}"></span><span class="nm2">${rw.name}</span></span><span class="val">${rw.v.toFixed(ctx.dec)}${ctx.unit}</span></div>`).join('');
+    tip.style.opacity=1;const tw=tip.offsetWidth,xpx=ctx.X(i)/ctx.CW*r.width;tip.style.left=Math.min(r.width-tw-4,Math.max(4,xpx+12))+'px';tip.style.top='8px';};
+  svg.onmouseleave=()=>{const tip=document.getElementById(tipId),cg=svg.querySelector('.cg');tip.style.opacity=0;if(cg)cg.style.opacity=0;};
+}
+function legendHTML(id,series){document.getElementById(id).innerHTML=series.map(s=>`<span class="chip"><span class="sw" style="background:${s.color}"></span><b>${s.name}</b></span>`).join('');}
+function drawMacro(){
+  const cols=SERIES(),[s,e]=mslice(),xs=MDATES.slice(s,e),cat=state.mcCat;
+  const perLbl=['1M','3M','6M','12M','24M'][[21,63,126,252,520].indexOf(state.mcPer)]||'';
+  let series=[],opt={base100:true,unit:'',tipdec:1};
+  $('#mc-title').textContent=cat==='all'?'クロスアセット・パフォーマンス（カテゴリ平均）':'クロスアセット：'+CATLABEL[cat];
+  $('#mc-hint').textContent=perLbl+' ・ native通貨・初日=100';
+  if(cat==='all'){
+    MACRO.cats.forEach((c,i)=>{const mem=c.key==='Rates'?MACRO.ratesPx:c.members;
+      series.push({name:c.key==='Rates'?'金利(債券)':c.label,color:cols[i%8],vals:avgSeries(mem,s,e)});});
+  }else if(cat==='Rates'){
+    opt={base100:false,unit:'%',tipdec:2};$('#mc-hint').textContent=perLbl+' ・利回り(%)';
+    MACRO.cats.find(c=>c.key==='Rates').members.forEach((t,i)=>series.push({name:MI[t].name,color:cols[i%8],vals:MI[t].close.slice(s,e)}));
+  }else{
+    MACRO.cats.find(c=>c.key===cat).members.forEach((t,i)=>series.push({name:MI[t].name,color:cols[i%8],vals:rebase(MI[t].close.slice(s,e))}));
+  }
+  legendHTML('mclegend',series);lineChart('mcchart','mctip',series,xs,opt);
+}
+function drawRatios(){
+  const cols=SERIES(),[s,e]=mslice(),xs=MDATES.slice(s,e);
+  const series=MACRO.ratios.map((r,i)=>({name:r.label,color:cols[i%8],vals:rebase(r.series.slice(s,e))}));
+  legendHTML('rtlegend',series);lineChart('rtchart','rttip',series,xs,{base100:true,unit:'',tipdec:1,h:340});
+  $('#rtdesc').innerHTML=MACRO.ratios.map((r,i)=>`<div style="margin:3px 0"><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:${cols[i%8]};margin-right:6px"></span><b style="color:var(--ink)">${r.label}</b>：${r.desc}</div>`).join('');
+}
+function switchTab(t){$('#tab-jp').hidden=t!=='jp';$('#tab-world').hidden=t!=='world';
+  $$('#tabbar button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.t===t));
+  if(t==='world'&&!state.worldDrawn){state.worldDrawn=true;drawMacro();drawRatios();}}
+
 /* ---------- tiles ---------- */
 function drawTiles(){
   const top=[...themes].filter(t=>t.surge!=null).sort((a,b)=>b.surge-a.surge)[0];
@@ -505,6 +624,9 @@ seg('gran',b=>{state.gran=b.dataset.g;drawHeat();});
 seg('hsort',b=>{state.hsort=b.dataset.h;drawHeat();});
 seg('rkmetric',b=>{state.rkMetric=b.dataset.m;state.rkSel=null;drawRk();});
 seg('rkrows',b=>{state.rkRows=+b.dataset.n;drawRkBump();});
+$('#tabbar').onclick=e=>{const b=e.target.closest('button');if(b)switchTab(b.dataset.t);};
+seg('mccat',b=>{state.mcCat=b.dataset.c;drawMacro();});
+seg('mcper',b=>{state.mcPer=+b.dataset.p;drawMacro();drawRatios();});
 document.getElementById('rktbl').querySelectorAll('th.srt').forEach(th=>th.onclick=()=>{
   const k=th.dataset.k;
   if(state.rkSort.k===k)state.rkSort.dir=state.rkSort.dir==='asc'?'desc':'asc';
@@ -512,8 +634,9 @@ document.getElementById('rktbl').querySelectorAll('th.srt').forEach(th=>th.oncli
   drawRkList();});
 
 const mq=window.matchMedia('(prefers-color-scheme:dark)');
-mq.addEventListener?.('change',()=>{drawChart();drawRank();drawHeat();drawStock();});
-new MutationObserver(()=>{drawChart();drawRank();drawHeat();drawStock();drawRkBump();}).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+function redrawAll(){drawChart();drawRank();drawHeat();drawStock();drawRkBump();if(state.worldDrawn){drawMacro();drawRatios();}}
+mq.addEventListener?.('change',redrawAll);
+new MutationObserver(redrawAll).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
 
 state.mapTheme=state.selected[0]||themes[0]?.name||null;
 drawTiles();drawChart();bindTip();drawRank();drawHeat();drawStock();drawRk();
