@@ -283,6 +283,9 @@ table.sp .sc{font-size:9.5px;color:var(--muted);font-family:"IBM Plex Mono",mono
         <div class="phint">縦軸=順位（上=1位）・101位以下は圏外</div>
       </div>
       <div class="chartbox"><svg id="rkbump" viewBox="0 0 720 300" preserveAspectRatio="xMidYMid meet"></svg></div>
+      <div class="sp-h" id="rkc-h" style="font-size:14px;margin-top:14px"></div>
+      <div id="rkc-ctl"></div>
+      <div class="chartbox"><div id="rkcandle"></div></div>
     </div>
   </div>
 
@@ -449,6 +452,49 @@ function drawHeat(){
   const steps=[-2,-1.2,-.5,0,.5,1.2,2];$('#hscale').innerHTML=steps.map(z=>`<i style="background:${col(z)}"></i>`).join('');
 }
 
+/* ---------- candlestick (lazy OHLC) ---------- */
+state.spStock=null; state.spPer=126; state.spFreq='day';
+state.rkcPer=126; state.rkcFreq='day';
+const OHLC_CACHE={};
+function loadOHLC(code){if(!(code in OHLC_CACHE))OHLC_CACHE[code]=fetch('ohlc/'+encodeURIComponent(code)+'.json').then(r=>r.ok?r.json():null).catch(()=>null);return OHLC_CACHE[code];}
+function _sma(a,w){const o=[];let s=0;for(let i=0;i<a.length;i++){s+=a[i];if(i>=w)s-=a[i-w];o.push(i>=w-1?s/w:null);}return o;}
+function _aggW(oh){const R={d:[],o:[],h:[],l:[],c:[]};for(let i=0;i<oh.d.length;i+=5){const e=Math.min(i+5,oh.d.length);let hh=-1e18,ll=1e18;for(let j=i;j<e;j++){if(oh.h[j]>hh)hh=oh.h[j];if(oh.l[j]<ll)ll=oh.l[j];}R.d.push(oh.d[i]);R.o.push(oh.o[i]);R.h.push(hh);R.l.push(ll);R.c.push(oh.c[e-1]);}return R;}
+function candleSVG(oh,per,freq,H){
+  if(!oh)return '<div class="phint" style="padding:16px 0">この銘柄のOHLCは未収録です（テーマ上位20＋ランキングTop100が対象）。</div>';
+  const data=freq==='week'?_aggW(oh):oh;
+  let bars=freq==='week'?Math.ceil(per/5):per;bars=Math.min(bars,data.c.length);
+  const s=data.c.length-bars;
+  const D=data.d.slice(s),O=data.o.slice(s),Hi=data.h.slice(s),Lo=data.l.slice(s),C=data.c.slice(s);
+  const m5=_sma(data.c,5).slice(s),m20=_sma(data.c,20).slice(s),m50=_sma(data.c,50).slice(s);
+  const CW=700,CH=H||280,ML=48,MR=8,MT=8,MB=20;
+  let lo=Infinity,hi=-Infinity;Hi.forEach(v=>{if(v>hi)hi=v});Lo.forEach(v=>{if(v<lo)lo=v});
+  [m5,m20,m50].forEach(a=>a.forEach(v=>{if(v!=null){if(v>hi)hi=v;if(v<lo)lo=v;}}));
+  if(!isFinite(lo)){lo=0;hi=1;}const pad=(hi-lo)*0.06||1;lo-=pad;hi+=pad;
+  const n=C.length,bw=(CW-ML-MR)/Math.max(n,1),X=i=>ML+bw*(i+0.5),Y=v=>MT+(CH-MT-MB)*(1-(v-lo)/(hi-lo));
+  const cUp='#16a34a',cDn='#dc2626';let g='';
+  for(let k=0;k<=4;k++){const v=lo+(hi-lo)*k/4,y=Y(v);g+=`<line class="gl" x1="${ML}" y1="${y.toFixed(1)}" x2="${CW-MR}" y2="${y.toFixed(1)}"/><text class="axl" x="${ML-5}" y="${(y+3).toFixed(1)}" text-anchor="end">${Math.round(v).toLocaleString()}</text>`;}
+  let lm='';D.forEach((d,i)=>{const mo=d.slice(0,7);if(mo!==lm){lm=mo;g+=`<text class="axl" x="${X(i).toFixed(1)}" y="${CH-6}" text-anchor="middle">${d.slice(2,7).replace('-','/')}</text>`;}});
+  const wq=Math.max(0.6,bw*0.3);
+  for(let i=0;i<n;i++){const c=C[i]>=O[i]?cUp:cDn,x=X(i);
+    g+=`<line x1="${x.toFixed(1)}" y1="${Y(Hi[i]).toFixed(1)}" x2="${x.toFixed(1)}" y2="${Y(Lo[i]).toFixed(1)}" stroke="${c}" stroke-width="1"/>`;
+    const ya=Y(Math.max(O[i],C[i])),yb=Y(Math.min(O[i],C[i]));
+    g+=`<rect x="${(x-wq).toFixed(1)}" y="${ya.toFixed(1)}" width="${(wq*2).toFixed(1)}" height="${Math.max(0.8,yb-ya).toFixed(1)}" fill="${c}"/>`;}
+  const ln=(a,col)=>{let p='',st=false;a.forEach((v,i)=>{if(v==null)return;p+=(st?'L':'M')+X(i).toFixed(1)+' '+Y(v).toFixed(1)+' ';st=true;});return p?`<path d="${p}" fill="none" stroke="${col}" stroke-width="1.3"/>`:'';};
+  g+=ln(m5,'#eb6834')+ln(m20,'#2a78d6')+ln(m50,'#8a5cd6');
+  return `<svg viewBox="0 0 ${CW} ${CH}" width="100%" style="overflow:visible">${g}</svg>`;
+}
+function candleCtl(idp,per,freq){
+  const P=[['21','1M'],['63','3M'],['126','6M'],['252','12M'],['520','24M']];
+  return `<div class="ctlrow" style="margin:6px 0 2px">
+    <div class="seg small" id="${idp}per">${P.map(p=>`<button data-p="${p[0]}" aria-pressed="${+p[0]===per}">${p[1]}</button>`).join('')}</div>
+    <div class="seg small" id="${idp}freq"><button data-f="day" aria-pressed="${freq==='day'}">日足</button><button data-f="week" aria-pressed="${freq==='week'}">週足</button></div></div>
+  <div class="legend" style="margin:2px 0 4px;font-size:11px">
+    <span class="chip"><span class="sw" style="background:#eb6834"></span>5MA</span>
+    <span class="chip"><span class="sw" style="background:#2a78d6"></span>20MA</span>
+    <span class="chip"><span class="sw" style="background:#8a5cd6"></span>50MA</span></div>`;
+}
+function wireSeg(id,fn){const el=document.getElementById(id);if(el)el.onclick=e=>{const b=e.target.closest('button');if(!b)return;$$('#'+id+' button').forEach(x=>x.setAttribute('aria-pressed',x===b));fn(b);};}
+
 /* ---------- stock panel ---------- */
 function spark(arr){
   if(!arr||!arr.length)return'';
@@ -463,22 +509,32 @@ function drawStock(){
   const th=state.mapTheme?byName[state.mapTheme]:null;
   if(!th){el.innerHTML='<div class="sp-sub">左のマップでテーマをクリックすると、構成銘柄がここに表示されます。</div>';return;}
   let rows=(th.members||[]).map(c=>({code:c,...STK[c]})).filter(x=>x.name);
+  if(state.spStock && !rows.some(r=>r.code===state.spStock)) state.spStock=null;
   const k=state.spSort;
   rows.sort((a,b)=>((b[k]??-1e9)-(a[k]??-1e9)));
   const th2=(id,lbl,cls)=>`<th class="${cls||''}" data-k="${id}" style="${state.spSort===id?'color:var(--ink)':''}">${lbl}</th>`;
   el.innerHTML=`
     <div class="sp-h">${th.name}<span class="c">${th.cat}・${th.n}銘柄</span></div>
-    <div class="sp-sub">売買代金上位（クリックで並べ替え）</div>
+    <div class="sp-sub">売買代金上位（列見出しで並べ替え・行クリックでチャート）</div>
     <div class="sp-list"><table class="sp"><thead><tr>
       <th class="l">銘柄</th>${th2('to','代金')}${th2('surge','急増')}${th2('ret20','20d')}<th>推移</th>
-    </tr></thead><tbody>${rows.map(s=>`<tr>
+    </tr></thead><tbody>${rows.map(s=>`<tr data-code="${s.code}" class="${s.code===state.spStock?'on':''}">
       <td><div class="snm" title="${s.name}">${s.name}</div><span class="sc">${s.code}</span></td>
       <td class="num">${fmt(s.to,1)}</td>
       <td class="num ${(s.surge??0)>=0?'pos':'neg'}">${sign(s.surge)}%</td>
       <td class="num ${(s.ret20??0)>=0?'pos':'neg'}">${sign(s.ret20)}%</td>
-      <td>${spark(s.spark)}</td></tr>`).join('')}</tbody></table></div>`;
+      <td>${spark(s.spark)}</td></tr>`).join('')}</tbody></table></div>
+    <div class="sp-h" style="font-size:13px;margin-top:10px">${state.spStock?('ローソク足: '+(STK[state.spStock]?.name||state.spStock)):'銘柄をクリックでローソク足'}</div>
+    ${state.spStock?candleCtl('sp',state.spPer,state.spFreq):''}
+    <div id="spcandle"></div>`;
   $$('#stockpanel th[data-k]').forEach(h=>h.onclick=()=>{state.spSort=h.dataset.k;drawStock();});
+  $$('#stockpanel tbody tr').forEach(tr=>tr.onclick=()=>{state.spStock=tr.dataset.code;drawStock();});
+  if(state.spStock){wireSeg('spper',b=>{state.spPer=+b.dataset.p;renderSpCandle();});
+    wireSeg('spfreq',b=>{state.spFreq=b.dataset.f;renderSpCandle();});renderSpCandle();}
 }
+function renderSpCandle(){const box=$('#spcandle');if(!box)return;const cur=state.spStock;if(!cur){box.innerHTML='';return;}
+  box.innerHTML='<div class="phint">読み込み中…</div>';
+  loadOHLC(cur).then(oh=>{if(state.spStock!==cur)return;box.innerHTML=candleSVG(oh,state.spPer,state.spFreq,220);});}
 
 /* ---------- rankings (leaderboard + bump) ---------- */
 const RK=DATA.rankings;
@@ -505,7 +561,7 @@ function drawRkList(){
       <td class="num">${s.ratio!=null?s.ratio.toFixed(2):'–'}</td>
       <td class="num">${rkChip(rkDelta(code))}</td>
       <td>${rankMini(rkSeries(code))}</td></tr>`;}).join('');
-  $$('#rktbody tr').forEach(tr=>tr.onclick=()=>{state.rkSel=tr.dataset.code;drawRkList();drawRkBump();});
+  $$('#rktbody tr').forEach(tr=>tr.onclick=()=>selectRk(tr.dataset.code));
 }
 function drawRkBump(){
   const days=RK.days,n=days.length,top=rkTop();
@@ -529,10 +585,21 @@ function drawRkBump(){
   $$('#rkbump .rkhit').forEach(el=>{const c=el.dataset.code,v=()=>document.querySelector(`#rkbump .rkbg[data-code="${c}"]`);
     el.addEventListener('mouseenter',()=>{const x=v();if(x){x.setAttribute('stroke',inkC);x.setAttribute('opacity','0.9');x.setAttribute('stroke-width','1.9');}});
     el.addEventListener('mouseleave',()=>{const x=v();if(x){x.setAttribute('stroke',mutedC);x.setAttribute('opacity','0.22');x.setAttribute('stroke-width','1.1');}});
-    el.addEventListener('click',()=>{state.rkSel=c;drawRkList();drawRkBump();});});
+    el.addEventListener('click',()=>selectRk(c));});
   $('#rkselname').textContent=' — '+s.name;
 }
-function drawRk(){if(!state.rkSel)state.rkSel=rkTop()[0];drawRkList();drawRkBump();}
+function drawRkCandle(){const code=state.rkSel,h=$('#rkc-h'),ctl=$('#rkc-ctl');if(!h)return;
+  if(!code){h.textContent='';ctl.innerHTML='';$('#rkcandle').innerHTML='';return;}
+  h.textContent='ローソク足: '+(RK.stocks[code]?.name||code)+'（'+code+'）';
+  ctl.innerHTML=candleCtl('rkc',state.rkcPer,state.rkcFreq);
+  wireSeg('rkcper',b=>{state.rkcPer=+b.dataset.p;renderRkCandle();});
+  wireSeg('rkcfreq',b=>{state.rkcFreq=b.dataset.f;renderRkCandle();});
+  renderRkCandle();}
+function renderRkCandle(){const box=$('#rkcandle');if(!box)return;const cur=state.rkSel;
+  box.innerHTML='<div class="phint">読み込み中…</div>';
+  loadOHLC(cur).then(oh=>{if(state.rkSel!==cur)return;box.innerHTML=candleSVG(oh,state.rkcPer,state.rkcFreq,260);});}
+function selectRk(code){state.rkSel=code;drawRkList();drawRkBump();drawRkCandle();}
+function drawRk(){if(!state.rkSel)state.rkSel=rkTop()[0];drawRkList();drawRkBump();drawRkCandle();}
 
 /* ---------- world: cross-asset ---------- */
 const MACRO=__MACRO__;

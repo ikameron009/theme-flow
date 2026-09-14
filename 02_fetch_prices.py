@@ -23,7 +23,7 @@ def main():
     tickers = [c + ".T" for c in codes]
     print(f"対象 {len(tickers)} 銘柄を取得...")
 
-    closes, vols = {}, {}
+    closes, vols, opens, highs, lows = {}, {}, {}, {}, {}
     for i in range(0, len(tickers), CHUNK):
         chunk = tickers[i:i + CHUNK]
         for attempt in (1, 2):
@@ -48,6 +48,9 @@ def main():
                     continue
                 closes[code] = c
                 vols[code] = v
+                opens[code] = sub["Open"]
+                highs[code] = sub["High"]
+                lows[code] = sub["Low"]
                 ok += 1
             except Exception:
                 continue
@@ -68,6 +71,10 @@ def main():
     close.to_pickle(BASE + "close.pkl")
     volume.to_pickle(BASE + "volume.pkl")
     turnover.to_pickle(BASE + "turnover.pkl")
+    # ローソク足用OHLC(始値・高値・安値)。closeと同indexに揃える
+    pd.DataFrame(opens).reindex(close.index).to_pickle(BASE + "open.pkl")
+    pd.DataFrame(highs).reindex(close.index).to_pickle(BASE + "high.pkl")
+    pd.DataFrame(lows).reindex(close.index).to_pickle(BASE + "low.pkl")
 
     print(f"\n取得完了: {close.shape[1]} 銘柄 x {close.shape[0]} 営業日")
     print("期間:", close.index.min().date(), "->", close.index.max().date())

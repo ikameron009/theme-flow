@@ -40,6 +40,9 @@ jobs:
       - name: 03 テーマ別集計
         run: python 03_aggregate.py
 
+      - name: 07 ローソク足用OHLC出力(site/ohlc)
+        run: python 07_write_ohlc.py || echo "ohlc生成スキップ"
+
       - name: 05 クロスアセット取得(世界のお金の流れ・失敗しても継続)
         run: python 05_fetch_macro.py || echo "macro fetch failed; 世界タブは今回休止"
 
