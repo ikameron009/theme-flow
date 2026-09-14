@@ -22,17 +22,8 @@ hi = pd.read_pickle(BASE + "high.pkl")
 lo = pd.read_pickle(BASE + "low.pkl")
 avail = set(close.columns)
 
-# 対象銘柄の集合
-codes = set()
-for th, g in m.groupby("theme"):
-    cs = [c for c in g["code"].unique() if c in avail]
-    if not cs:
-        continue
-    top = (turn[cs].iloc[-5:].mean()).sort_values(ascending=False).index[:TOP_MEMBERS]
-    codes.update(top)
-codes.update(turn.iloc[-1].dropna().sort_values(ascending=False).index[:TOPN])
-codes.update(vol.iloc[-1].dropna().sort_values(ascending=False).index[:TOPN])
-codes = [c for c in codes if c in avail]
+# 対象銘柄 = 取得できた全銘柄(どの銘柄をクリックしてもローソク足が出るように)
+codes = sorted(avail)
 
 dates_all = [d.strftime("%Y-%m-%d") for d in close.index]
 

@@ -124,11 +124,11 @@ rect.hcell{cursor:pointer}
 rect.rowhit{cursor:pointer;fill:transparent}
 rect.rowhit:hover{fill:rgba(128,128,128,.08)}
 
-.stockpanel{background:var(--surface-2);border:1px solid var(--border);border-radius:11px;padding:12px 12px 8px;position:sticky;top:12px}
+.stockpanel{background:var(--surface-2);border:1px solid var(--border);border-radius:11px;padding:12px 12px 8px;position:sticky;top:12px;display:flex;flex-direction:column;overflow:hidden}
 .sp-h{font-family:"Archivo","Noto Sans JP",sans-serif;font-weight:700;font-size:14px;display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
 .sp-h .c{font-size:10.5px;color:var(--muted);font-weight:600}
 .sp-sub{font-size:11px;color:var(--muted);margin:2px 0 8px}
-.sp-list{max-height:560px;overflow-y:auto;margin:0 -4px}
+.sp-list{flex:1 1 0;min-height:60px;overflow-y:auto;margin:0 -4px}
 table.sp{width:100%;border-collapse:collapse;font-size:12px}
 table.sp th{position:sticky;top:0;background:var(--surface-2);text-align:right;font-size:10px;color:var(--muted);font-weight:600;padding:5px 6px;border-bottom:1px solid var(--border);cursor:pointer;white-space:nowrap}
 table.sp th.l{text-align:left}
@@ -450,6 +450,7 @@ function drawHeat(){
   const svg=$('#heat');svg.setAttribute('viewBox',`0 0 ${W} ${H}`);svg.setAttribute('width',W);svg.setAttribute('height',H);svg.innerHTML=g;
   $$('#heat .rowhit,#heat .hcell').forEach(el=>el.addEventListener('click',()=>{state.mapTheme=el.dataset.nm;drawHeat();drawStock();}));
   const steps=[-2,-1.2,-.5,0,.5,1.2,2];$('#hscale').innerHTML=steps.map(z=>`<i style="background:${col(z)}"></i>`).join('');
+  syncPanelHeight();
 }
 
 /* ---------- candlestick (lazy OHLC) ---------- */
@@ -494,6 +495,7 @@ function candleCtl(idp,per,freq){
     <span class="chip"><span class="sw" style="background:#8a5cd6"></span>50MA</span></div>`;
 }
 function wireSeg(id,fn){const el=document.getElementById(id);if(el)el.onclick=e=>{const b=e.target.closest('button');if(!b)return;$$('#'+id+' button').forEach(x=>x.setAttribute('aria-pressed',x===b));fn(b);};}
+function stockLinks(code){return `<a href="https://finance.yahoo.co.jp/quote/${code}.T" target="_blank" rel="noopener" style="font-size:11px;margin-left:10px;color:var(--accent)">Yahoo↗</a><a href="https://kabutan.jp/stock/?code=${code}" target="_blank" rel="noopener" style="font-size:11px;margin-left:8px;color:var(--accent)">株探↗</a>`;}
 
 /* ---------- stock panel ---------- */
 function spark(arr){
@@ -524,17 +526,20 @@ function drawStock(){
       <td class="num ${(s.surge??0)>=0?'pos':'neg'}">${sign(s.surge)}%</td>
       <td class="num ${(s.ret20??0)>=0?'pos':'neg'}">${sign(s.ret20)}%</td>
       <td>${spark(s.spark)}</td></tr>`).join('')}</tbody></table></div>
-    <div class="sp-h" style="font-size:13px;margin-top:10px">${state.spStock?('ローソク足: '+(STK[state.spStock]?.name||state.spStock)):'銘柄をクリックでローソク足'}</div>
+    <div class="sp-h" style="font-size:13px;margin-top:10px">${state.spStock?('ローソク足: '+(STK[state.spStock]?.name||state.spStock)+stockLinks(state.spStock)):'銘柄をクリックでローソク足'}</div>
     ${state.spStock?candleCtl('sp',state.spPer,state.spFreq):''}
     <div id="spcandle"></div>`;
   $$('#stockpanel th[data-k]').forEach(h=>h.onclick=()=>{state.spSort=h.dataset.k;drawStock();});
   $$('#stockpanel tbody tr').forEach(tr=>tr.onclick=()=>{state.spStock=tr.dataset.code;drawStock();});
   if(state.spStock){wireSeg('spper',b=>{state.spPer=+b.dataset.p;renderSpCandle();});
     wireSeg('spfreq',b=>{state.spFreq=b.dataset.f;renderSpCandle();});renderSpCandle();}
+  syncPanelHeight();
 }
 function renderSpCandle(){const box=$('#spcandle');if(!box)return;const cur=state.spStock;if(!cur){box.innerHTML='';return;}
   box.innerHTML='<div class="phint">読み込み中…</div>';
-  loadOHLC(cur).then(oh=>{if(state.spStock!==cur)return;box.innerHTML=candleSVG(oh,state.spPer,state.spFreq,220);});}
+  loadOHLC(cur).then(oh=>{if(state.spStock!==cur)return;box.innerHTML=candleSVG(oh,state.spPer,state.spFreq,300);});}
+function syncPanelHeight(){const hm=document.querySelector('.hm-scroll'),sp=$('#stockpanel');
+  if(!hm||!sp||window.innerWidth<=860)return;const h=hm.getBoundingClientRect().height;if(h>200)sp.style.height=h+'px';}
 
 /* ---------- rankings (leaderboard + bump) ---------- */
 const RK=DATA.rankings;
@@ -590,7 +595,7 @@ function drawRkBump(){
 }
 function drawRkCandle(){const code=state.rkSel,h=$('#rkc-h'),ctl=$('#rkc-ctl');if(!h)return;
   if(!code){h.textContent='';ctl.innerHTML='';$('#rkcandle').innerHTML='';return;}
-  h.textContent='ローソク足: '+(RK.stocks[code]?.name||code)+'（'+code+'）';
+  h.innerHTML='ローソク足: '+(RK.stocks[code]?.name||code)+'（'+code+'）'+stockLinks(code);
   ctl.innerHTML=candleCtl('rkc',state.rkcPer,state.rkcFreq);
   wireSeg('rkcper',b=>{state.rkcPer=+b.dataset.p;renderRkCandle();});
   wireSeg('rkcfreq',b=>{state.rkcFreq=b.dataset.f;renderRkCandle();});
@@ -708,5 +713,6 @@ mq.addEventListener?.('change',redrawAll);
 new MutationObserver(redrawAll).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
 
 state.mapTheme=state.selected[0]||themes[0]?.name||null;
+window.addEventListener('resize',()=>syncPanelHeight());
 drawTiles();drawChart();bindTip();drawRank();drawHeat();drawStock();drawRk();
 </script>
