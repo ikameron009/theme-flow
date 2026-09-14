@@ -5,7 +5,10 @@ Step 6: macro_close.pkl から macro.json を生成(世界のお金の流れ)。
 - カテゴリ, 金利(level%), Rates平均用債券, 比率(銅/金・株/債券 等)
 """
 import json, os
+from datetime import datetime, timedelta
 import pandas as pd
+
+TODAY_JST = (datetime.utcnow() + timedelta(hours=9)).date()  # 当日除外の基準
 
 BASE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "")
 KEEP = 520  # 24M
@@ -64,6 +67,8 @@ if os.path.exists(BASE + "macro_fresh.csv"):
         print(f"fresh {fr.shape[1]}銘柄をベースラインに重ね済み")
     except Exception as e:
         print(f"[WARN] fresh重ね失敗・ベースライン使用: {e}")
+# 当日(JST)以降の未確定バーを除外(前日までに揃える)
+close = close[close.index.date < TODAY_JST]
 close = close.tail(KEEP)
 dates = [d.strftime("%Y-%m-%d") for d in close.index]
 
@@ -105,8 +110,8 @@ if "^TNX" in inst:
     world_members.append("^TNX")          # 米国10年金利(既存)
 if "jp10" in inst:
     world_members.append("jp10")          # 日本10年(MOF)
-FGNAME = {"de10": "ドイツ10年", "gb10": "英国10年", "fr10": "フランス10年",
-          "it10": "イタリア10年", "ca10": "カナダ10年", "eu10": "ユーロ圏10年"}
+FGNAME = {"de10": "ドイツ10年", "gb10": "英国10年", "fr10": "フランス10年(月次)",
+          "it10": "イタリア10年(月次)", "ca10": "カナダ10年", "eu10": "ユーロ圏10年"}
 if os.path.exists(BASE + "foreign_yields.csv"):
     fy = pd.read_csv(BASE + "foreign_yields.csv", index_col=0, parse_dates=True)
     for c in ["de10", "gb10", "fr10", "it10", "ca10", "eu10"]:  # G7残り→ユーロ圏の順

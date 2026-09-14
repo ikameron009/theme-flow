@@ -9,8 +9,12 @@ Step 2: themes_map.csv のユニーク銘柄について yfinance で
 """
 import warnings, time, sys, os
 warnings.filterwarnings("ignore")
+from datetime import datetime, timedelta
 import pandas as pd
 import yfinance as yf
+
+# 当日(JST)は場中/未確定の可能性→集計から除外し「前日までの完了取引日」に揃える
+TODAY_JST = (datetime.utcnow() + timedelta(hours=9)).date()
 
 BASE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "")
 PERIOD = "2y"         # 360d・年初来(YTD)表示に対応
@@ -64,7 +68,8 @@ def main():
 
     close = pd.DataFrame(closes).sort_index()
     volume = pd.DataFrame(vols).sort_index()
-    # 共通のindexに揃える
+    # 当日(JST)以降の未確定バーを除外(前日までの完了取引日に揃える)
+    close = close[close.index.date < TODAY_JST]
     volume = volume.reindex(close.index)
     turnover = close * volume  # 売買代金(円)
 

@@ -2,8 +2,9 @@ name: Update theme flow
 
 on:
   schedule:
-    # 07:30 UTC = 16:30 JST（日本market引け後）平日
-    - cron: '30 7 * * 1-5'
+    # 22:00 UTC = 翌07:00 JST。前日EOD確定後・場が開く前に更新し、
+    # 常に「前日までの完了取引日」でページを固定する
+    - cron: '0 22 * * *'
   workflow_dispatch:        # 手動実行ボタン
   push:
     branches: [ main ]      # push時にも一度ビルド（初回確認用）
