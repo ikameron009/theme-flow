@@ -35,7 +35,7 @@ UNIV = [
     ("SPY","SPY","Aux",0),("TLT","TLT","Aux",0),("QQQ","QQQ","Aux",0),("IWD","IWD","Aux",0),
     ("VEU","VEU","Aux",0),("HYG","HYG","Aux",0),("LQD","LQD","Aux",0),
 ]
-CATS = [("Indices","株価指数"),("Rates","米国金利(利回り%)"),("Energy","エネルギー"),
+CATS = [("Indices","株価指数"),("Rates","金利(利回り%)"),("Energy","エネルギー"),
         ("Metals","貴金属・鉱物"),("Grains","穀物"),("Softs","ソフト・畜産"),("FX","通貨")]
 
 def read_close_csv(path):

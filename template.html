@@ -305,7 +305,7 @@ table.sp .sc{font-size:9.5px;color:var(--muted);font-family:"IBM Plex Mono",mono
         <div class="seg small" id="mccat">
           <button data-c="all" aria-pressed="true">すべて</button>
           <button data-c="Indices" aria-pressed="false">株価指数</button>
-          <button data-c="Rates" aria-pressed="false">米国金利</button>
+          <button data-c="Rates" aria-pressed="false">金利</button>
           <button data-c="Energy" aria-pressed="false">エネルギー</button>
           <button data-c="Metals" aria-pressed="false">貴金属・鉱物</button>
           <button data-c="Grains" aria-pressed="false">穀物</button>
@@ -322,8 +322,8 @@ table.sp .sc{font-size:9.5px;color:var(--muted);font-family:"IBM Plex Mono",mono
         </div></div>
       <div class="ctlrow" id="ratesub-row" hidden><span class="ctl-label">国</span>
         <div class="seg small" id="ratesub">
-          <button data-r="us" aria-pressed="true">米国</button>
-          <button data-r="jp" aria-pressed="false">日本</button>
+          <button data-r="jp" aria-pressed="true">日本</button>
+          <button data-r="us" aria-pressed="false">米国</button>
           <button data-r="world" aria-pressed="false">先進国(10Y)</button>
         </div></div>
       <div class="legend" id="mclegend"></div>
@@ -616,7 +616,7 @@ function drawRk(){if(!state.rkSel)state.rkSel=rkTop()[0];drawRkList();drawRkBump
 const MACRO=__MACRO__;
 const MI=MACRO.inst, MDATES=MACRO.dates, MN=MDATES.length;
 const CATLABEL=Object.fromEntries(MACRO.cats.map(c=>[c.key,c.label]));
-state.mcCat='all'; state.mcPer=126; state.worldDrawn=false; state.rateSub='us';
+state.mcCat='all'; state.mcPer=126; state.worldDrawn=false; state.rateSub='jp';
 const RGROUPS=MACRO.rateGroups||{us:[],jp:[],world:[]};
 const RSUBLABEL={us:'米国金利',jp:'日本金利',world:'主要先進国 10年金利'};
 function mslice(){const p=Math.min(state.mcPer,MN);return [MN-p,MN];}
@@ -663,9 +663,9 @@ function drawMacro(){
   $('#mc-hint').textContent=perLbl+' ・ native通貨・初日=100';
   if(cat==='all'){
     MACRO.cats.forEach((c,i)=>{const mem=c.key==='Rates'?MACRO.ratesPx:c.members;
-      series.push({name:c.key==='Rates'?'米国債(価格)':c.label,color:cols[i%8],vals:avgSeries(mem,s,e)});});
+      series.push({name:c.key==='Rates'?'金利(債券)':c.label,color:cols[i%8],vals:avgSeries(mem,s,e)});});
   }else if(cat==='Rates'){
-    opt={base100:false,unit:'%',tipdec:2};$('#mc-hint').textContent=perLbl+' ・利回り(%)';
+    opt={base100:false,unit:'%',tipdec:2,dec:2};$('#mc-hint').textContent=perLbl+' ・利回り(%)';
     const mem=(RGROUPS[state.rateSub]||[]).filter(t=>MI[t]);
     if(!mem.length){$('#mclegend').innerHTML='<span class="phint">'+(state.rateSub==='world'?'主要先進国データは取得できていません（次回更新で復帰）。':'データがありません。')+'</span>';$('#mcchart').innerHTML='';return;}
     mem.forEach((t,i)=>series.push({name:MI[t].name,color:cols[i%8],vals:MI[t].close.slice(s,e)}));
