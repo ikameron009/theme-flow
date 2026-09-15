@@ -9,12 +9,17 @@ Step 2: themes_map.csv のユニーク銘柄について yfinance で
 """
 import warnings, time, sys, os
 warnings.filterwarnings("ignore")
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, time as dtime
 import pandas as pd
 import yfinance as yf
 
-# 当日(JST)は場中/未確定の可能性→集計から除外し「前日までの完了取引日」に揃える
-TODAY_JST = (datetime.utcnow() + timedelta(hours=9)).date()
+# 日本株: 大引け15:30。引け後(15:45 JST以降)に走ったら当日を"確定済み"として含め、
+# それ以前(場中/寄り前)なら当日を除外して前日までにする。
+_NOW_JST = datetime.utcnow() + timedelta(hours=9)
+if _NOW_JST.time() >= dtime(15, 45):
+    JP_CUTOFF = _NOW_JST.date() + timedelta(days=1)   # 当日まで含む
+else:
+    JP_CUTOFF = _NOW_JST.date()                        # 当日除外(前日まで)
 
 BASE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "")
 PERIOD = "2y"         # 360d・年初来(YTD)表示に対応
@@ -68,8 +73,8 @@ def main():
 
     close = pd.DataFrame(closes).sort_index()
     volume = pd.DataFrame(vols).sort_index()
-    # 当日(JST)以降の未確定バーを除外(前日までの完了取引日に揃える)
-    close = close[close.index.date < TODAY_JST]
+    # JP_CUTOFF未満に限定(引け後なら当日含む/場中なら前日まで)
+    close = close[close.index.date < JP_CUTOFF]
     volume = volume.reindex(close.index)
     turnover = close * volume  # 売買代金(円)
 

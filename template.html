@@ -298,6 +298,7 @@ table.sp .sc{font-size:9.5px;color:var(--muted);font-family:"IBM Plex Mono",mono
   </div>
 
   <div id="tab-world" hidden>
+    <div class="pdesc" style="margin:0 0 14px"><b style="color:var(--ink)">データ期間</b> <span id="w-period" class="mono"></span> <span style="color:var(--muted)">（欧米市場が17:00 JST時点で未確定のため、世界タブは前営業日までで表示）</span></div>
     <div class="panel">
       <div class="phead"><div class="ptitle" id="mc-title">クロスアセット・パフォーマンス</div><div class="phint" id="mc-hint"></div></div>
       <div class="pdesc" id="mc-desc">Finviz futures準拠の全資産クラスを横断。各資産のnative通貨建てで、選択期間の初日＝100に指数化した推移。「すべて」は7カテゴリの平均、カテゴリ選択で構成銘柄を表示。金利カテゴリのみ利回り(%)そのもの。</div>
@@ -683,6 +684,8 @@ function drawRatios(){
 }
 function switchTab(t){$('#tab-jp').hidden=t!=='jp';$('#tab-world').hidden=t!=='world';
   $$('#tabbar button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.t===t));
+  if(t==='jp'){$('#u-date').textContent=DATA.updated;$('#u-univ').textContent=`日本株 ${DATA.n_themes}テーマ / ${DATA.n_stocks.toLocaleString()}銘柄`;}
+  else{$('#u-date').textContent=MACRO.updated||'–';$('#u-univ').textContent='世界クロスアセット';}
   if(t==='world'&&!state.worldDrawn){state.worldDrawn=true;drawMacro();drawRatios();}}
 
 /* ---------- tiles ---------- */
@@ -694,8 +697,9 @@ function drawTiles(){
    <div class="tile"><div class="k">資金 最流入テーマ</div><div class="v big">${top.name}</div><div class="d pos">急増率 ${sign(top.surge)}%</div></div>
    <div class="tile"><div class="k">資金 最流出テーマ</div><div class="v big">${out.name}</div><div class="d neg">${sign(out.share_chg)}pt</div></div>
    <div class="tile"><div class="k">データ期間</div><div class="v" style="font-size:16px">${DATA.updated}</div><div class="d">${DATA.start}〜</div></div>`;
-  $('#u-date').textContent=DATA.updated;$('#u-univ').textContent=`${DATA.n_themes}テーマ / ${DATA.n_stocks.toLocaleString()}銘柄`;
+  $('#u-date').textContent=DATA.updated;$('#u-univ').textContent=`日本株 ${DATA.n_themes}テーマ / ${DATA.n_stocks.toLocaleString()}銘柄`;
   $('#f-univ').textContent=`${DATA.n_themes}テーマ・${DATA.n_stocks.toLocaleString()}銘柄`;
+  const mp=$('#w-period');if(mp)mp.textContent=(MACRO.start&&MACRO.updated)?`${MACRO.start} 〜 ${MACRO.updated}`:'—';
 }
 
 /* ---------- wire ---------- */

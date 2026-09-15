@@ -2,9 +2,9 @@ name: Update theme flow
 
 on:
   schedule:
-    # 22:00 UTC = 翌07:00 JST。前日EOD確定後・場が開く前に更新し、
-    # 常に「前日までの完了取引日」でページを固定する
-    - cron: '0 22 * * *'
+    # 08:00 UTC = 17:00 JST。日本株の大引け(15:30)後に更新。
+    # 日本株タブ=当日確定、世界タブ(欧米未確定のため)=前日までで表示。
+    - cron: '0 8 * * *'
   workflow_dispatch:        # 手動実行ボタン
   push:
     branches: [ main ]      # push時にも一度ビルド（初回確認用）
