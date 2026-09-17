@@ -3,7 +3,8 @@
 Step 4: template.html に theme_flow.json を注入して site/index.html を生成。
 site/ フォルダが GitHub Pages で公開される中身。
 """
-import os
+import os, json
+from datetime import datetime, timezone
 
 BASE = os.path.dirname(os.path.abspath(__file__))
 SITE = os.path.join(BASE, "site")
@@ -16,9 +17,22 @@ with open(os.path.join(BASE, "theme_flow.json"), encoding="utf-8") as f:
 with open(os.path.join(BASE, "macro.json"), encoding="utf-8") as f:
     macro = f.read()
 
-out = tpl.replace("__DATA__", data).replace("__MACRO__", macro)
+# ビルドID(このビルドの一意時刻)。ページに埋め込み、version.jsonと突き合わせて
+# 新デプロイをブラウザ側で自動検知する。
+built = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+out = tpl.replace("__DATA__", data).replace("__MACRO__", macro).replace("__BUILT__", built)
 dst = os.path.join(SITE, "index.html")
 with open(dst, "w", encoding="utf-8") as f:
     f.write(out)
 
-print(f"built {dst}  ({len(out):,} bytes)")
+# 軽量な版数ファイル(自動検知用ポーリング先)
+def _upd(path):
+    try:
+        return json.load(open(os.path.join(BASE, path), encoding="utf-8")).get("updated", "")
+    except Exception:
+        return ""
+with open(os.path.join(SITE, "version.json"), "w", encoding="utf-8") as f:
+    json.dump({"built": built, "jp": _upd("theme_flow.json"), "world": _upd("macro.json")},
+              f, ensure_ascii=False)
+
+print(f"built {dst}  ({len(out):,} bytes)  built={built}")
