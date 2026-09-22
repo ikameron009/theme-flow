@@ -28,7 +28,15 @@ CHUNK = 100
 
 def main():
     m = pd.read_csv(BASE + "themes_map.csv", dtype=str)
-    codes = sorted(m["code"].unique())
+    codes = set(m["code"].dropna().unique())
+    # 市場全体のTop100ランキング用に、テーマ未登録の銘柄も含む
+    # 内国普通株ユニバース(ranking_universe.csv)を併せて取得する。
+    up = BASE + "ranking_universe.csv"
+    if os.path.exists(up):
+        u = pd.read_csv(up, dtype=str)
+        codes |= set(u["code"].dropna())
+        print(f"themes_map + ranking_universe を統合 → {len(codes)} 銘柄")
+    codes = sorted(codes)
     tickers = [c + ".T" for c in codes]
     print(f"対象 {len(tickers)} 銘柄を取得...")
 

@@ -41,6 +41,15 @@ K = min(KEEP_DAYS, N)
 name_of = dict(zip(m["code"], m["name"]))
 cat_of_theme = dict(zip(m["theme"], m["category"]))
 
+# 市場全体のランキング用ユニバース(内国普通株のみ・ETF/REIT/ETN除外)。
+# Top100は「テーマ登録銘柄」ではなくこのユニバースで作るので、
+# テーマ未登録の大型株(例: キオクシア285A)も市場全体のランキングに乗る。
+uni_codes = None
+if os.path.exists(BASE + "ranking_universe.csv"):
+    _u = pd.read_csv(BASE + "ranking_universe.csv", dtype=str)
+    name_of = {**name_of, **dict(zip(_u["code"], _u["name"]))}  # 銘柄名はユニバース優先
+    uni_codes = set(_u["code"].dropna())
+
 def surge_of(s):
     if len(s) < 25: return None
     b = s.iloc[-25:-5].mean()
@@ -108,15 +117,20 @@ for c in member_codes:
     }
 
 # ---------- ランキング(Top100・順位推移バンプ) ----------
+# ランキングは市場全体ユニバース(内国普通株)に限定=ETF/REIT等を自動除外。
+# ユニバース未指定時は従来通り取得済み全銘柄で作る。
+rank_cols = [c for c in turn.columns if uni_codes is None or c in uni_codes]
+turnR = turn[rank_cols]
+volR = vol[rank_cols]
 RD = min(RANK_DAYS, N)
-to_win = turn.iloc[-RD:]
-vo_win = vol.iloc[-RD:]
+to_win = turnR.iloc[-RD:]
+vo_win = volR.iloc[-RD:]
 to_rank = to_win.rank(axis=1, ascending=False, method="min")
 vo_rank = vo_win.rank(axis=1, ascending=False, method="min")
 rank_dates = [d.strftime("%Y-%m-%d") for d in to_win.index]
 
-last_to = turn.iloc[-1]
-last_vo = vol.iloc[-1]
+last_to = turnR.iloc[-1]
+last_vo = volR.iloc[-1]
 top_to = list(last_to.dropna().sort_values(ascending=False).head(TOPN).index)
 top_vol = list(last_vo.dropna().sort_values(ascending=False).head(TOPN).index)
 rankset = list(dict.fromkeys(top_to + top_vol))   # 表示候補(現Top100の和集合)
