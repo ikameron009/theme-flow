@@ -1,3 +1,5 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>テーマ資金フロー</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -65,7 +67,7 @@ h1{font-family:"Archivo","Noto Sans JP",sans-serif;font-weight:800;font-size:27p
 .tile .v.big{font-family:"Archivo",sans-serif;font-size:18px;font-weight:700}
 
 .panel{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px 18px 14px;margin-bottom:16px}
-.grid-main{display:grid;grid-template-columns:1fr 340px;gap:16px;align-items:start}
+.grid-main{display:grid;grid-template-columns:1fr 372px;gap:16px;align-items:start}
 .phead{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:4px}
 .ptitle{font-family:"Archivo","Noto Sans JP",sans-serif;font-weight:700;font-size:15px}
 .phint{font-size:11.5px;color:var(--muted)}
@@ -77,6 +79,11 @@ h1{font-family:"Archivo","Noto Sans JP",sans-serif;font-weight:800;font-size:27p
 .seg button{font:inherit;font-size:12.5px;border:0;background:transparent;color:var(--ink-2);padding:6px 11px;border-radius:6px;cursor:pointer;font-weight:500;white-space:nowrap}
 .seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,.08)}
 .seg.small button{padding:5px 9px;font-size:12px}
+.search{display:inline-flex;align-items:center;gap:6px;background:var(--surface-2);border:1px solid var(--border);border-radius:9px;padding:4px 10px}
+.search input{font:inherit;font-size:12.5px;border:0;background:transparent;color:var(--ink);width:120px;outline:none}
+.search input::placeholder{color:var(--muted)}
+.search .x{cursor:pointer;color:var(--muted);font-size:13px;line-height:1;padding:0 2px;user-select:none}
+.search .x:hover{color:var(--ink)}
 
 .legend{display:flex;flex-wrap:wrap;gap:6px 12px;margin:10px 0 6px}
 .chip{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--ink-2);cursor:pointer;padding:2px 4px;border-radius:6px}
@@ -99,6 +106,10 @@ table.rk tr.on td{background:color-mix(in srgb,var(--accent) 9%,var(--surface))}
 .num{font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
 .pos{color:var(--pos)} .neg{color:var(--neg)}
 .sbar{position:relative;height:16px;width:66px}
+/* 資金の初動ランキングは狭い右カラムに全列を収める（横スクロール排除） */
+#rk td,#rk th{padding-left:5px;padding-right:5px}
+#rk .nm .t{max-width:110px}
+#rk .sbar{width:44px}
 .sbar .mid{position:absolute;left:50%;top:0;bottom:0;width:1px;background:var(--axis)}
 .sbar i{position:absolute;top:3px;height:10px;border-radius:2px}
 
@@ -139,7 +150,11 @@ table.sp{width:100%;border-collapse:collapse;font-size:12px}
 table.sp th{position:sticky;top:0;background:var(--surface-2);text-align:right;font-size:10px;color:var(--muted);font-weight:600;padding:5px 6px;border-bottom:1px solid var(--border);cursor:pointer;white-space:nowrap}
 table.sp th.l{text-align:left}
 table.sp td{padding:4px 6px;border-bottom:1px solid var(--grid);vertical-align:middle}
+table.sp tbody tr{cursor:pointer}
+table.sp tbody tr:hover td{background:var(--surface)}
+table.sp tbody tr.on td{background:color-mix(in srgb,var(--accent) 10%,var(--surface-2))}
 table.sp .snm{font-weight:500;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:96px}
+table.sp tbody tr:hover .snm{text-decoration:underline;text-decoration-color:var(--accent)}
 table.sp .sc{font-size:9.5px;color:var(--muted);font-family:"IBM Plex Mono",monospace}
 
 .foot{margin-top:8px;font-size:11.5px;color:var(--muted);line-height:1.7;border-top:1px solid var(--border);padding-top:14px}
@@ -157,9 +172,9 @@ table.sp .sc{font-size:9.5px;color:var(--muted);font-family:"IBM Plex Mono",mono
 <div class="wrap">
   <header>
     <div>
-      <div class="eyebrow">Japan Equities · Thematic Money Flow</div>
-      <h1>日本株 テーマ別 資金フロー</h1>
-      <div class="sub">株探テーマの構成銘柄を横断集計。売買代金（＝終値×出来高）で、どこから資金が抜け、どこへ入っているかを時系列で追う。</div>
+      <div class="eyebrow">Global Equities · Thematic Money Flow</div>
+      <h1>テーマ別 資金フロー</h1>
+      <div class="sub">日本株・米国株のテーマ構成銘柄を横断集計。売買代金（＝終値×出来高）で、どこから資金が抜け、どこへ入っているかを時系列で追う。</div>
     </div>
     <div class="updated">最終更新 <b id="u-date">–</b><a class="upd-btn" id="upd-btn" href="https://github.com/ikameron009/theme-flow/actions/workflows/update.yml" target="_blank" rel="noopener">🔄 更新</a><br><span id="u-univ">–</span><span id="upd-hint" hidden></span></div>
   </header>
@@ -225,13 +240,6 @@ table.sp .sc{font-size:9.5px;color:var(--muted);font-family:"IBM Plex Mono",mono
       各テーマの週次/日次シェアを「自テーマの平常時と比べた乖離（z-score）」で色分け。
       <b style="color:var(--pos)">青＝資金流入（平常以上）</b>／<b style="color:var(--neg)">赤＝資金流出（平常以下）</b>。左→右で時間。
     </div>
-    <div class="ctlrow"><span class="ctl-label">行数</span>
-      <div class="seg small" id="rows">
-        <button data-n="20" aria-pressed="true">上位20</button>
-        <button data-n="50" aria-pressed="false">上位50</button>
-        <button data-n="100" aria-pressed="false">上位100</button>
-        <button data-n="999" aria-pressed="false">すべて</button>
-      </div></div>
     <div class="ctlrow"><span class="ctl-label">粒度</span>
       <div class="seg small" id="gran">
         <button data-g="day" aria-pressed="false">日単位(50日)</button>
@@ -242,7 +250,9 @@ table.sp .sc{font-size:9.5px;color:var(--muted);font-family:"IBM Plex Mono",mono
         <button data-h="flow" aria-pressed="true">直近流入順</button>
         <button data-h="cat" aria-pressed="false">カテゴリ順</button>
         <button data-h="name" aria-pressed="false">五十音</button>
-      </div></div>
+      </div>
+      <span class="search" style="margin-left:6px"><span style="color:var(--muted);font-size:12px">🔍</span><input id="hsearch" type="text" placeholder="テーマを検索" autocomplete="off"><span class="x" id="hsearch-x" hidden>✕</span></span>
+      <span class="phint" id="hsearch-hint"></span></div>
 
     <div class="map-grid">
       <div>
@@ -268,7 +278,9 @@ table.sp .sc{font-size:9.5px;color:var(--muted);font-family:"IBM Plex Mono",mono
       <div class="seg small" id="rkmetric">
         <button data-m="to" aria-pressed="true">売買代金</button>
         <button data-m="vol" aria-pressed="false">出来高</button>
-      </div></div>
+      </div>
+      <span class="search" style="margin-left:6px"><span style="color:var(--muted);font-size:12px">🔍</span><input id="rksearch" type="text" placeholder="銘柄名・コード" autocomplete="off"><span class="x" id="rksearch-x" hidden>✕</span></span>
+      <span class="phint" id="rksearch-hint"></span></div>
     <div class="rank" style="max-height:520px"><table class="rk" id="rktbl">
       <thead><tr>
         <th class="l srt" data-k="rank" style="width:46px">順位<span class="ar" data-a="rank"></span></th><th class="l">銘柄</th>
@@ -369,7 +381,7 @@ const byName=Object.fromEntries(themes.map(t=>[t.name,t]));
 const latestYear=dates[N-1].slice(0,4);
 
 let state={metric:'index',range:120,smooth:5,sort:'surge',selected:[],
-  rows:20,gran:'week',hsort:'flow',mapTheme:null,spSort:'to'};
+  gran:'week',hsort:'flow',hquery:'',mapTheme:null,spSort:'to'};
 state.selected=[...themes].filter(t=>t.surge!=null).sort((a,b)=>b.surge-a.surge).slice(0,8).map(t=>t.name);
 
 /* ---------- line chart ---------- */
@@ -452,7 +464,13 @@ function drawHeat(){
   if(state.hsort==='flow')rows.sort((a,b)=>b.lastZ-a.lastZ);
   else if(state.hsort==='name')rows.sort((a,b)=>a.t.name.localeCompare(b.t.name,'ja'));
   else{const ord=DATA.categories;rows.sort((a,b)=>{const d=ord.indexOf(a.t.cat)-ord.indexOf(b.t.cat);return d||(b.t.surge??-999)-(a.t.surge??-999);});}
-  if(state.rows!==999)rows=rows.slice(0,state.rows);
+  const total=rows.length;
+  if(state.hquery){const q=state.hquery.toLowerCase();
+    rows=rows.filter(r=>r.t.name.toLowerCase().includes(q)||(r.t.cat||'').toLowerCase().includes(q));}
+  const hint=$('#hsearch-hint');
+  if(hint)hint.textContent=state.hquery?`${rows.length} / ${total} テーマ`:`全 ${total} テーマ`;
+  if(!rows.length){$('#heat').innerHTML='';$('#heat').setAttribute('viewBox','0 0 200 40');
+    $('#heat').innerHTML='<text x="8" y="24" font-size="12" fill="var(--muted)" font-family="Noto Sans JP">該当するテーマがありません</text>';return;}
   const nc=Math.max(...rows.map(r=>r.ms.z.length),1);
   const cell=11,rh=16,lblW=124,topH=20,W=lblW+nc*cell+8,H=topH+rows.length*rh+6;
   const labels=rows[0]?rows[0].ms.labels:[];
@@ -559,7 +577,7 @@ function syncPanelHeight(){const hm=document.querySelector('.hm-scroll'),sp=$('#
 
 /* ---------- rankings (leaderboard + bump) ---------- */
 const RK=DATA.rankings;
-state.rkMetric='to'; state.rkSel=null; state.rkSort={k:'rank',dir:'asc'}; state.rkRows=20;
+state.rkMetric='to'; state.rkSel=null; state.rkSort={k:'rank',dir:'asc'}; state.rkRows=20; state.rkQuery='';
 function rkTop(){return state.rkMetric==='to'?RK.top_to:RK.top_vol;}
 function rkSeries(code){const s=RK.stocks[code];return state.rkMetric==='to'?s.rt:s.rv;}
 function rkDelta(code){const s=RK.stocks[code];return state.rkMetric==='to'?s.d_to:s.d_vol;}
@@ -571,8 +589,13 @@ function drawRkList(){
   const top=rkTop(), mrank=new Map(top.map((c,i)=>[c,i+1]));
   const {k,dir}=state.rkSort, sgn=dir==='asc'?1:-1;
   const gv=c=>{const s=RK.stocks[c];if(k==='to')return s.to;if(k==='mcap')return s.mcap==null?-1:s.mcap;if(k==='ratio')return s.ratio==null?-1:s.ratio;return mrank.get(c);};
-  const rows=[...top].sort((a,b)=>(gv(a)-gv(b))*sgn);
+  let rows=[...top].sort((a,b)=>(gv(a)-gv(b))*sgn);
+  if(state.rkQuery){const q=state.rkQuery.toLowerCase();
+    rows=rows.filter(c=>{const s=RK.stocks[c];return (s.name||'').toLowerCase().includes(q)||c.toLowerCase().includes(q);});}
+  const rhint=$('#rksearch-hint');
+  if(rhint)rhint.textContent=state.rkQuery?`${rows.length} / ${top.length} 銘柄`:'';
   $$('#rktbl .ar').forEach(a=>a.textContent=a.dataset.a===k?(dir==='asc'?'▲':'▼'):'');
+  if(!rows.length){$('#rktbody').innerHTML='<tr><td colspan="7" style="padding:12px;color:var(--muted)">Top100内に該当銘柄がありません（このランキングは追跡ユニバース内のTop100が対象です）。</td></tr>';return;}
   $('#rktbody').innerHTML=rows.map(code=>{const s=RK.stocks[code],on=code===state.rkSel;
     return `<tr class="${on?'on':''}" data-code="${code}">
       <td class="num" style="text-align:left;font-weight:500;${on?'color:var(--accent)':''}">${mrank.get(code)}</td>
@@ -717,7 +740,6 @@ seg('metric',b=>{state.metric=b.dataset.m;drawChart();});
 seg('range',b=>{state.range=b.dataset.r==='ytd'?'ytd':+b.dataset.r;drawChart();});
 seg('smooth',b=>{state.smooth=+b.dataset.w;drawChart();});
 seg('sortby',b=>{state.sort=b.dataset.s;drawRank();});
-seg('rows',b=>{state.rows=+b.dataset.n;drawHeat();});
 seg('gran',b=>{state.gran=b.dataset.g;drawHeat();});
 seg('hsort',b=>{state.hsort=b.dataset.h;drawHeat();});
 seg('rkmetric',b=>{state.rkMetric=b.dataset.m;state.rkSel=null;drawRk();});
@@ -731,6 +753,13 @@ document.getElementById('rktbl').querySelectorAll('th.srt').forEach(th=>th.oncli
   if(state.rkSort.k===k)state.rkSort.dir=state.rkSort.dir==='asc'?'desc':'asc';
   else state.rkSort={k,dir:k==='rank'?'asc':'desc'};
   drawRkList();});
+
+/* 検索窓（テーマ／Top100） */
+function wireSearch(inputId,clearId,fn){const el=$('#'+inputId),x=$('#'+clearId);if(!el)return;
+  el.addEventListener('input',()=>{const v=el.value.trim();if(x)x.hidden=!v;fn(v);});
+  if(x)x.addEventListener('click',()=>{el.value='';x.hidden=true;fn('');el.focus();});}
+wireSearch('hsearch','hsearch-x',v=>{state.hquery=v;drawHeat();});
+wireSearch('rksearch','rksearch-x',v=>{state.rkQuery=v;drawRkList();});
 
 const mq=window.matchMedia('(prefers-color-scheme:dark)');
 function redrawAll(){drawChart();drawRank();drawHeat();drawStock();drawRkBump();if(state.worldDrawn){drawMacro();drawRatios();}}
