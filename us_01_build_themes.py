@@ -46,7 +46,50 @@ SSGA_THEMES = {
     "kbe": ("銀行", "金融・不動産"),
     "kce": ("資本市場", "金融・不動産"),
     "kie": ("保険", "金融・不動産"),
+    # --- SSGA Kensho / その他 SPDR(curl可・前方志向の細テーマ) ---
+    "cnrg": ("クリーンエネルギー", "エネルギー"),
+    "sims": ("スマートインフラ", "産業・インフラ"),
+    "rokt": ("宇宙・フロンティア", "防衛・宇宙"),
+    "hail": ("スマートモビリティ・自動運転", "モビリティ"),
+    "xitk": ("革新テクノロジー", "AI・ソフト・データ"),
 }
+# --- stockanalysis.com 経由(Cloudflare非対象・curl可)で拾う"ホット"テーマ別ETF ---
+# 上位25構成銘柄(= そのテーマの中核)を取得。米国上場外の銘柄はyfinance取得時に脱落。
+# ticker -> (日本語テーマ名, カテゴリ)
+SA_THEMES = {
+    "CIBR": ("サイバーセキュリティ", "AI・ソフト・データ"),
+    "SKYY": ("クラウド", "AI・ソフト・データ"),
+    "ROBT": ("AI・ロボティクス", "ロボット・FA・機械"),
+    "CHAT": ("生成AI", "AI・ソフト・データ"),
+    "QTUM": ("量子コンピュータ", "AI・ソフト・データ"),
+    "BLOK": ("ブロックチェーン・暗号資産", "金融・不動産"),
+    "IPAY": ("デジタル決済", "金融・不動産"),
+    "METV": ("メタバース", "AI・ソフト・データ"),
+    "FIVG": ("5G・通信インフラ", "通信"),
+    "SNSR": ("IoT", "半導体・電子"),
+    "IBUY": ("Eコマース", "消費・小売・インバウンド"),
+    "ESPO": ("ゲーム・eスポーツ", "消費・小売・インバウンド"),
+    "BETZ": ("オンライン賭博", "消費・小売・インバウンド"),
+    "IDRV": ("EV・自動運転", "モビリティ"),
+    "LIT": ("リチウム・車載電池", "素材・資源"),
+    "URA": ("原子力・ウラン", "エネルギー"),
+    "TAN": ("ソーラー", "エネルギー"),
+    "FAN": ("風力", "エネルギー"),
+    "HDRO": ("水素", "エネルギー"),
+    "REMX": ("レアアース・戦略金属", "素材・資源"),
+    "COPX": ("銅鉱山", "素材・資源"),
+    "GDX": ("金鉱山", "素材・資源"),
+    "MOO": ("アグリビジネス", "素材・資源"),
+    "PHO": ("水関連", "産業・インフラ"),
+    "PAVE": ("米国インフラ", "産業・インフラ"),
+    "JETS": ("航空", "産業・インフラ"),
+    "ITA": ("防衛", "防衛・宇宙"),
+    "IDNA": ("ゲノム医療", "ヘルスケア・バイオ"),
+    "MSOS": ("大麻", "ヘルスケア・バイオ"),
+    "OZEM": ("肥満・GLP-1", "ヘルスケア・バイオ"),
+}
+SA_URL = "https://stockanalysis.com/etf/{t}/holdings/"
+
 # --- ARK(イノベーション系テーマ): file stem -> (日本語テーマ名, カテゴリ) ---
 ARK_THEMES = {
     "ARK_INNOVATION_ETF_ARKK_HOLDINGS": ("破壊的イノベーション", "その他成長"),
@@ -121,6 +164,41 @@ def parse_ark(raw):
     return out
 
 
+def parse_sa(raw):
+    """stockanalysis.com の holdings ページ(上位25構成銘柄のHTMLテーブル)を解析。"""
+    html = raw.decode("utf-8", "ignore")
+    try:
+        tbls = pd.read_html(io.StringIO(html))
+    except Exception:
+        return []
+    df = None
+    for t in tbls:
+        cols = [str(c) for c in t.columns]
+        if any("Symbol" in c for c in cols) and any("Name" in c for c in cols):
+            df = t
+            break
+    if df is None:
+        return []
+    cn = {str(c): c for c in df.columns}
+    c_sym = next((cn[c] for c in cn if "Symbol" in c), None)
+    c_nm = next((cn[c] for c in cn if "Name" in c), None)
+    c_w = next((cn[c] for c in cn if "Weight" in c or "%" in c), None)
+    out = []
+    for _, r in df.iterrows():
+        tk = norm_ticker(r.get(c_sym))
+        nm = str(r.get(c_nm)).strip()
+        if not SYM_RE.match(tk) or nm in ("nan", ""):
+            continue
+        wt = None
+        if c_w is not None:
+            try:
+                wt = float(str(r.get(c_w)).replace("%", "").replace(",", ""))
+            except Exception:
+                wt = None
+        out.append((tk, nm, wt))
+    return out
+
+
 def main():
     rows = []
     for t, (theme, cat) in SSGA_THEMES.items():
@@ -139,6 +217,17 @@ def main():
             print(f"  ARK  {theme:16s} {len(hs)} 銘柄")
         except Exception as e:
             print(f"  ARK {f} 失敗: {e}", file=sys.stderr)
+
+    import time
+    for tk_etf, (theme, cat) in SA_THEMES.items():
+        try:
+            hs = parse_sa(_get(SA_URL.format(t=tk_etf)))
+            for tk, nm, wt in hs:
+                rows.append({"theme": theme, "category": cat, "ticker": tk, "name": nm, "weight": wt})
+            print(f"  SA   {tk_etf:5s} {theme:16s} {len(hs)} 銘柄")
+            time.sleep(0.5)
+        except Exception as e:
+            print(f"  SA {tk_etf} 失敗: {e}", file=sys.stderr)
 
     df = pd.DataFrame(rows)
     # 同一(theme,ticker)重複除去。name はETF表記のまま(後段でユニバース名に寄せる)

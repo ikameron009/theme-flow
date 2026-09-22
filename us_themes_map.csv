@@ -1,4 +1,187 @@
 ﻿theme,category,ticker,name,weight
+5G・通信インフラ,通信,AAPL,Apple Inc.,3.83
+5G・通信インフラ,通信,ANET,"Arista Networks, Inc.",1.88
+5G・通信インフラ,通信,ARM,Arm Holdings plc,2.76
+5G・通信インフラ,通信,ASTS,"AST SpaceMobile, Inc.",3.48
+5G・通信インフラ,通信,ATEN,"A10 Networks, Inc.",1.52
+5G・通信インフラ,通信,AVGO,Broadcom Inc.,3.82
+5G・通信インフラ,通信,CEVA,"CEVA, Inc.",2.02
+5G・通信インフラ,通信,CRDO,Credo Technology Group Holding Ltd,2.22
+5G・通信インフラ,通信,CSCO,"Cisco Systems, Inc.",3.35
+5G・通信インフラ,通信,DDOG,"Datadog, Inc.",2.09
+5G・通信インフラ,通信,DOCN,"DigitalOcean Holdings, Inc.",1.98
+5G・通信インフラ,通信,ECHO,EchoStar Corporation,1.69
+5G・通信インフラ,通信,EXTR,"Extreme Networks, Inc.",1.9
+5G・通信インフラ,通信,MRVL,"Marvell Technology, Inc.",3.8
+5G・通信インフラ,通信,MTSI,"MACOM Technology Solutions Holdings, Inc.",1.54
+5G・通信インフラ,通信,MXL,"MaxLinear, Inc.",6.47
+5G・通信インフラ,通信,NAN,"Mount Vernon Liquid Assets Portfolio, LLC",19.53
+5G・通信インフラ,通信,NOK,Nokia Oyj,1.83
+5G・通信インフラ,通信,NVDA,NVIDIA Corporation,3.71
+5G・通信インフラ,通信,ORCL,Oracle Corporation,2.03
+5G・通信インフラ,通信,PL,Planet Labs PBC,1.68
+5G・通信インフラ,通信,QCOM,QUALCOMM Incorporated,2.0
+5G・通信インフラ,通信,RKLB,Rocket Lab Corporation,4.88
+5G・通信インフラ,通信,SPCX,Space Exploration Technologies Corp.,5.24
+5G・通信インフラ,通信,VSAT,"Viasat, Inc.",1.69
+AI・ロボティクス,ロボット・FA・機械,AI,"C3.ai, Inc.",1.43
+AI・ロボティクス,ロボット・FA・機械,APPN,Appian Corporation,2.33
+AI・ロボティクス,ロボット・FA・機械,CCC,CCC Intelligent Solutions Holdings Inc.,2.01
+AI・ロボティクス,ロボット・FA・機械,CRM,"Salesforce, Inc.",1.82
+AI・ロボティクス,ロボット・FA・機械,DT,"Dynatrace, Inc.",1.88
+AI・ロボティクス,ロボット・FA・機械,ILMN,"Illumina, Inc.",2.15
+AI・ロボティクス,ロボット・FA・機械,META,"Meta Platforms, Inc.",1.54
+AI・ロボティクス,ロボット・FA・機械,NET,"Cloudflare, Inc.",1.98
+AI・ロボティクス,ロボット・FA・機械,NOW,"ServiceNow, Inc.",1.59
+AI・ロボティクス,ロボット・FA・機械,NSY-DE,NICE Ltd ADR,1.63
+AI・ロボティクス,ロボット・FA・機械,OII,"Oceaneering International, Inc.",1.73
+AI・ロボティクス,ロボット・FA・機械,PANW,"Palo Alto Networks, Inc.",1.91
+AI・ロボティクス,ロボット・FA・機械,PATH,"UiPath, Inc.",1.68
+AI・ロボティクス,ロボット・FA・機械,PEGA,Pegasystems Inc.,1.44
+AI・ロボティクス,ロボット・FA・機械,PLTR,Palantir Technologies Inc.,1.61
+AI・ロボティクス,ロボット・FA・機械,RXRX,"Recursion Pharmaceuticals, Inc.",1.41
+AI・ロボティクス,ロボット・FA・機械,S,"SentinelOne, Inc.",2.01
+AI・ロボティクス,ロボット・FA・機械,TEM,"Tempus AI, Inc.",2.28
+AI・ロボティクス,ロボット・FA・機械,WDAY,"Workday, Inc.",1.95
+EV・自動運転,モビリティ,ALB,Albemarle Corporation,3.45
+EV・自動運転,モビリティ,ALV,"Autoliv, Inc.",3.47
+EV・自動運転,モビリティ,AUR,"Aurora Innovation, Inc.",3.23
+EV・自動運転,モビリティ,GNTX,Gentex Corporation,1.87
+EV・自動運転,モビリティ,LEA,Lear Corporation,2.39
+EV・自動運転,モビリティ,RIVN,"Rivian Automotive, Inc.",4.43
+EV・自動運転,モビリティ,TSLA,"Tesla, Inc.",4.5
+EV・自動運転,モビリティ,XTSLA,BLK CSH FND TREASURY SL AGENCY,10.93
+Eコマース,消費・小売・インバウンド,ABNB,"Airbnb, Inc.",2.86
+Eコマース,消費・小売・インバウンド,AFRM,"Affirm Holdings, Inc.",2.58
+Eコマース,消費・小売・インバウンド,AMZN,"Amazon.com, Inc.",2.2
+Eコマース,消費・小売・インバウンド,BKNG,Booking Holdings Inc.,2.44
+Eコマース,消費・小売・インバウンド,CART,Maplebear Inc.,2.72
+Eコマース,消費・小売・インバウンド,CHWY,"Chewy, Inc.",2.05
+Eコマース,消費・小売・インバウンド,CPRT,"Copart, Inc.",2.14
+Eコマース,消費・小売・インバウンド,CVNA,Carvana Co.,2.04
+Eコマース,消費・小売・インバウンド,DASH,"DoorDash, Inc.",2.79
+Eコマース,消費・小売・インバウンド,EBAY,eBay Inc.,2.51
+Eコマース,消費・小売・インバウンド,ETSY,"Etsy, Inc.",2.68
+Eコマース,消費・小売・インバウンド,EXPE,"Expedia Group, Inc.",2.78
+Eコマース,消費・小売・インバウンド,FIGS,"FIGS, Inc.",2.17
+Eコマース,消費・小売・インバウンド,HIMS,"Hims & Hers Health, Inc.",2.5
+Eコマース,消費・小売・インバウンド,LQDT,"Liquidity Services, Inc.",2.79
+Eコマース,消費・小売・インバウンド,LYFT,"Lyft, Inc.",2.62
+Eコマース,消費・小売・インバウンド,MSM,"MSC Industrial Direct Co., Inc.",2.79
+Eコマース,消費・小売・インバウンド,NAN,OTHER ASSETS AND LIABILITIES,2.78
+Eコマース,消費・小売・インバウンド,PTON,"Peloton Interactive, Inc.",2.27
+Eコマース,消費・小売・インバウンド,PYPL,"PayPal Holdings, Inc.",2.75
+Eコマース,消費・小売・インバウンド,RVLV,"Revolve Group, Inc.",2.49
+Eコマース,消費・小売・インバウンド,SPOT,Spotify Technology S.A.,2.99
+Eコマース,消費・小売・インバウンド,UBER,"Uber Technologies, Inc.",2.16
+Eコマース,消費・小売・インバウンド,UPWK,Upwork Inc.,2.03
+Eコマース,消費・小売・インバウンド,W,Wayfair Inc.,3.74
+IoT,半導体・電子,ADI,"Analog Devices, Inc.",1.84
+IoT,半導体・電子,ADT,ADT Inc.,1.75
+IoT,半導体・電子,BDC,Belden Inc.,1.43
+IoT,半導体・電子,CSCO,"Cisco Systems, Inc.",2.22
+IoT,半導体・電子,DXCM,"DexCom, Inc.",6.14
+IoT,半導体・電子,EMR,Emerson Electric Co.,1.71
+IoT,半導体・電子,GRMN,Garmin Ltd.,5.54
+IoT,半導体・電子,IBM,International Business Machines Corporation,1.45
+IoT,半導体・電子,IOT,Samsara Inc.,4.7
+IoT,半導体・電子,ITRI,"Itron, Inc.",1.35
+IoT,半導体・電子,JCI,Johnson Controls International plc,1.69
+IoT,半導体・電子,LSCC,Lattice Semiconductor Corporation,5.04
+IoT,半導体・電子,NXPI,NXP Semiconductors N.V.,1.32
+IoT,半導体・電子,PI,"Impinj, Inc.",1.82
+IoT,半導体・電子,QCOM,QUALCOMM Incorporated,2.1
+IoT,半導体・電子,RMBS,Rambus Inc.,3.13
+IoT,半導体・電子,SLAB,Silicon Laboratories Inc.,2.41
+IoT,半導体・電子,ST,Sensata Technologies Holding plc,2.03
+IoT,半導体・電子,SWKS,"Skyworks Solutions, Inc.",4.43
+アグリビジネス,素材・資源,ADM,Archer-Daniels-Midland Company,5.36
+アグリビジネス,素材・資源,AGCO,AGCO Corporation,1.76
+アグリビジネス,素材・資源,BG,Bunge Global SA,3.45
+アグリビジネス,素材・資源,CF,"CF Industries Holdings, Inc.",4.96
+アグリビジネス,素材・資源,CNH,CNH Industrial N.V.,2.85
+アグリビジネス,素材・資源,CTVA,"Corteva, Inc.",7.88
+アグリビジネス,素材・資源,DAR,Darling Ingredients Inc.,2.72
+アグリビジネス,素材・資源,DE,Deere & Company,8.81
+アグリビジネス,素材・資源,ELAN,Elanco Animal Health Incorporated,1.27
+アグリビジネス,素材・資源,MOS,The Mosaic Company,1.83
+アグリビジネス,素材・資源,TSN,"Tyson Foods, Inc.",3.65
+アグリビジネス,素材・資源,TTC,The Toro Company,2.12
+アグリビジネス,素材・資源,ZTS,Zoetis Inc.,4.85
+オンライン賭博,消費・小売・インバウンド,AUD,AUSTRALIAN DOLLAR,0.04
+オンライン賭博,消費・小売・インバウンド,CDRO,"Codere Online Luxembourg, S.A.",0.11
+オンライン賭博,消費・小売・インバウンド,EVO-SS,Evolution AB,17.58
+オンライン賭博,消費・小売・インバウンド,GENI,Genius Sports Limited,1.59
+オンライン賭博,消費・小売・インバウンド,JPY,Lazard Japanese Equity ETF,0.0
+オンライン賭博,消費・小売・インバウンド,LNW-AU,Light & Wonder Inc,6.77
+オンライン賭博,消費・小売・インバウンド,RSI,"Rush Street Interactive, Inc.",5.65
+オンライン賭博,消費・小売・インバウンド,SGHC,Super Group (SGHC) Limited,7.03
+オンライン賭博,消費・小売・インバウンド,SRAD,Sportradar Group AG,4.05
+オンライン賭博,消費・小売・インバウンド,TAH-AU,Tabcorp Holdings Ltd,1.49
+クラウド,AI・ソフト・データ,AMZN,"Amazon.com, Inc.",2.98
+クラウド,AI・ソフト・データ,ANET,"Arista Networks, Inc.",4.02
+クラウド,AI・ソフト・データ,CRM,"Salesforce, Inc.",2.04
+クラウド,AI・ソフト・データ,CRWV,"CoreWeave, Inc.",1.95
+クラウド,AI・ソフト・データ,CSCO,"Cisco Systems, Inc.",1.96
+クラウド,AI・ソフト・データ,DELL,Dell Technologies Inc.,2.24
+クラウド,AI・ソフト・データ,DOCN,"DigitalOcean Holdings, Inc.",2.74
+クラウド,AI・ソフト・データ,FSLY,"Fastly, Inc.",2.04
+クラウド,AI・ソフト・データ,GOOGL,Alphabet Inc.,2.93
+クラウド,AI・ソフト・データ,GTLB,GitLab Inc.,2.6
+クラウド,AI・ソフト・データ,HPE,Hewlett Packard Enterprise Company,2.28
+クラウド,AI・ソフト・データ,IBM,International Business Machines Corporation,2.56
+クラウド,AI・ソフト・データ,MDB,"MongoDB, Inc.",3.14
+クラウド,AI・ソフト・データ,MSFT,Microsoft Corporation,3.55
+クラウド,AI・ソフト・データ,NET,"Cloudflare, Inc.",2.96
+クラウド,AI・ソフト・データ,NTAP,"NetApp, Inc.",1.81
+クラウド,AI・ソフト・データ,NTNX,"Nutanix, Inc.",4.31
+クラウド,AI・ソフト・データ,NTSK,"Netskope, Inc.",1.93
+クラウド,AI・ソフト・データ,ORCL,Oracle Corporation,2.14
+クラウド,AI・ソフト・データ,P,"Everpure, Inc.",4.2
+クラウド,AI・ソフト・データ,RBRK,"Rubrik, Inc.",2.2
+クラウド,AI・ソフト・データ,RNG,"RingCentral, Inc.",2.25
+クラウド,AI・ソフト・データ,TEAM,Atlassian Corporation,2.87
+クラウド,AI・ソフト・データ,TWLO,Twilio Inc.,2.07
+クラウド,AI・ソフト・データ,WK,Workiva Inc.,2.14
+クリーンエネルギー,エネルギー,ACA,ARCOSA INC,4.002097
+クリーンエネルギー,エネルギー,AES,AES CORP,3.409525
+クリーンエネルギー,エネルギー,AMRC,AMERESCO INC CL A,3.140602
+クリーンエネルギー,エネルギー,AMSC,AMERICAN SUPERCONDUCTOR CORP,2.194278
+クリーンエネルギー,エネルギー,ARRY,ARRAY TECHNOLOGIES INC,2.001841
+クリーンエネルギー,エネルギー,AVA,AVISTA CORP,2.86348
+クリーンエネルギー,エネルギー,BE,BLOOM ENERGY CORP  A,3.918715
+クリーンエネルギー,エネルギー,BLDP,BALLARD POWER SYSTEMS INC,1.709032
+クリーンエネルギー,エネルギー,CEG,CONSTELLATION ENERGY,3.636288
+クリーンエネルギー,エネルギー,CIG,CIA ENERGETICA DE SPON ADR,3.527355
+クリーンエネルギー,エネルギー,CSIQ,CANADIAN SOLAR INC,2.596908
+クリーンエネルギー,エネルギー,DQ,DAQO NEW ENERGY CORP ADR,2.790399
+クリーンエネルギー,エネルギー,ENIC,ENEL CHILE SA ADR,0.89348
+クリーンエネルギー,エネルギー,ENLT,ENLIGHT RENEWABLE ENERGY LTD,2.816377
+クリーンエネルギー,エネルギー,ENPH,ENPHASE ENERGY INC,2.311714
+クリーンエネルギー,エネルギー,EOSE,EOS ENERGY ENTERPRISES INC,2.260841
+クリーンエネルギー,エネルギー,FCEL,FUELCELL ENERGY INC,3.726589
+クリーンエネルギー,エネルギー,FLNC,FLUENCE ENERGY INC,0.911962
+クリーンエネルギー,エネルギー,FSLR,FIRST SOLAR INC,2.698874
+クリーンエネルギー,エネルギー,GEV,GE VERNOVA INC,3.678833
+クリーンエネルギー,エネルギー,GLW,CORNING INC,2.511325
+クリーンエネルギー,エネルギー,GNRC,GENERAC HOLDINGS INC,2.879305
+クリーンエネルギー,エネルギー,HY,HYSTER YALE INC,0.927434
+クリーンエネルギー,エネルギー,JKS,JINKOSOLAR HOLDING CO ADR,2.032994
+クリーンエネルギー,エネルギー,NEE,NEXTERA ENERGY INC,3.147653
+クリーンエネルギー,エネルギー,NRGV,ENERGY VAULT HOLDINGS INC,3.66003
+クリーンエネルギー,エネルギー,NXT,NEXTPOWER INC,2.506109
+クリーンエネルギー,エネルギー,ORA,ORMAT TECHNOLOGIES INC,2.373942
+クリーンエネルギー,エネルギー,PLUG,PLUG POWER INC,2.464104
+クリーンエネルギー,エネルギー,RNW,RENEW ENERGY GLOBAL PLC A,1.691282
+クリーンエネルギー,エネルギー,RUN,SUNRUN INC,2.483431
+クリーンエネルギー,エネルギー,SEDG,SOLAREDGE TECHNOLOGIES INC,2.201818
+クリーンエネルギー,エネルギー,SHLS,SHOALS TECHNOLOGIES GROUP  A,2.84827
+クリーンエネルギー,エネルギー,TAC,TRANSALTA CORP,3.34444
+クリーンエネルギー,エネルギー,TE,T1 ENERGY INC,1.941099
+クリーンエネルギー,エネルギー,TS,TENARIS SA ADR,2.430282
+クリーンエネルギー,エネルギー,TSLA,TESLA INC,2.618275
+クリーンエネルギー,エネルギー,TYGO,TIGO ENERGY INC,0.246674
+クリーンエネルギー,エネルギー,VMI,VALMONT INDUSTRIES,2.438641
 ゲノム・バイオ革命,ヘルスケア・バイオ,ABSI,ABSCI CORP,4.81
 ゲノム・バイオ革命,ヘルスケア・バイオ,ADPT,ADAPTIVE BIOTECHNOLOGIES,2.35
 ゲノム・バイオ革命,ヘルスケア・バイオ,ALMR,ALAMAR BIOSCIENCES INC,1.6
@@ -30,6 +213,193 @@
 ゲノム・バイオ革命,ヘルスケア・バイオ,TXG,10X GENOMICS INC-CLASS A,9.51
 ゲノム・バイオ革命,ヘルスケア・バイオ,VCYT,VERACYTE INC,1.97
 ゲノム・バイオ革命,ヘルスケア・バイオ,WGS,GENEDX HOLDINGS CORP,2.33
+ゲノム医療,ヘルスケア・バイオ,ABCL,AbCellera Biologics Inc.,2.73
+ゲノム医療,ヘルスケア・バイオ,BNTX,BioNTech SE,3.2
+ゲノム医療,ヘルスケア・バイオ,CAI,"Caris Life Sciences, Inc.",3.39
+ゲノム医療,ヘルスケア・バイオ,CRSP,CRISPR Therapeutics AG,1.5
+ゲノム医療,ヘルスケア・バイオ,EXEL,"Exelixis, Inc.",3.25
+ゲノム医療,ヘルスケア・バイオ,IBRX,"ImmunityBio, Inc.",2.94
+ゲノム医療,ヘルスケア・バイオ,IDYA,"IDEAYA Biosciences, Inc.",2.94
+ゲノム医療,ヘルスケア・バイオ,INCY,Incyte Corporation,3.6
+ゲノム医療,ヘルスケア・バイオ,IOVA,"Iovance Biotherapeutics, Inc.",3.67
+ゲノム医療,ヘルスケア・バイオ,MRK,"Merck & Co., Inc.",3.57
+ゲノム医療,ヘルスケア・バイオ,MRNA,"Moderna, Inc.",9.54
+ゲノム医療,ヘルスケア・バイオ,NVAX,"Novavax, Inc.",1.46
+ゲノム医療,ヘルスケア・バイオ,RCUS,"Arcus Biosciences, Inc.",1.95
+ゲノム医療,ヘルスケア・バイオ,REGN,"Regeneron Pharmaceuticals, Inc.",3.63
+ゲノム医療,ヘルスケア・バイオ,RVMD,"Revolution Medicines, Inc.",3.76
+ゲノム医療,ヘルスケア・バイオ,TWST,Twist Bioscience Corporation,7.09
+ゲノム医療,ヘルスケア・バイオ,VRTX,Vertex Pharmaceuticals Incorporated,3.34
+ゲーム・eスポーツ,消費・小売・インバウンド,GME,GameStop Corp.,4.37
+ゲーム・eスポーツ,消費・小売・インバウンド,NAN,Us Dollar,0.24
+ゲーム・eスポーツ,消費・小売・インバウンド,NTES,"NetEase, Inc.",7.1
+ゲーム・eスポーツ,消費・小売・インバウンド,RBLX,Roblox Corporation,6.02
+ゲーム・eスポーツ,消費・小売・インバウンド,TTWO,"Take-Two Interactive Software, Inc.",5.74
+ゲーム・eスポーツ,消費・小売・インバウンド,U,Unity Software Inc.,6.75
+サイバーセキュリティ,AI・ソフト・データ,ACN,Accenture plc,1.79
+サイバーセキュリティ,AI・ソフト・データ,AKAM,"Akamai Technologies, Inc.",2.27
+サイバーセキュリティ,AI・ソフト・データ,ANET,"Arista Networks, Inc.",2.2
+サイバーセキュリティ,AI・ソフト・データ,AVGO,Broadcom Inc.,5.46
+サイバーセキュリティ,AI・ソフト・データ,CHKP,Check Point Software Technologies Ltd.,1.97
+サイバーセキュリティ,AI・ソフト・データ,CRWD,"CrowdStrike Holdings, Inc.",9.45
+サイバーセキュリティ,AI・ソフト・データ,CSCO,"Cisco Systems, Inc.",6.43
+サイバーセキュリティ,AI・ソフト・データ,DDOG,"Datadog, Inc.",1.68
+サイバーセキュリティ,AI・ソフト・データ,DT,"Dynatrace, Inc.",2.3
+サイバーセキュリティ,AI・ソフト・データ,FFIV,"F5, Inc.",3.15
+サイバーセキュリティ,AI・ソフト・データ,FROG,JFrog Ltd.,2.0
+サイバーセキュリティ,AI・ソフト・データ,FTNT,"Fortinet, Inc.",8.79
+サイバーセキュリティ,AI・ソフト・データ,GEN,Gen Digital Inc.,2.29
+サイバーセキュリティ,AI・ソフト・データ,GOOGL,Alphabet Inc.,1.6
+サイバーセキュリティ,AI・ソフト・データ,IBM,International Business Machines Corporation,1.4
+サイバーセキュリティ,AI・ソフト・データ,INFY,Infosys Limited,1.54
+サイバーセキュリティ,AI・ソフト・データ,LDOS,"Leidos Holdings, Inc.",1.8
+サイバーセキュリティ,AI・ソフト・データ,MSFT,Microsoft Corporation,1.94
+サイバーセキュリティ,AI・ソフト・データ,NET,"Cloudflare, Inc.",4.85
+サイバーセキュリティ,AI・ソフト・データ,NTAP,"NetApp, Inc.",1.98
+サイバーセキュリティ,AI・ソフト・データ,OKTA,"Okta, Inc.",4.33
+サイバーセキュリティ,AI・ソフト・データ,PANW,"Palo Alto Networks, Inc.",9.36
+サイバーセキュリティ,AI・ソフト・データ,RBRK,"Rubrik, Inc.",3.17
+サイバーセキュリティ,AI・ソフト・データ,ZS,"Zscaler, Inc.",3.76
+スマートインフラ,産業・インフラ,ADIG,ADI GLOBAL DISTRIB,0.948499
+スマートインフラ,産業・インフラ,ADT,ADT INC,2.689381
+スマートインフラ,産業・インフラ,ALLE,ALLEGION PLC,1.875633
+スマートインフラ,産業・インフラ,ALRM,ALARM.COM HOLDINGS INC,3.133882
+スマートインフラ,産業・インフラ,AME,AMETEK INC,1.743017
+スマートインフラ,産業・インフラ,AMRC,AMERESCO INC CL A,2.541502
+スマートインフラ,産業・インフラ,ARLO,ARLO TECHNOLOGIES INC,2.945043
+スマートインフラ,産業・インフラ,AYI,ACUITY INC,1.751307
+スマートインフラ,産業・インフラ,BCE,BCE INC,1.426256
+スマートインフラ,産業・インフラ,BE,BLOOM ENERGY CORP  A,3.172135
+スマートインフラ,産業・インフラ,BIDU,BAIDU INC   SPON ADR,1.25838
+スマートインフラ,産業・インフラ,BMI,BADGER METER INC,2.786385
+スマートインフラ,産業・インフラ,BP,BP PLC SPONS ADR,1.610284
+スマートインフラ,産業・インフラ,CARR,CARRIER GLOBAL CORP,1.2878
+スマートインフラ,産業・インフラ,CEVA,CEVA INC,1.25825
+スマートインフラ,産業・インフラ,CHPT,CHARGEPOINT HOLDINGS INC,1.170661
+スマートインフラ,産業・インフラ,CNM,CORE + MAIN INC CLASS A,1.395634
+スマートインフラ,産業・インフラ,CWCO,CONSOLIDATED WATER CO ORD SH,1.226644
+スマートインフラ,産業・インフラ,CWEN,CLEARWAY ENERGY INC C,1.32375
+スマートインフラ,産業・インフラ,DD,DUPONT DE NEMOURS INC,1.538756
+スマートインフラ,産業・インフラ,ENPH,ENPHASE ENERGY INC,1.10163
+スマートインフラ,産業・インフラ,ERII,ENERGY RECOVERY INC,2.416087
+スマートインフラ,産業・インフラ,EVGO,EVGO INC,1.875128
+スマートインフラ,産業・インフラ,FCEL,FUELCELL ENERGY INC,1.775649
+スマートインフラ,産業・インフラ,FLNC,FLUENCE ENERGY INC,0.545403
+スマートインフラ,産業・インフラ,GNRC,GENERAC HOLDINGS INC,2.332554
+スマートインフラ,産業・インフラ,GNTX,GENTEX CORP,1.43992
+スマートインフラ,産業・インフラ,HIMX,HIMAX TECHNOLOGIES INC ADR,1.442665
+スマートインフラ,産業・インフラ,HON,HONEYWELL INTERNATIONAL INC,0.800057
+スマートインフラ,産業・インフラ,HONA,HONEYWELL AEROSPACE INC,0.654948
+スマートインフラ,産業・インフラ,HWKN,HAWKINS INC,2.219955
+スマートインフラ,産業・インフラ,ITRI,ITRON INC,3.156834
+スマートインフラ,産業・インフラ,JCI,JOHNSON CONTROLS INTERNATION,2.835672
+スマートインフラ,産業・インフラ,MWA,MUELLER WATER PRODUCTS INC A,1.370076
+スマートインフラ,産業・インフラ,NRG,NRG ENERGY INC,1.371698
+スマートインフラ,産業・インフラ,NSSC,NAPCO SECURITY TECHNOLOGIES,1.629293
+スマートインフラ,産業・インフラ,ON,ON SEMICONDUCTOR,1.043423
+スマートインフラ,産業・インフラ,PNR,PENTAIR PLC,2.126669
+スマートインフラ,産業・インフラ,PSN,PARSONS CORP,1.286385
+スマートインフラ,産業・インフラ,REZI,RESIDEO TECHNOLOGIES INC,1.705667
+スマートインフラ,産業・インフラ,ROKU,ROKU INC,2.115527
+スマートインフラ,産業・インフラ,ROP,ROPER TECHNOLOGIES INC,1.754206
+スマートインフラ,産業・インフラ,SHEL,SHELL PLC ADR,1.736525
+スマートインフラ,産業・インフラ,SHLS,SHOALS TECHNOLOGIES GROUP  A,2.305536
+スマートインフラ,産業・インフラ,SLAB,SILICON LABORATORIES INC,2.758521
+スマートインフラ,産業・インフラ,SMRT,SMARTRENT INC,0.397965
+スマートインフラ,産業・インフラ,SU,SUNCOR ENERGY INC,1.735279
+スマートインフラ,産業・インフラ,TEL,TE CONNECTIVITY PLC,1.665853
+スマートインフラ,産業・インフラ,TSLA,TESLA INC,2.675162
+スマートインフラ,産業・インフラ,TTEK,TETRA TECH INC,3.605203
+スマートインフラ,産業・インフラ,VLTO,VERALTO CORP,3.135943
+スマートインフラ,産業・インフラ,WTTR,SELECT WATER SOLUTIONS INC,3.047205
+スマートインフラ,産業・インフラ,XYL,XYLEM INC,2.724448
+スマートモビリティ・自動運転,モビリティ,AEVA,AEVA TECHNOLOGIES INC,1.05768
+スマートモビリティ・自動運転,モビリティ,AIOT,POWERFLEET INC,0.758598
+スマートモビリティ・自動運転,モビリティ,ALGM,ALLEGRO MICROSYSTEMS INC,1.251894
+スマートモビリティ・自動運転,モビリティ,ALSN,ALLISON TRANSMISSION HOLDING,1.634426
+スマートモビリティ・自動運転,モビリティ,AMBA,AMBARELLA INC,1.720739
+スマートモビリティ・自動運転,モビリティ,APTV,APTIV PLC,0.683145
+スマートモビリティ・自動運転,モビリティ,ASPN,ASPEN AEROGELS INC,1.493047
+スマートモビリティ・自動運転,モビリティ,AUR,AURORA INNOVATION INC,1.684294
+スマートモビリティ・自動運転,モビリティ,BIDU,BAIDU INC   SPON ADR,0.802203
+スマートモビリティ・自動運転,モビリティ,BLBD,BLUE BIRD CORP,0.872207
+スマートモビリティ・自動運転,モビリティ,BLDP,BALLARD POWER SYSTEMS INC,0.793419
+スマートモビリティ・自動運転,モビリティ,BWA,BORGWARNER INC,1.390004
+スマートモビリティ・自動運転,モビリティ,CAR,AVIS BUDGET GROUP INC,0.983515
+スマートモビリティ・自動運転,モビリティ,CMI,CUMMINS INC,1.327178
+スマートモビリティ・自動運転,モビリティ,DAN,DANA INC,1.323913
+スマートモビリティ・自動運転,モビリティ,DCH,DAUCH CORPORATION,1.531456
+スマートモビリティ・自動運転,モビリティ,E,ENI SPA SPONSORED ADR,1.006306
+スマートモビリティ・自動運転,モビリティ,ECX,ECARX HOLDINGS INC CL A,0.91404
+スマートモビリティ・自動運転,モビリティ,EH,EHANG HOLDINGS LTD SPS ADR,1.085597
+スマートモビリティ・自動運転,モビリティ,ELVA,ELECTROVAYA INC,0.754686
+スマートモビリティ・自動運転,モビリティ,EMBJ,EMBRAER SA SPON ADR,1.456144
+スマートモビリティ・自動運転,モビリティ,ENPH,ENPHASE ENERGY INC,0.702497
+スマートモビリティ・自動運転,モビリティ,F,FORD MOTOR CO,0.941136
+スマートモビリティ・自動運転,モビリティ,GM,GENERAL MOTORS CO,1.65523
+スマートモビリティ・自動運転,モビリティ,GOOG,ALPHABET INC CL C,1.01493
+スマートモビリティ・自動運転,モビリティ,GRAB,GRAB HOLDINGS LTD   CL A,0.90928
+スマートモビリティ・自動運転,モビリティ,GTX,GARRETT MOTION INC,0.843629
+スマートモビリティ・自動運転,モビリティ,HEI,HEICO CORP,0.964534
+スマートモビリティ・自動運転,モビリティ,HII,HUNTINGTON INGALLS INDUSTRIE,0.975623
+スマートモビリティ・自動運転,モビリティ,HMC,HONDA MOTOR CO LTD SPONS ADR,1.950544
+スマートモビリティ・自動運転,モビリティ,HSAI,HESAI GROUP,1.550732
+スマートモビリティ・自動運転,モビリティ,HY,HYSTER YALE INC,0.847977
+スマートモビリティ・自動運転,モビリティ,INDI,INDIE SEMICONDUCTOR INC A,1.279697
+スマートモビリティ・自動運転,モビリティ,IOT,SAMSARA INC CL A,1.186104
+スマートモビリティ・自動運転,モビリティ,IRDM,IRIDIUM COMMUNICATIONS INC,1.079966
+スマートモビリティ・自動運転,モビリティ,ITRN,ITURAN LOCATION AND CONTROL,1.297814
+スマートモビリティ・自動運転,モビリティ,JOBY,JOBY AVIATION INC,1.132444
+スマートモビリティ・自動運転,モビリティ,KARO,KAROOOOO LTD,1.393667
+スマートモビリティ・自動運転,モビリティ,KDK,KODIAK AI INC,0.883881
+スマートモビリティ・自動運転,モビリティ,KULR,KULR TECHNOLOGY GROUP INC,0.702676
+スマートモビリティ・自動運転,モビリティ,LCID,LUCID GROUP INC,1.436779
+スマートモビリティ・自動運転,モビリティ,LEA,LEAR CORP,0.874643
+スマートモビリティ・自動運転,モビリティ,LI,LI AUTO INC   ADR,1.317389
+スマートモビリティ・自動運転,モビリティ,LTRX,LANTRONIX INC,0.979135
+スマートモビリティ・自動運転,モビリティ,LYFT,LYFT INC A,1.78521
+スマートモビリティ・自動運転,モビリティ,MBLY,MOBILEYE GLOBAL INC A,1.368682
+スマートモビリティ・自動運転,モビリティ,MGA,MAGNA INTERNATIONAL INC,1.005555
+スマートモビリティ・自動運転,モビリティ,MOD,MODINE MANUFACTURING CO,0.782753
+スマートモビリティ・自動運転,モビリティ,MT,ARCELORMITTAL NY REGISTERED,1.156449
+スマートモビリティ・自動運転,モビリティ,MVST,MICROVAST HOLDINGS INC,0.903248
+スマートモビリティ・自動運転,モビリティ,NBIS,NEBIUS GROUP NV,1.119782
+スマートモビリティ・自動運転,モビリティ,NIO,NIO INC ADR,1.109098
+スマートモビリティ・自動運転,モビリティ,NIU,NIU TECHNOLOGIES SPONS ADR,0.338759
+スマートモビリティ・自動運転,モビリティ,NVDA,NVIDIA CORP,1.777592
+スマートモビリティ・自動運転,モビリティ,NXPI,NXP SEMICONDUCTORS NV,0.827607
+スマートモビリティ・自動運転,モビリティ,ON,ON SEMICONDUCTOR,1.01843
+スマートモビリティ・自動運転,モビリティ,ONDS,ONDAS INC,0.80999
+スマートモビリティ・自動運転,モビリティ,OSK,OSHKOSH CORP,1.153895
+スマートモビリティ・自動運転,モビリティ,OUST,OUSTER INC,1.011401
+スマートモビリティ・自動運転,モビリティ,PCAR,PACCAR INC,1.028291
+スマートモビリティ・自動運転,モビリティ,PLUG,PLUG POWER INC,1.143961
+スマートモビリティ・自動運転,モビリティ,PONY,PONY AI INC,1.32109
+スマートモビリティ・自動運転,モビリティ,PSNY,POLESTAR AUTOMOTIVE CL A ADS,0.302073
+スマートモビリティ・自動運転,モビリティ,QCOM,QUALCOMM INC,1.589728
+スマートモビリティ・自動運転,モビリティ,RCAT,RED CAT HOLDINGS INC,1.002021
+スマートモビリティ・自動運転,モビリティ,RIVN,RIVIAN AUTOMOTIVE INC A,1.628865
+スマートモビリティ・自動運転,モビリティ,SEDG,SOLAREDGE TECHNOLOGIES INC,0.667782
+スマートモビリティ・自動運転,モビリティ,SERV,SERVE ROBOTICS INC,0.650332
+スマートモビリティ・自動運転,モビリティ,SES,SES AI CORP,0.841759
+スマートモビリティ・自動運転,モビリティ,SLDP,SOLID POWER INC,1.401502
+スマートモビリティ・自動運転,モビリティ,ST,SENSATA TECHNOLOGIES HOLDPLC,0.909305
+スマートモビリティ・自動運転,モビリティ,STLA,STELLANTIS NV,0.748322
+スマートモビリティ・自動運転,モビリティ,STM,STMICROELECTRONICS NV NY SHS,1.142981
+スマートモビリティ・自動運転,モビリティ,THRM,GENTHERM INC,1.05719
+スマートモビリティ・自動運転,モビリティ,TM,TOYOTA MOTOR CORP  SPON ADR,1.143183
+スマートモビリティ・自動運転,モビリティ,TRMB,TRIMBLE INC,1.166173
+スマートモビリティ・自動運転,モビリティ,TSLA,TESLA INC,1.54204
+スマートモビリティ・自動運転,モビリティ,TXT,TEXTRON INC,0.888355
+スマートモビリティ・自動運転,モビリティ,UBER,UBER TECHNOLOGIES INC,1.616014
+スマートモビリティ・自動運転,モビリティ,UMAC,UNUSUAL MACHINES INC /US,1.661179
+スマートモビリティ・自動運転,モビリティ,VC,VISTEON CORP,0.797909
+スマートモビリティ・自動運転,モビリティ,VFS,VINFAST AUTO LTD,0.939853
+スマートモビリティ・自動運転,モビリティ,VIA,VIA TRANSPORTATION INC CL A,2.904074
+スマートモビリティ・自動運転,モビリティ,VLN,VALENS SEMICONDUCTOR LTD,0.861407
+スマートモビリティ・自動運転,モビリティ,VNT,VONTIER CORP,1.126997
+スマートモビリティ・自動運転,モビリティ,WRD,WERIDE INC ADR,1.478102
+スマートモビリティ・自動運転,モビリティ,XPEV,XPENG INC  ADR,1.103245
 ソフトウェア,AI・ソフト・データ,ACIW,ACI WORLDWIDE INC,0.703312
 ソフトウェア,AI・ソフト・データ,ACN,ACCENTURE PLC CL A,0.780172
 ソフトウェア,AI・ソフト・データ,ADBE,ADOBE INC,0.721503
@@ -161,6 +531,19 @@
 ソフトウェア,AI・ソフト・データ,ZETA,ZETA GLOBAL HOLDINGS CORP A,0.754612
 ソフトウェア,AI・ソフト・データ,ZM,ZOOM COMMUNICATIONS INC,0.696475
 ソフトウェア,AI・ソフト・データ,ZS,ZSCALER INC,0.918998
+ソーラー,エネルギー,ARRY,"Array Technologies, Inc.",1.62
+ソーラー,エネルギー,CSIQ,Canadian Solar Inc.,1.52
+ソーラー,エネルギー,CWEN,"Clearway Energy, Inc.",3.67
+ソーラー,エネルギー,DQ,Daqo New Energy Corp.,1.67
+ソーラー,エネルギー,ENPH,"Enphase Energy, Inc.",6.66
+ソーラー,エネルギー,FSLR,"First Solar, Inc.",10.13
+ソーラー,エネルギー,HASI,"HA Sustainable Infrastructure Capital, Inc.",4.47
+ソーラー,エネルギー,NXT,Nextpower Inc.,9.2
+ソーラー,エネルギー,RNW,ReNew Energy Global Plc,1.46
+ソーラー,エネルギー,RUN,Sunrun Inc.,3.97
+ソーラー,エネルギー,SEDG,"SolarEdge Technologies, Inc.",4.03
+ソーラー,エネルギー,SHLS,"Shoals Technologies Group, Inc.",2.88
+ソーラー,エネルギー,TE,T1 Energy Inc.,2.08
 テクノロジー総合,AI・ソフト・データ,AAPL,APPLE INC,2.541656
 テクノロジー総合,AI・ソフト・データ,ADBE,ADOBE INC,1.460732
 テクノロジー総合,AI・ソフト・データ,AMAT,APPLIED MATERIALS INC,3.738145
@@ -196,6 +579,27 @@
 テクノロジー総合,AI・ソフト・データ,TSM,TAIWAN SEMICONDUCTOR SP ADR,3.181337
 テクノロジー総合,AI・ソフト・データ,TXN,TEXAS INSTRUMENTS INC,3.151284
 テクノロジー総合,AI・ソフト・データ,UBER,UBER TECHNOLOGIES INC,1.737067
+デジタル決済,金融・不動産,ACIW,"ACI Worldwide, Inc.",2.28
+デジタル決済,金融・不動産,AFRM,"Affirm Holdings, Inc.",4.42
+デジタル決済,金融・不動産,AXP,American Express Company,5.98
+デジタル決済,金融・不動産,COF,Capital One Financial Corporation,5.99
+デジタル決済,金融・不動産,COIN,"Coinbase Global, Inc.",4.52
+デジタル決済,金融・不動産,CPAY,"Corpay, Inc.",4.7
+デジタル決済,金融・不動産,EEFT,"Euronet Worldwide, Inc.",1.18
+デジタル決済,金融・不動産,FIS,"Fidelity National Information Services, Inc.",4.27
+デジタル決済,金融・不動産,FISV,"Fiserv, Inc.",4.54
+デジタル決済,金融・不動産,FLYW,Flywire Corporation,1.15
+デジタル決済,金融・不動産,FOUR,"Shift4 Payments, Inc.",1.22
+デジタル決済,金融・不動産,GPN,Global Payments Inc.,4.43
+デジタル決済,金融・不動産,MA,Mastercard Incorporated,6.3
+デジタル決済,金融・不動産,PYPL,"PayPal Holdings, Inc.",5.56
+デジタル決済,金融・不動産,QTWO,"Q2 Holdings, Inc.",1.59
+デジタル決済,金融・不動産,RELY,"Remitly Global, Inc.",2.11
+デジタル決済,金融・不動産,TOST,"Toast, Inc.",4.05
+デジタル決済,金融・不動産,V,Visa Inc.,6.44
+デジタル決済,金融・不動産,WEX,WEX Inc.,3.47
+デジタル決済,金融・不動産,WSE,Wise Group plc,4.4
+デジタル決済,金融・不動産,XYZ,"Block, Inc.",4.51
 バイオテック,ヘルスケア・バイオ,ABBV,ABBVIE INC,1.508923
 バイオテック,ヘルスケア・バイオ,ABSI,ABSCI CORP,0.470577
 バイオテック,ヘルスケア・バイオ,ABUS,ARBUTUS BIOPHARMA CORP,0.135285
@@ -389,6 +793,30 @@
 フィンテック,金融・不動産,TOST,TOAST INC-CLASS A,4.34
 フィンテック,金融・不動産,XYZ,BLOCK INC,3.85
 フィンテック,金融・不動産,Z,ZILLOW GROUP INC - C,1.52
+ブロックチェーン・暗号資産,金融・不動産,AMD,"Advanced Micro Devices, Inc.",3.13
+ブロックチェーン・暗号資産,金融・不動産,APLD,Applied Digital Corporation,2.27
+ブロックチェーン・暗号資産,金融・不動産,ARKB,ARK 21Shares Bitcoin ETF,1.76
+ブロックチェーン・暗号資産,金融・不動産,BLK,"BlackRock, Inc.",2.15
+ブロックチェーン・暗号資産,金融・不動産,BTC,Grayscale Bitcoin Mini Trust ETF,1.75
+ブロックチェーン・暗号資産,金融・不動産,CIFR,Cipher Digital Inc.,3.56
+ブロックチェーン・暗号資産,金融・不動産,CLSK,"CleanSpark, Inc.",2.84
+ブロックチェーン・暗号資産,金融・不動産,COIN,"Coinbase Global, Inc.",2.57
+ブロックチェーン・暗号資産,金融・不動産,CORZ,"Core Scientific, Inc.",2.23
+ブロックチェーン・暗号資産,金融・不動産,CUBI,"Customers Bancorp, Inc.",1.87
+ブロックチェーン・暗号資産,金融・不動産,DELL,Dell Technologies Inc.,3.1
+ブロックチェーン・暗号資産,金融・不動産,FIGR,"Figure Technology Solutions, Inc.",4.13
+ブロックチェーン・暗号資産,金融・不動産,GLXY,Galaxy Digital Inc.,3.28
+ブロックチェーン・暗号資産,金融・不動産,HODL,VanEck Bitcoin ETF,1.86
+ブロックチェーン・暗号資産,金融・不動産,HOOD,"Robinhood Markets, Inc.",3.91
+ブロックチェーン・暗号資産,金融・不動産,HUT,Hut 8 Corp.,3.41
+ブロックチェーン・暗号資産,金融・不動産,IBM,International Business Machines Corporation,2.34
+ブロックチェーン・暗号資産,金融・不動産,NAN,OTHER ASSETS AND LIABILITIES,6.39
+ブロックチェーン・暗号資産,金融・不動産,NU,Nu Holdings Ltd.,2.6
+ブロックチェーン・暗号資産,金融・不動産,NXH,"Neighborhood Intelligence, Inc.",1.98
+ブロックチェーン・暗号資産,金融・不動産,OPRA,Opera Limited,3.03
+ブロックチェーン・暗号資産,金融・不動産,PYPL,"PayPal Holdings, Inc.",1.8
+ブロックチェーン・暗号資産,金融・不動産,WULF,TeraWulf Inc.,3.37
+ブロックチェーン・暗号資産,金融・不動産,XYZ,"Block, Inc.",2.24
 ヘルスケアサービス,ヘルスケア・バイオ,ACHC,ACADIA HEALTHCARE CO INC,1.763152
 ヘルスケアサービス,ヘルスケア・バイオ,ADUS,ADDUS HOMECARE CORP,1.695056
 ヘルスケアサービス,ヘルスケア・バイオ,AGL,AGILON HEALTH INC,1.647899
@@ -450,6 +878,38 @@
 ヘルスケアサービス,ヘルスケア・バイオ,UNH,UNITEDHEALTH GROUP INC,1.682697
 ヘルスケアサービス,ヘルスケア・バイオ,USPH,U.S. PHYSICAL THERAPY INC,1.855055
 ヘルスケアサービス,ヘルスケア・バイオ,WGS,GENEDX HOLDINGS CORP,1.982008
+メタバース,AI・ソフト・データ,AAPL,Apple Inc.,6.91
+メタバース,AI・ソフト・データ,AMD,"Advanced Micro Devices, Inc.",2.0
+メタバース,AI・ソフト・データ,AMZN,"Amazon.com, Inc.",2.58
+メタバース,AI・ソフト・データ,ARM,Arm Holdings plc,2.03
+メタバース,AI・ソフト・データ,BIDU,"Baidu, Inc.",2.04
+メタバース,AI・ソフト・データ,COIN,"Coinbase Global, Inc.",2.66
+メタバース,AI・ソフト・データ,DIS,The Walt Disney Company,2.31
+メタバース,AI・ソフト・データ,GOOGL,Alphabet Inc.,4.23
+メタバース,AI・ソフト・データ,INTC,Intel Corporation,1.97
+メタバース,AI・ソフト・データ,META,"Meta Platforms, Inc.",3.9
+メタバース,AI・ソフト・データ,MSFT,Microsoft Corporation,3.75
+メタバース,AI・ソフト・データ,NVDA,NVIDIA Corporation,4.77
+メタバース,AI・ソフト・データ,QCOM,QUALCOMM Incorporated,2.86
+メタバース,AI・ソフト・データ,RBLX,Roblox Corporation,7.47
+メタバース,AI・ソフト・データ,SE,Sea Limited,2.7
+メタバース,AI・ソフト・データ,SNAP,Snap Inc.,1.5
+メタバース,AI・ソフト・データ,TSM,Taiwan Semiconductor Manufacturing Company Limited,2.5
+メタバース,AI・ソフト・データ,TTWO,"Take-Two Interactive Software, Inc.",2.57
+メタバース,AI・ソフト・データ,U,Unity Software Inc.,3.34
+リチウム・車載電池,素材・資源,ALB,Albemarle Corporation,4.24
+リチウム・車載電池,素材・資源,ENS,EnerSys,2.1
+リチウム・車載電池,素材・資源,RIO,Rio Tinto Group,22.9
+リチウム・車載電池,素材・資源,SQM,Sociedad Química y Minera de Chile S.A.,3.13
+リチウム・車載電池,素材・資源,TSLA,"Tesla, Inc.",4.37
+レアアース・戦略金属,素材・資源,ALB,Albemarle Corporation,7.61
+レアアース・戦略金属,素材・資源,ALM,Almonty Industries Inc.,5.06
+レアアース・戦略金属,素材・資源,ELVR,Elevra Lithium Limited,1.63
+レアアース・戦略金属,素材・資源,LAC,Lithium Americas Corp.,2.03
+レアアース・戦略金属,素材・資源,LAR,Lithium Argentina AG,1.63
+レアアース・戦略金属,素材・資源,MP,MP Materials Corp.,6.75
+レアアース・戦略金属,素材・資源,SQM,Sociedad Química y Minera de Chile S.A.,6.26
+レアアース・戦略金属,素材・資源,UAMY,United States Antimony Corporation,1.19
 住宅建設,消費・小売・インバウンド,ALLE,ALLEGION PLC,3.232119
 住宅建設,消費・小売・インバウンド,BLDR,BUILDERS FIRSTSOURCE INC,3.088481
 住宅建設,消費・小売・インバウンド,BZH,BEAZER HOMES USA INC,1.218047
@@ -657,6 +1117,14 @@
 半導体,半導体・電子,TE,T1 ENERGY INC,0.746131
 半導体,半導体・電子,TXN,TEXAS INSTRUMENTS INC,2.412677
 半導体,半導体・電子,WOLF,WOLFSPEED INC,0.822673
+原子力・ウラン,エネルギー,CCO-NE,CAMECO CORP,22.2
+原子力・ウラン,エネルギー,EFR-NE,ENERGY FUELS INC,2.92
+原子力・ウラン,エネルギー,LEU,Centrus Energy Corp.,2.68
+原子力・ウラン,エネルギー,OKLO,Oklo Inc.,5.63
+原子力・ウラン,エネルギー,SMR,NuScale Power Corporation,2.81
+原子力・ウラン,エネルギー,UEC,Uranium Energy Corp.,4.64
+原子力・ウラン,エネルギー,XE,"X-Energy, Inc.",2.77
+原子力・ウラン,エネルギー,YCA-L,YELLOW CAKE PLC,1.92
 地方銀行,金融・不動産,ABCB,AMERIS BANCORP,1.111017
 地方銀行,金融・不動産,ACNB,ACNB CORP,0.12987
 地方銀行,金融・不動産,AMAL,AMALGAMATED FINANCIAL CORP,0.25838
@@ -824,6 +1292,45 @@
 地方銀行,金融・不動産,WSFS,WSFS FINANCIAL CORP,1.106042
 地方銀行,金融・不動産,WTFC,WINTRUST FINANCIAL CORP,1.099192
 地方銀行,金融・不動産,ZION,ZIONS BANCORP NA,1.073409
+大麻,ヘルスケア・バイオ,NAN,Derivatives Collateral Nomura,26.16
+大麻,ヘルスケア・バイオ,TRLV,Trulieve Cannabis Corp.,11.47
+宇宙・フロンティア,防衛・宇宙,ADI,ANALOG DEVICES INC,2.334862
+宇宙・フロンティア,防衛・宇宙,APH,AMPHENOL CORP CL A,2.569321
+宇宙・フロンティア,防衛・宇宙,BA,BOEING CO/THE,3.263572
+宇宙・フロンティア,防衛・宇宙,BWXT,BWX TECHNOLOGIES INC,1.916834
+宇宙・フロンティア,防衛・宇宙,DCO,DUCOMMUN INC,3.702152
+宇宙・フロンティア,防衛・宇宙,ESE,ESCO TECHNOLOGIES INC,2.919112
+宇宙・フロンティア,防衛・宇宙,ESLT,ELBIT SYSTEMS LTD,2.193593
+宇宙・フロンティア,防衛・宇宙,FET,FORUM ENERGY TECHNOLOGIES IN,4.324684
+宇宙・フロンティア,防衛・宇宙,FLY,FIREFLY AEROSPACE INC,2.307015
+宇宙・フロンティア,防衛・宇宙,FTI,TECHNIPFMC PLC,2.432181
+宇宙・フロンティア,防衛・宇宙,GD,GENERAL DYNAMICS CORP,2.468173
+宇宙・フロンティア,防衛・宇宙,HEI,HEICO CORP,3.200525
+宇宙・フロンティア,防衛・宇宙,HII,HUNTINGTON INGALLS INDUSTRIE,2.279204
+宇宙・フロンティア,防衛・宇宙,HON,HONEYWELL INTERNATIONAL INC,1.697599
+宇宙・フロンティア,防衛・宇宙,HONA,HONEYWELL AEROSPACE INC,1.389699
+宇宙・フロンティア,防衛・宇宙,HXL,HEXCEL CORP,3.217727
+宇宙・フロンティア,防衛・宇宙,IRDM,IRIDIUM COMMUNICATIONS INC,3.58235
+宇宙・フロンティア,防衛・宇宙,KBR,KBR INC,2.482919
+宇宙・フロンティア,防衛・宇宙,LDOS,LEIDOS HOLDINGS INC,2.515963
+宇宙・フロンティア,防衛・宇宙,LHX,L3HARRIS TECHNOLOGIES INC,2.765044
+宇宙・フロンティア,防衛・宇宙,LMT,LOCKHEED MARTIN CORP,3.46113
+宇宙・フロンティア,防衛・宇宙,LUNR,INTUITIVE MACHINES INC,2.001358
+宇宙・フロンティア,防衛・宇宙,MOG-A,MOOG INC CLASS A,3.28079
+宇宙・フロンティア,防衛・宇宙,NOC,NORTHROP GRUMMAN CORP,3.284783
+宇宙・フロンティア,防衛・宇宙,OII,OCEANEERING INTL INC,3.960358
+宇宙・フロンティア,防衛・宇宙,PL,PLANET LABS PBC,1.877197
+宇宙・フロンティア,防衛・宇宙,PSN,PARSONS CORP,1.90822
+宇宙・フロンティア,防衛・宇宙,RDW,REDWIRE CORP,2.635257
+宇宙・フロンティア,防衛・宇宙,RKLB,ROCKET LAB CORP,2.248155
+宇宙・フロンティア,防衛・宇宙,RTX,RTX CORP,3.712206
+宇宙・フロンティア,防衛・宇宙,SPIR,SPIRE GLOBAL INC,2.476402
+宇宙・フロンティア,防衛・宇宙,SXI,STANDEX INTERNATIONAL CORP,2.149492
+宇宙・フロンティア,防衛・宇宙,TDG,TRANSDIGM GROUP INC,2.180607
+宇宙・フロンティア,防衛・宇宙,TDY,TELEDYNE TECHNOLOGIES INC,3.430137
+宇宙・フロンティア,防衛・宇宙,TTMI,TTM TECHNOLOGIES,1.718705
+宇宙・フロンティア,防衛・宇宙,VOYG,VOYAGER TECHNOLOGIES INC A,3.08199
+宇宙・フロンティア,防衛・宇宙,VSAT,VIASAT INC,2.96288
 宇宙・探査,防衛・宇宙,ACHR,ARCHER AVIATION INC-A,5.08
 宇宙・探査,防衛・宇宙,AIR,AIRBUS SE,1.02
 宇宙・探査,防衛・宇宙,AMD,ADVANCED MICRO DEVICES,4.16
@@ -961,6 +1468,55 @@
 次世代インターネット,AI・ソフト・データ,TSLA,TESLA INC,7.44
 次世代インターネット,AI・ソフト・データ,TSM,TAIWAN SEMICONDUCTOR-SP ADR,2.13
 次世代インターネット,AI・ソフト・データ,XYZ,BLOCK INC,3.42
+水素,エネルギー,AFC-L,AFC Energy PLC,0.67
+水素,エネルギー,FGXXX,First American Government Obligations Fund,36.16
+水素,エネルギー,ITM-L,ITM Power PLC,4.92
+水素,エネルギー,NAN,DEPOSITS WITH BROKER FOR SHORT POSITIONS,46.96
+水素,エネルギー,XBC-TO,Xebec Adsorption Inc,0.0
+水関連,産業・インフラ,A,"Agilent Technologies, Inc.",4.48
+水関連,産業・インフラ,ACM,AECOM,2.69
+水関連,産業・インフラ,AOS,A. O. Smith Corporation,2.27
+水関連,産業・インフラ,AWK,"American Water Works Company, Inc.",4.36
+水関連,産業・インフラ,BMI,"Badger Meter, Inc.",1.77
+水関連,産業・インフラ,BSY,"Bentley Systems, Incorporated",2.07
+水関連,産業・インフラ,CNM,"Core & Main, Inc.",2.41
+水関連,産業・インフラ,ECL,Ecolab Inc.,8.25
+水関連,産業・インフラ,FERG,Ferguson Enterprises Inc.,6.47
+水関連,産業・インフラ,IDXX,"IDEXX Laboratories, Inc.",6.01
+水関連,産業・インフラ,IEX,IDEX Corporation,3.63
+水関連,産業・インフラ,ITRI,"Itron, Inc.",1.94
+水関連,産業・インフラ,J,Jacobs Solutions Inc.,3.67
+水関連,産業・インフラ,MLI,"Mueller Industries, Inc.",1.82
+水関連,産業・インフラ,PNR,Pentair plc,2.76
+水関連,産業・インフラ,ROP,"Roper Technologies, Inc.",8.95
+水関連,産業・インフラ,TRMB,Trimble Inc.,3.01
+水関連,産業・インフラ,TTEK,"Tetra Tech, Inc.",2.76
+水関連,産業・インフラ,VLTO,Veralto Corporation,4.5
+水関連,産業・インフラ,VMI,"Valmont Industries, Inc.",1.9
+水関連,産業・インフラ,WAT,Waters Corporation,7.87
+水関連,産業・インフラ,WMS,"Advanced Drainage Systems, Inc.",2.65
+水関連,産業・インフラ,WTS,"Watts Water Technologies, Inc.",1.95
+水関連,産業・インフラ,XYL,Xylem Inc.,3.82
+水関連,産業・インフラ,ZWS,Zurn Elkay Water Solutions Corporation,1.1
+生成AI,AI・ソフト・データ,ALAB,"Astera Labs, Inc.",2.86
+生成AI,AI・ソフト・データ,AMD,"Advanced Micro Devices, Inc.",3.14
+生成AI,AI・ソフト・データ,AMZN,"Amazon.com, Inc.",3.42
+生成AI,AI・ソフト・データ,ARM,Arm Holdings plc,2.63
+生成AI,AI・ソフト・データ,ASML,ASML Holding N.V.,3.27
+生成AI,AI・ソフト・データ,AVGO,Broadcom Inc.,2.53
+生成AI,AI・ソフト・データ,COHR,Coherent Corp.,2.55
+生成AI,AI・ソフト・データ,CRWD,"CrowdStrike Holdings, Inc.",2.25
+生成AI,AI・ソフト・データ,CRWV,"CoreWeave, Inc.",2.27
+生成AI,AI・ソフト・データ,GOOGL,Alphabet Inc.,5.69
+生成AI,AI・ソフト・データ,LITE,Lumentum Holdings Inc.,2.33
+生成AI,AI・ソフト・データ,META,"Meta Platforms, Inc.",2.36
+生成AI,AI・ソフト・データ,MSFT,Microsoft Corporation,3.72
+生成AI,AI・ソフト・データ,MU,"Micron Technology, Inc.",3.09
+生成AI,AI・ソフト・データ,NBIS,Nebius Group N.V.,3.02
+生成AI,AI・ソフト・データ,NET,"Cloudflare, Inc.",2.13
+生成AI,AI・ソフト・データ,NVDA,NVIDIA Corporation,6.92
+生成AI,AI・ソフト・データ,SKM,"SK Telecom Co., Ltd.",2.16
+生成AI,AI・ソフト・データ,VRT,Vertiv Holdings Co,2.12
 石油サービス,エネルギー,AESI,ATLAS ENERGY SOLUTIONS INC,2.389044
 石油サービス,エネルギー,AROC,ARCHROCK INC,3.580541
 石油サービス,エネルギー,BKR,BAKER HUGHES CO,3.489765
@@ -1088,6 +1644,43 @@
 破壊的イノベーション,その他成長,WGS,GENEDX HOLDINGS CORP,1.31
 破壊的イノベーション,その他成長,XE,X-ENERGY INC,1.06
 破壊的イノベーション,その他成長,XYZ,BLOCK INC,2.24
+米国インフラ,産業・インフラ,AMRZ,Amrize AG,1.26
+米国インフラ,産業・インフラ,ATI,ATI Inc.,1.59
+米国インフラ,産業・インフラ,CRH,CRH plc,2.86
+米国インフラ,産業・インフラ,CRS,Carpenter Technology Corporation,1.24
+米国インフラ,産業・インフラ,CSX,CSX Corporation,2.9
+米国インフラ,産業・インフラ,DE,Deere & Company,3.65
+米国インフラ,産業・インフラ,EME,"EMCOR Group, Inc.",2.03
+米国インフラ,産業・インフラ,EMR,Emerson Electric Co.,3.37
+米国インフラ,産業・インフラ,ETN,Eaton Corporation plc,3.33
+米国インフラ,産業・インフラ,FAST,Fastenal Company,3.45
+米国インフラ,産業・インフラ,HUBB,Hubbell Incorporated,1.44
+米国インフラ,産業・インフラ,HWM,Howmet Aerospace Inc.,2.61
+米国インフラ,産業・インフラ,MLM,"Martin Marietta Materials, Inc.",1.79
+米国インフラ,産業・インフラ,NSC,Norfolk Southern Corporation,2.93
+米国インフラ,産業・インフラ,NUE,Nucor Corporation,3.35
+米国インフラ,産業・インフラ,PH,Parker-Hannifin Corporation,3.11
+米国インフラ,産業・インフラ,PWR,"Quanta Services, Inc.",3.17
+米国インフラ,産業・インフラ,ROK,"Rockwell Automation, Inc.",2.94
+米国インフラ,産業・インフラ,RS,"Reliance, Inc.",1.21
+米国インフラ,産業・インフラ,SRE,Sempra,2.83
+米国インフラ,産業・インフラ,STLD,"Steel Dynamics, Inc.",2.06
+米国インフラ,産業・インフラ,TT,Trane Technologies plc,2.91
+米国インフラ,産業・インフラ,UNP,Union Pacific Corporation,2.99
+米国インフラ,産業・インフラ,URI,"United Rentals, Inc.",2.9
+米国インフラ,産業・インフラ,VMC,Vulcan Materials Company,1.9
+肥満・GLP-1,ヘルスケア・バイオ,AMGN,Amgen Inc.,3.93
+肥満・GLP-1,ヘルスケア・バイオ,CHF,SWISS FRANC,
+肥満・GLP-1,ヘルスケア・バイオ,GILD,"Gilead Sciences, Inc.",1.82
+肥満・GLP-1,ヘルスケア・バイオ,GPCR,Structure Therapeutics Inc.,2.72
+肥満・GLP-1,ヘルスケア・バイオ,KLRA,"Kailera Therapeutics, Inc.",5.71
+肥満・GLP-1,ヘルスケア・バイオ,LLY,Eli Lilly and Company,12.44
+肥満・GLP-1,ヘルスケア・バイオ,MBX,"MBX Biosciences, Inc.",2.2
+肥満・GLP-1,ヘルスケア・バイオ,NVO,Novo Nordisk A/S,12.45
+肥満・GLP-1,ヘルスケア・バイオ,PFE,Pfizer Inc.,7.34
+肥満・GLP-1,ヘルスケア・バイオ,RYTM,"Rhythm Pharmaceuticals, Inc.",1.48
+肥満・GLP-1,ヘルスケア・バイオ,VKTX,"Viking Therapeutics, Inc.",4.79
+肥満・GLP-1,ヘルスケア・バイオ,WVE,"Wave Life Sciences, Inc.",0.33
 自律技術・ロボティクス,ロボット・FA・機械,ACHR,ARCHER AVIATION INC-A,2.47
 自律技術・ロボティクス,ロボット・FA・機械,AMD,ADVANCED MICRO DEVICES,4.88
 自律技術・ロボティクス,ロボット・FA・機械,AMZN,AMAZON.COM INC,3.48
@@ -1123,6 +1716,25 @@
 自律技術・ロボティクス,ロボット・FA・機械,TSM,TAIWAN SEMICONDUCTOR-SP ADR,3.65
 自律技術・ロボティクス,ロボット・FA・機械,WRD,WERIDE INC-ADR,1.05
 自律技術・ロボティクス,ロボット・FA・機械,XE,X-ENERGY INC,1.24
+航空,産業・インフラ,AAL,American Airlines Group Inc.,10.64
+航空,産業・インフラ,ALGT,Allegiant Travel Company,3.68
+航空,産業・インフラ,ALK,"Alaska Air Group, Inc.",3.53
+航空,産業・インフラ,BA,The Boeing Company,1.89
+航空,産業・インフラ,BKNG,Booking Holdings Inc.,1.93
+航空,産業・インフラ,CLV-DE,Trip.com Group Ltd ADR,1.03
+航空,産業・インフラ,DAL,"Delta Air Lines, Inc.",10.59
+航空,産業・インフラ,EXPE,"Expedia Group, Inc.",2.02
+航空,産業・インフラ,GD,General Dynamics Corporation,1.98
+航空,産業・インフラ,JBLU,JetBlue Airways Corporation,3.51
+航空,産業・インフラ,LTM,LATAM Airlines Group S.A.,1.0
+航空,産業・インフラ,LUV,Southwest Airlines Co.,11.05
+航空,産業・インフラ,RYAAY,Ryanair Holdings plc,0.99
+航空,産業・インフラ,SABR,Sabre Corporation,2.08
+航空,産業・インフラ,SKYW,"SkyWest, Inc.",3.54
+航空,産業・インフラ,TRIP,"Tripadvisor, Inc.",1.98
+航空,産業・インフラ,TXT,Textron Inc.,2.01
+航空,産業・インフラ,UAL,"United Airlines Holdings, Inc.",10.54
+航空,産業・インフラ,ULCC,"Frontier Group Holdings, Inc.",3.72
 航空宇宙・防衛,防衛・宇宙,ACHR,ARCHER AVIATION INC A,1.869104
 航空宇宙・防衛,防衛・宇宙,AIR,AAR CORP,1.483916
 航空宇宙・防衛,防衛・宇宙,ARXS,ARXIS INC A,1.061158
@@ -1385,6 +1997,22 @@
 運輸,産業・インフラ,UPS,UNITED PARCEL SERVICE CL B,2.68469
 運輸,産業・インフラ,WERN,WERNER ENTERPRISES INC,2.408402
 運輸,産業・インフラ,XPO,XPO INC,2.660036
+量子コンピュータ,AI・ソフト・データ,AMD,"Advanced Micro Devices, Inc.",1.44
+量子コンピュータ,AI・ソフト・データ,AMZN,"Amazon.com, Inc.",1.26
+量子コンピュータ,AI・ソフト・データ,ARQQ,Arqit Quantum Inc.,1.78
+量子コンピュータ,AI・ソフト・データ,ESTC,Elastic N.V.,1.75
+量子コンピュータ,AI・ソフト・データ,HPE,Hewlett Packard Enterprise Company,1.6
+量子コンピュータ,AI・ソフト・データ,HQ,Horizon Quantum Holdings Ltd.,1.61
+量子コンピュータ,AI・ソフト・データ,MDB,"MongoDB, Inc.",1.35
+量子コンピュータ,AI・ソフト・データ,MSFT,Microsoft Corporation,1.5
+量子コンピュータ,AI・ソフト・データ,MU,"Micron Technology, Inc.",1.31
+量子コンピュータ,AI・ソフト・データ,NET,"Cloudflare, Inc.",1.82
+量子コンピュータ,AI・ソフト・データ,NTNX,"Nutanix, Inc.",1.68
+量子コンピュータ,AI・ソフト・データ,NVDA,NVIDIA Corporation,1.31
+量子コンピュータ,AI・ソフト・データ,PLTR,Palantir Technologies Inc.,1.62
+量子コンピュータ,AI・ソフト・データ,RDNT,"RadNet, Inc.",1.6
+量子コンピュータ,AI・ソフト・データ,RTX,RTX Corporation,1.3
+量子コンピュータ,AI・ソフト・データ,SNOW,Snowflake Inc.,1.69
 金属・鉱山,素材・資源,AA,ALCOA CORP,4.557733
 金属・鉱山,素材・資源,ABAT,AMERICAN BATTERY TECHNOLOGY,0.294941
 金属・鉱山,素材・資源,ALOY,REALLOYS INC,0.585302
@@ -1423,6 +2051,14 @@
 金属・鉱山,素材・資源,URG,UR ENERGY INC,0.435982
 金属・鉱山,素材・資源,USAR,USA RARE EARTH INC,3.634707
 金属・鉱山,素材・資源,WS,WORTHINGTON STEEL INC,0.609085
+金鉱山,素材・資源,AU,AngloGold Ashanti plc,5.02
+金鉱山,素材・資源,CDE,"Coeur Mining, Inc.",2.29
+金鉱山,素材・資源,EDG-DE,Gold Fields Ltd ADR,4.13
+金鉱山,素材・資源,EQX,Equinox Gold Corp.,1.65
+金鉱山,素材・資源,HAM-DE,Harmony Gold Mining Co Ltd ADR,1.11
+金鉱山,素材・資源,HL,Hecla Mining Company,1.34
+金鉱山,素材・資源,NEM,Newmont Corporation,10.91
+金鉱山,素材・資源,RGLD,"Royal Gold, Inc.",1.93
 銀行,金融・不動産,ABCB,AMERIS BANCORP,0.93901
 銀行,金融・不動産,AGM,FEDERAL AGRIC MTG CORP CL C,0.927687
 銀行,金融・不動産,APO,APOLLO GLOBAL MANAGEMENT INC,0.928595
@@ -1530,3 +2166,134 @@
 銀行,金融・不動産,WSFS,WSFS FINANCIAL CORP,0.934694
 銀行,金融・不動産,WTFC,WINTRUST FINANCIAL CORP,0.929017
 銀行,金融・不動産,ZION,ZIONS BANCORP NA,0.907205
+銅鉱山,素材・資源,FCX,Freeport-McMoRan Inc.,4.93
+銅鉱山,素材・資源,SCCO,Southern Copper Corporation,5.0
+銅鉱山,素材・資源,TGB,Trekor Metals Limited,1.62
+防衛,防衛・宇宙,ATI,ATI Inc.,1.96
+防衛,防衛・宇宙,AXON,"Axon Enterprise, Inc.",2.74
+防衛,防衛・宇宙,BA,The Boeing Company,7.72
+防衛,防衛・宇宙,BWXT,"BWX Technologies, Inc.",1.02
+防衛,防衛・宇宙,CRS,Carpenter Technology Corporation,1.52
+防衛,防衛・宇宙,CW,Curtiss-Wright Corporation,1.58
+防衛,防衛・宇宙,FTAI,FTAI Aviation Ltd.,1.47
+防衛,防衛・宇宙,GD,General Dynamics Corporation,4.59
+防衛,防衛・宇宙,GE,GE Aerospace,20.42
+防衛,防衛・宇宙,HEI,HEICO Corporation,0.92
+防衛,防衛・宇宙,HEI-A,HEICO Corporation,1.26
+防衛,防衛・宇宙,HII,"Huntington Ingalls Industries, Inc.",0.81
+防衛,防衛・宇宙,HONA,Honeywell Aerospace Inc.,3.91
+防衛,防衛・宇宙,HWM,Howmet Aerospace Inc.,4.53
+防衛,防衛・宇宙,HXL,Hexcel Corporation,0.5
+防衛,防衛・宇宙,KTOS,"Kratos Defense & Security Solutions, Inc.",0.67
+防衛,防衛・宇宙,LHX,"L3Harris Technologies, Inc.",3.46
+防衛,防衛・宇宙,LMT,Lockheed Martin Corporation,4.66
+防衛,防衛・宇宙,MOG-A,Moog Inc.,0.78
+防衛,防衛・宇宙,NOC,Northrop Grumman Corporation,4.69
+防衛,防衛・宇宙,RKLB,Rocket Lab Corporation,2.67
+防衛,防衛・宇宙,RTX,RTX Corporation,16.38
+防衛,防衛・宇宙,TDG,TransDigm Group Incorporated,4.43
+防衛,防衛・宇宙,TXT,Textron Inc.,1.03
+防衛,防衛・宇宙,WWD,"Woodward, Inc.",1.43
+革新テクノロジー,AI・ソフト・データ,AAOI,APPLIED OPTOELECTRONICS INC,3.141352
+革新テクノロジー,AI・ソフト・データ,ACMR,ACM RESEARCH INC CLASS A,1.740085
+革新テクノロジー,AI・ソフト・データ,ACVA,ACV AUCTIONS INC A,1.2191
+革新テクノロジー,AI・ソフト・データ,AEVA,AEVA TECHNOLOGIES INC,0.887
+革新テクノロジー,AI・ソフト・データ,AI,C3.AI INC A,0.653019
+革新テクノロジー,AI・ソフト・データ,ALKT,ALKAMI TECHNOLOGY INC,0.771725
+革新テクノロジー,AI・ソフト・データ,AMBA,AMBARELLA INC,0.846209
+革新テクノロジー,AI・ソフト・データ,AMD,ADVANCED MICRO DEVICES,2.703502
+革新テクノロジー,AI・ソフト・データ,AMPL,AMPLITUDE INC CLASS A,1.109697
+革新テクノロジー,AI・ソフト・データ,ANET,ARISTA NETWORKS INC,1.527286
+革新テクノロジー,AI・ソフト・データ,APLD,APPLIED DIGITAL CORP,0.940618
+革新テクノロジー,AI・ソフト・データ,APP,APPLOVIN CORP CLASS A,0.454402
+革新テクノロジー,AI・ソフト・データ,APPF,APPFOLIO INC   A,0.840671
+革新テクノロジー,AI・ソフト・データ,ARM,ARM HOLDINGS PLC ADR,2.288394
+革新テクノロジー,AI・ソフト・データ,ASAN,ASANA INC   CL A,0.6115
+革新テクノロジー,AI・ソフト・データ,AVGO,BROADCOM INC,0.934376
+革新テクノロジー,AI・ソフト・データ,AVPT,AVEPOINT INC,0.894034
+革新テクノロジー,AI・ソフト・データ,AXTI,AXT INC,5.00236
+革新テクノロジー,AI・ソフト・データ,BAH,BOOZ ALLEN HAMILTON HOLDINGS,0.776317
+革新テクノロジー,AI・ソフト・データ,BILL,BILL HOLDINGS INC,0.801469
+革新テクノロジー,AI・ソフト・データ,BL,BLACKLINE INC,0.447934
+革新テクノロジー,AI・ソフト・データ,BRZE,BRAZE INC A,0.712562
+革新テクノロジー,AI・ソフト・データ,CACI,CACI INTERNATIONAL INC  CL A,1.02612
+革新テクノロジー,AI・ソフト・データ,CLBT,CELLEBRITE DI LTD,0.570989
+革新テクノロジー,AI・ソフト・データ,CRDO,CREDO TECHNOLOGY GROUP HOLDI,1.20689
+革新テクノロジー,AI・ソフト・データ,CSGP,COSTAR GROUP INC,0.391487
+革新テクノロジー,AI・ソフト・データ,CVLT,COMMVAULT SYSTEMS INC,1.111337
+革新テクノロジー,AI・ソフト・データ,DDOG,DATADOG INC   CLASS A,1.554063
+革新テクノロジー,AI・ソフト・データ,DOCN,DIGITALOCEAN HOLDINGS INC,2.841293
+革新テクノロジー,AI・ソフト・データ,DOCS,DOXIMITY INC CLASS A,0.563008
+革新テクノロジー,AI・ソフト・データ,DT,DYNATRACE INC,1.1358
+革新テクノロジー,AI・ソフト・データ,DUOL,DUOLINGO,0.708907
+革新テクノロジー,AI・ソフト・データ,ESTC,ELASTIC NV,1.093114
+革新テクノロジー,AI・ソフト・データ,EVER,EVERQUOTE INC   CLASS A,0.764762
+革新テクノロジー,AI・ソフト・データ,EVLV,EVOLV TECHNOLOGIES HOLDINGS,0.653853
+革新テクノロジー,AI・ソフト・データ,FIVN,FIVE9 INC,1.623425
+革新テクノロジー,AI・ソフト・データ,FROG,JFROG LTD,1.238951
+革新テクノロジー,AI・ソフト・データ,FRSH,FRESHWORKS INC CL A,0.879859
+革新テクノロジー,AI・ソフト・データ,FUBO,FUBOTV INC  CLASS A,0.296802
+革新テクノロジー,AI・ソフト・データ,GENI,GENIUS SPORTS LTD,0.488791
+革新テクノロジー,AI・ソフト・データ,GOOGL,ALPHABET INC CL A,1.062073
+革新テクノロジー,AI・ソフト・データ,GWRE,GUIDEWIRE SOFTWARE INC,0.669788
+革新テクノロジー,AI・ソフト・データ,HUBS,HUBSPOT INC,0.522983
+革新テクノロジー,AI・ソフト・データ,IDCC,INTERDIGITAL INC,0.856454
+革新テクノロジー,AI・ソフト・データ,INOD,INNODATA INC,1.082213
+革新テクノロジー,AI・ソフト・データ,INTA,INTAPP INC,0.793462
+革新テクノロジー,AI・ソフト・データ,INTU,INTUIT INC,0.417694
+革新テクノロジー,AI・ソフト・データ,IONQ,IONQ INC,1.788363
+革新テクノロジー,AI・ソフト・データ,KVYO,KLAVIYO INC A,0.487643
+革新テクノロジー,AI・ソフト・データ,LIF,LIFE360 INC,0.564655
+革新テクノロジー,AI・ソフト・データ,MANH,MANHATTAN ASSOCIATES INC,1.117393
+革新テクノロジー,AI・ソフト・データ,MAX,MEDIAALPHA INC CLASS A,0.771391
+革新テクノロジー,AI・ソフト・データ,MDB,MONGODB INC,0.894476
+革新テクノロジー,AI・ソフト・データ,META,META PLATFORMS INC CLASS A,1.061918
+革新テクノロジー,AI・ソフト・データ,MNDY,MONDAY.COM LTD,0.515574
+革新テクノロジー,AI・ソフト・データ,NCNO,NCINO INC,0.745694
+革新テクノロジー,AI・ソフト・データ,NFLX,NETFLIX INC,0.715835
+革新テクノロジー,AI・ソフト・データ,NRDS,NERDWALLET INC CL A,0.58488
+革新テクノロジー,AI・ソフト・データ,NTNX,NUTANIX INC   A,1.364806
+革新テクノロジー,AI・ソフト・データ,NVDA,NVIDIA CORP,1.204659
+革新テクノロジー,AI・ソフト・データ,NVMI,NOVA LTD,1.067643
+革新テクノロジー,AI・ソフト・データ,NXDR,NEXTDOOR HOLDINGS INC,1.035325
+革新テクノロジー,AI・ソフト・データ,ONTO,ONTO INNOVATION INC,1.636696
+革新テクノロジー,AI・ソフト・データ,PAYC,PAYCOM SOFTWARE INC,1.258853
+革新テクノロジー,AI・ソフト・データ,PCOR,PROCORE TECHNOLOGIES INC,0.643096
+革新テクノロジー,AI・ソフト・データ,PCTY,PAYLOCITY HOLDING CORP,0.888014
+革新テクノロジー,AI・ソフト・データ,PGY,PAGAYA TECHNOLOGIES LTD  A,0.856001
+革新テクノロジー,AI・ソフト・データ,PHR,PHREESIA INC,0.573818
+革新テクノロジー,AI・ソフト・データ,PI,IMPINJ INC,1.171328
+革新テクノロジー,AI・ソフト・データ,PINS,PINTEREST INC  CLASS A,0.692104
+革新テクノロジー,AI・ソフト・データ,PLTR,PALANTIR TECHNOLOGIES INC A,0.924875
+革新テクノロジー,AI・ソフト・データ,PTC,PTC INC,0.714426
+革新テクノロジー,AI・ソフト・データ,RAMP,LIVERAMP HOLDINGS INC,1.157241
+革新テクノロジー,AI・ソフト・データ,RBRK,RUBRIK INC A,1.286669
+革新テクノロジー,AI・ソフト・データ,RDDT,REDDIT INC CL A,0.649551
+革新テクノロジー,AI・ソフト・データ,SIMO,SILICON MOTION TECHNOL ADR,2.841607
+革新テクノロジー,AI・ソフト・データ,SITM,SITIME CORP,1.633811
+革新テクノロジー,AI・ソフト・データ,SMCI,SUPER MICRO COMPUTER INC,1.181519
+革新テクノロジー,AI・ソフト・データ,SNAP,SNAP INC   A,0.725103
+革新テクノロジー,AI・ソフト・データ,SNOW,SNOWFLAKE INC,1.446215
+革新テクノロジー,AI・ソフト・データ,SPOT,SPOTIFY TECHNOLOGY SA,0.794929
+革新テクノロジー,AI・ソフト・データ,SPSC,SPS COMMERCE INC,0.87954
+革新テクノロジー,AI・ソフト・データ,SPT,SPROUT SOCIAL INC   CLASS A,0.869701
+革新テクノロジー,AI・ソフト・データ,TOST,TOAST INC CLASS A,0.784952
+革新テクノロジー,AI・ソフト・データ,TREE,LENDINGTREE INC,0.458694
+革新テクノロジー,AI・ソフト・データ,UI,UBIQUITI INC,0.971045
+革新テクノロジー,AI・ソフト・データ,UPST,UPSTART HOLDINGS INC,0.476762
+革新テクノロジー,AI・ソフト・データ,UPWK,UPWORK INC,0.350792
+革新テクノロジー,AI・ソフト・データ,VEEV,VEEVA SYSTEMS INC CLASS A,1.085155
+革新テクノロジー,AI・ソフト・データ,VERX,VERTEX INC   CLASS A,0.564104
+革新テクノロジー,AI・ソフト・データ,WAY,WAYSTAR HOLDING CORP,0.732558
+革新テクノロジー,AI・ソフト・データ,WDAY,WORKDAY INC CLASS A,0.786452
+革新テクノロジー,AI・ソフト・データ,WEAV,WEAVE COMMUNICATIONS INC,0.970626
+革新テクノロジー,AI・ソフト・データ,WK,WORKIVA INC,0.776327
+革新テクノロジー,AI・ソフト・データ,YOU,CLEAR SECURE INC  CLASS A,0.891726
+革新テクノロジー,AI・ソフト・データ,ZETA,ZETA GLOBAL HOLDINGS CORP A,1.556072
+風力,エネルギー,ACA,"Arcosa, Inc.",3.08
+風力,エネルギー,CWEN,"Clearway Energy, Inc.",1.84
+風力,エネルギー,GEV,GE Vernova Inc.,2.41
+風力,エネルギー,LNT,Alliant Energy Corporation,2.1
+風力,エネルギー,NAN,Currency Contract - Usd,4.68
+風力,エネルギー,NEE,"NextEra Energy, Inc.",1.97
+風力,エネルギー,TKR,The Timken Company,2.45
