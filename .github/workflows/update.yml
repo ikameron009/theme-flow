@@ -44,6 +44,16 @@ jobs:
       - name: 07 ローソク足用OHLC出力(site/ohlc)
         run: python 07_write_ohlc.py || echo "ohlc生成スキップ"
 
+      # --- 米国株テーマ(失敗しても日本株/世界タブは維持) ---
+      - name: US 02 米国株 価格取得（yfinance）
+        run: python us_02_fetch.py || echo "US価格取得失敗; 米国株タブは今回休止"
+
+      - name: US 03 米国テーマ別集計
+        run: python us_03_aggregate.py || echo "US集計スキップ"
+
+      - name: US 07 米国ローソク足OHLC出力(site/us_ohlc)
+        run: python us_07_ohlc.py || echo "US OHLC生成スキップ"
+
       - name: 05 クロスアセット取得(世界のお金の流れ・失敗しても継続)
         run: python 05_fetch_macro.py || echo "macro fetch failed; 世界タブは今回休止"
 

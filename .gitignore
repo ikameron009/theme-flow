@@ -2,6 +2,7 @@
 *.pkl
 site/
 theme_flow.json
+us_theme_flow.json
 macro.json
 macro_fresh.csv
 index.html

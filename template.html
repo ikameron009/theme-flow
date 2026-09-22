@@ -182,7 +182,8 @@ table.sp .sc{font-size:9.5px;color:var(--muted);font-family:"IBM Plex Mono",mono
   <div class="upd-banner" id="upd-banner" hidden><b>新しいデータがあります。</b><span>手動更新が完了しました。</span><button id="upd-reload" type="button">再読込</button></div>
 
   <div class="tabbar" id="tabbar">
-    <button data-t="jp" aria-pressed="true">日本株 テーマ別資金フロー</button>
+    <button data-t="jp" aria-pressed="true">日本株テーマ</button>
+    <button data-t="us" aria-pressed="false">米国株テーマ</button>
     <button data-t="world" aria-pressed="false">世界のお金の流れ</button>
   </div>
 
@@ -310,7 +311,7 @@ table.sp .sc{font-size:9.5px;color:var(--muted);font-family:"IBM Plex Mono",mono
   </div>
 
   <div class="foot">
-    <b>データ</b>：株探テーマ（テーマ→銘柄）× yfinance（日次 終値・出来高）。対象<span id="f-univ"></span>。売買代金＝終値×出来高で近似。<br>
+    <b>データ</b>：<span id="foot-src">株探テーマ（テーマ→銘柄）</span>× yfinance（日次 終値・出来高）。対象<span id="f-univ"></span>。売買代金＝終値×出来高で近似。<br>
     <b>指標</b>：<b>売買代金 指数</b>＝各テーマの売買代金を表示期間初日＝100で指数化／<b>実額 億円</b>＝売買代金そのもの／<b>シェア%</b>＝対象銘柄の総売買代金に占める割合（テーマ重複ありで合計は100%超・変化を見る）／<b>株価(騰落)</b>＝構成銘柄の等加重リターン指数（初日=100）。<br>
     <b>ランキング</b>：<b>急増率</b>＝直近5日平均売買代金 ÷ その前20営業日平均 −1。<b>シェア変化</b>＝直近5日平均シェア − 20営業日前の5日平均シェア。<br>
     <b>注意</b>：売買代金は資金流入の近似で売り・買いの方向は区別しない。本サイトは情報提供のみで投資助言ではありません。投資判断は自己責任で。
@@ -368,20 +369,37 @@ table.sp .sc{font-size:9.5px;color:var(--muted);font-family:"IBM Plex Mono",mono
 </div>
 
 <script>
-const DATA=__DATA__;
+const JP_DATA=__DATA__;
+const US_DATA=__US_DATA__;
 const BUILT="__BUILT__";
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const cssv=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 const SERIES=()=>[1,2,3,4,5,6,7,8].map(i=>cssv('--s'+i));
 const fmt=(x,d=1)=>x==null?'–':x.toLocaleString('ja-JP',{minimumFractionDigits:d,maximumFractionDigits:d});
 const sign=x=>x==null?'–':(x>=0?'+':'')+fmt(x,1);
+const US_ON=!!(US_DATA&&US_DATA.themes&&US_DATA.themes.length);
 
-const themes=DATA.themes, dates=DATA.dates, N=dates.length, STK=DATA.stocks;
-const byName=Object.fromEntries(themes.map(t=>[t.name,t]));
-const latestYear=dates[N-1].slice(0,4);
-
+/* 日本株パネルを日本株/米国株でデータ差し替え共有する */
+let market='jp', DATA=JP_DATA, themes, dates, N, STK, byName, latestYear, RK,
+    OHLC_DIR='ohlc/', U={turn:'億',turnLong:'億円',mcap:'億'};
 let state={metric:'index',range:120,smooth:5,sort:'surge',selected:[],
   gran:'week',hsort:'flow',hquery:'',mapTheme:null,spSort:'to'};
+function bindMarket(mk){
+  market=(mk==='us'&&US_ON)?'us':'jp'; DATA=market==='us'?US_DATA:JP_DATA;
+  themes=DATA.themes; dates=DATA.dates; N=dates.length; STK=DATA.stocks;
+  byName=Object.fromEntries(themes.map(t=>[t.name,t]));
+  latestYear=dates[N-1].slice(0,4); RK=DATA.rankings;
+  const u=DATA.units||{}; OHLC_DIR=u.ohlcDir||'ohlc/';
+  U={turn:u.turn||'億',turnLong:u.turnLong||'億円',mcap:u.mcap||'億'};
+}
+function marketReset(){
+  state.selected=[...themes].filter(t=>t.surge!=null).sort((a,b)=>b.surge-a.surge).slice(0,8).map(t=>t.name);
+  state.mapTheme=state.selected[0]||(themes[0]&&themes[0].name)||null;
+  state.rkSel=null; state.spStock=null; state.hquery=''; state.rkQuery='';
+  ['#hsearch','#rksearch'].forEach(s=>{const el=$(s);if(el)el.value='';});
+  ['#hsearch-x','#rksearch-x'].forEach(s=>{const el=$(s);if(el)el.hidden=true;});
+}
+bindMarket('jp');
 state.selected=[...themes].filter(t=>t.surge!=null).sort((a,b)=>b.surge-a.surge).slice(0,8).map(t=>t.name);
 
 /* ---------- line chart ---------- */
@@ -403,12 +421,12 @@ function drawChart(){
   const series=state.selected.map(n=>byName[n]).filter(Boolean).map((t,i)=>({name:t.name,color:cols[i%8],vals:seriesData(t)}));
   let lo=Infinity,hi=-Infinity;series.forEach(sr=>sr.vals.forEach(v=>{if(v<lo)lo=v;if(v>hi)hi=v;}));
   if(!isFinite(lo)){lo=0;hi=1;}if(m.rebased){lo=Math.min(lo,100);hi=Math.max(hi,100);}
-  const pad=(hi-lo)*0.08||1;lo-=pad;hi+=pad;if(m.unit==='%')lo=Math.max(0,lo);
+  const pad=(hi-lo)*0.08||1;lo-=pad;hi+=pad;if(metUnit()==='%')lo=Math.max(0,lo);
   const n=xs.length,X=i=>ML+(CW-ML-MR)*(n<=1?0:i/(n-1)),Y=v=>MT+(CH-MT-MB)*(1-(v-lo)/(hi-lo));
   let g='';
   for(let k=0;k<=5;k++){const v=lo+(hi-lo)*k/5,y=Y(v);
     g+=`<line class="gl" x1="${ML}" y1="${y.toFixed(1)}" x2="${CW-MR}" y2="${y.toFixed(1)}"/>`;
-    g+=`<text class="axl" x="${ML-6}" y="${(y+3.5).toFixed(1)}" text-anchor="end">${m.rebased?Math.round(v):fmt(v,m.unit==='%'?1:0)}</text>`;}
+    g+=`<text class="axl" x="${ML-6}" y="${(y+3.5).toFixed(1)}" text-anchor="end">${m.rebased?Math.round(v):fmt(v,metUnit()==='%'?1:0)}</text>`;}
   if(m.rebased){const y=Y(100);g+=`<line x1="${ML}" y1="${y.toFixed(1)}" x2="${CW-MR}" y2="${y.toFixed(1)}" stroke="var(--axis)"/>`;}
   let lm='';xs.forEach((d,i)=>{const mo=d.slice(0,7);if(mo!==lm){lm=mo;g+=`<text class="axl" x="${X(i).toFixed(1)}" y="${CH-8}" text-anchor="middle">${d.slice(2,7).replace('-','/')}</text>`;}});
   series.forEach(sr=>{let p='';sr.vals.forEach((v,i)=>{p+=(i?'L':'M')+X(i).toFixed(1)+' '+Y(v).toFixed(1)+' ';});
@@ -425,7 +443,7 @@ function bindTip(){const svg=$('#chart'),tip=$('#tip');const cg=()=>svg.querySel
     if(px<ML||px>CW-MR){hide();return;}let i=Math.round((px-ML)/(CW-ML-MR)*(ctx.n-1));i=Math.max(0,Math.min(ctx.n-1,i));
     const xp=ctx.X(i);cg().style.opacity=1;cx().setAttribute('x1',xp);cx().setAttribute('x2',xp);const m=METRIC[state.metric];
     const rows=ctx.series.map(sr=>({name:sr.name,color:sr.color,v:sr.vals[i]})).sort((a,b)=>b.v-a.v);
-    tip.innerHTML=`<div class="td">${ctx.xs[i]}</div>`+rows.map(rw=>`<div class="row"><span class="l"><span class="sw" style="background:${rw.color}"></span><span class="nm2">${rw.name}</span></span><span class="val">${m.rebased?fmt(rw.v,1):fmt(rw.v,m.unit==='%'?2:0)}${m.unit}</span></div>`).join('');
+    tip.innerHTML=`<div class="td">${ctx.xs[i]}</div>`+rows.map(rw=>`<div class="row"><span class="l"><span class="sw" style="background:${rw.color}"></span><span class="nm2">${rw.name}</span></span><span class="val">${m.rebased?fmt(rw.v,1):fmt(rw.v,metUnit()==='%'?2:0)}${metUnit()}</span></div>`).join('');
     tip.style.opacity=1;const tw=tip.offsetWidth,xpx=xp/CW*r.width;tip.style.left=Math.min(r.width-tw-4,Math.max(4,xpx+12))+'px';tip.style.top='8px';});
   svg.addEventListener('mouseleave',hide);function hide(){tip.style.opacity=0;const c=cg();if(c)c.style.opacity=0;}}
 
@@ -491,7 +509,7 @@ function drawHeat(){
 state.spStock=null; state.spPer=126; state.spFreq='day';
 state.rkcPer=126; state.rkcFreq='day';
 const OHLC_CACHE={};
-function loadOHLC(code){if(!(code in OHLC_CACHE))OHLC_CACHE[code]=fetch('ohlc/'+encodeURIComponent(code)+'.json').then(r=>r.ok?r.json():null).catch(()=>null);return OHLC_CACHE[code];}
+function loadOHLC(code){const key=OHLC_DIR+code;if(!(key in OHLC_CACHE))OHLC_CACHE[key]=fetch(OHLC_DIR+encodeURIComponent(code)+'.json').then(r=>r.ok?r.json():null).catch(()=>null);return OHLC_CACHE[key];}
 function _sma(a,w){const o=[];let s=0;for(let i=0;i<a.length;i++){s+=a[i];if(i>=w)s-=a[i-w];o.push(i>=w-1?s/w:null);}return o;}
 function _aggW(oh){const R={d:[],o:[],h:[],l:[],c:[]};for(let i=0;i<oh.d.length;i+=5){const e=Math.min(i+5,oh.d.length);let hh=-1e18,ll=1e18;for(let j=i;j<e;j++){if(oh.h[j]>hh)hh=oh.h[j];if(oh.l[j]<ll)ll=oh.l[j];}R.d.push(oh.d[i]);R.o.push(oh.o[i]);R.h.push(hh);R.l.push(ll);R.c.push(oh.c[e-1]);}return R;}
 function candleSVG(oh,per,freq,H){
@@ -576,7 +594,6 @@ function syncPanelHeight(){const hm=document.querySelector('.hm-scroll'),sp=$('#
   if(!hm||!sp||window.innerWidth<=860)return;const h=hm.getBoundingClientRect().height;if(h>200)sp.style.height=h+'px';}
 
 /* ---------- rankings (leaderboard + bump) ---------- */
-const RK=DATA.rankings;
 state.rkMetric='to'; state.rkSel=null; state.rkSort={k:'rank',dir:'asc'}; state.rkRows=20; state.rkQuery='';
 function rkTop(){return state.rkMetric==='to'?RK.top_to:RK.top_vol;}
 function rkSeries(code){const s=RK.stocks[code];return state.rkMetric==='to'?s.rt:s.rv;}
@@ -714,11 +731,26 @@ function drawRatios(){
   legendHTML('rtlegend',series);lineChart('rtchart','rttip',series,xs,{base100:true,unit:'',tipdec:1,h:340});
   $('#rtdesc').innerHTML=MACRO.ratios.map((r,i)=>`<div style="margin:3px 0"><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:${cols[i%8]};margin-right:6px"></span><b style="color:var(--ink)">${r.label}</b>：${r.desc}</div>`).join('');
 }
-function switchTab(t){$('#tab-jp').hidden=t!=='jp';$('#tab-world').hidden=t!=='world';
+function metUnit(){return state.metric==='share'?'%':(state.metric==='oku'?U.turnLong:'');}
+function applyMarketLabels(){
+  const H={to:`売買代金<br>(${U.turn})`,mcap:`時価総額<br>(${U.mcap})`,ratio:'代金/時価<br>(%)'};
+  $$('#rktbl thead th.srt').forEach(th=>{const k=th.dataset.k;if(H[k])th.innerHTML=H[k]+`<span class="ar" data-a="${k}"></span>`;});
+  const okb=document.querySelector('#metric button[data-m="oku"]');if(okb)okb.textContent='実額 '+U.turnLong;
+  const fs=$('#foot-src');if(fs)fs.textContent=market==='us'?'テーマ別ETF（SSGA/ARK等の構成銘柄）':'株探テーマ（テーマ→銘柄）';
+}
+function renderMarket(){applyMarketLabels();drawTiles();drawChart();drawRank();drawHeat();drawStock();drawRk();}
+function switchTab(t){
+  if(t==='us'&&!US_ON)t='jp';
+  const isMk=(t==='jp'||t==='us');
+  $('#tab-jp').hidden=!isMk;$('#tab-world').hidden=(t!=='world');
   $$('#tabbar button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.t===t));
-  if(t==='jp'){$('#u-date').textContent=DATA.updated;$('#u-univ').textContent=`日本株 ${DATA.n_themes}テーマ / ${DATA.n_stocks.toLocaleString()}銘柄`;}
-  else{$('#u-date').textContent=MACRO.updated||'–';$('#u-univ').textContent='世界クロスアセット';}
-  if(t==='world'&&!state.worldDrawn){state.worldDrawn=true;drawMacro();drawRatios();}}
+  if(isMk){
+    if(t!==market){bindMarket(t);marketReset();renderMarket();}
+    $('#u-date').textContent=DATA.updated;
+    $('#u-univ').textContent=`${market==='us'?'米国株':'日本株'} ${DATA.n_themes}テーマ / ${DATA.n_stocks.toLocaleString()}銘柄`;
+  }else{$('#u-date').textContent=MACRO.updated||'–';$('#u-univ').textContent='世界クロスアセット';
+    if(!state.worldDrawn){state.worldDrawn=true;drawMacro();drawRatios();}}
+}
 
 /* ---------- tiles ---------- */
 function drawTiles(){
@@ -729,7 +761,7 @@ function drawTiles(){
    <div class="tile"><div class="k">資金 最流入テーマ</div><div class="v big">${top.name}</div><div class="d pos">急増率 ${sign(top.surge)}%</div></div>
    <div class="tile"><div class="k">資金 最流出テーマ</div><div class="v big">${out.name}</div><div class="d neg">${sign(out.share_chg)}pt</div></div>
    <div class="tile"><div class="k">データ期間</div><div class="v" style="font-size:16px">${DATA.updated}</div><div class="d">${DATA.start}〜</div></div>`;
-  $('#u-date').textContent=DATA.updated;$('#u-univ').textContent=`日本株 ${DATA.n_themes}テーマ / ${DATA.n_stocks.toLocaleString()}銘柄`;
+  $('#u-date').textContent=DATA.updated;$('#u-univ').textContent=`${market==='us'?'米国株':'日本株'} ${DATA.n_themes}テーマ / ${DATA.n_stocks.toLocaleString()}銘柄`;
   $('#f-univ').textContent=`${DATA.n_themes}テーマ・${DATA.n_stocks.toLocaleString()}銘柄`;
   const mp=$('#w-period');if(mp)mp.textContent=(MACRO.start&&MACRO.updated)?`${MACRO.start} 〜 ${MACRO.updated}`:'—';
 }
@@ -768,6 +800,8 @@ new MutationObserver(redrawAll).observe(document.documentElement,{attributes:tru
 
 state.mapTheme=state.selected[0]||themes[0]?.name||null;
 window.addEventListener('resize',()=>syncPanelHeight());
+if(!US_ON){const ub=document.querySelector('#tabbar button[data-t="us"]');if(ub)ub.hidden=true;}
+applyMarketLabels();
 drawTiles();drawChart();bindTip();drawRank();drawHeat();drawStock();drawRk();
 
 /* ---------- 手動更新ボタン & 新デプロイ自動検知 ---------- */
