@@ -379,8 +379,8 @@ table.sp .sc{font-size:9.5px;color:var(--muted);font-family:"IBM Plex Mono",mono
 
   <div id="tab-vcp" hidden>
     <div class="pdesc" style="margin:0 0 12px">
-      毎営業日のミネルヴィニ式トレンドテンプレート＋<b>VCP</b>判定の該当銘柄。優先度 <b>T1</b>(BUY発火)→<b>T2</b>(買い場近辺)→<b>T3</b>(監視)。
-      <b style="color:var(--neg)">赤＝新規</b>／<b style="color:var(--muted)">グレー＝消失（前回あり→今回消えた）</b>／継続＝掲載連続日数。◁▷または スライダーで過去（約半年）を1日ずつ遡れます。
+      毎営業日のミネルヴィニ式トレンドテンプレート＋<b>VCP</b>判定の該当銘柄。<b>優先度</b>＝スコア（数値・買い場近辺ほど高い／監視は空欄）、<b>Buy</b>＝ブレイク発火。
+      <b style="color:var(--neg)">赤字＝新規</b>／<b style="color:var(--muted)">グレー＝消失（前回あり→今回消えた）</b>／<b style="background:#FAEEDA;color:#633806;padding:0 4px;border-radius:4px">黄＝新しく優先度がついた</b>／継続＝掲載連続日数。◁▷またはスライダーで過去（約半年）を1日ずつ遡れます。
     </div>
     <div class="panel">
       <div class="ctlrow" style="margin-bottom:10px">
@@ -401,7 +401,7 @@ table.sp .sc{font-size:9.5px;color:var(--muted);font-family:"IBM Plex Mono",mono
         <thead><tr id="vcp-head"></tr></thead><tbody id="vcp-body"></tbody></table></div>
       <div class="foot">
         <b>データ</b>：ミネルヴィニ式トレンドテンプレート（Stage2）＋VCP有効判定（真のVCPカウンター）× yfinance。米国は業績成長（EDGAR）フィルタ、日本は増収増益（EDINET）フィルタ。<br>
-        <b>優先度</b>：<b>T1</b>＝BUY発火（ピボット上抜け）／<b>T2</b>＝VCP有効かつ買い点近辺（ピボット距離≤8%）をスコア順／<b>T3</b>＝監視（RS順）。<b>VCP</b>＝収縮のタイトさ等のスコア0-100。<b>ピボット</b>＝買い点までの距離%。<br>
+        <b>優先度</b>＝ゲート＋スコア（VCP有効かつ買い点近辺=ピボット距離≤8%を 0.45×VCP＋0.25×近接＋0.20×RS＋0.10×ソース数 で採点。監視は空欄）。<b>Buy</b>＝ピボット上抜け発火。<b>VCP</b>＝収縮のタイトさ等のスコア0-100。<b>ピボット</b>＝買い点までの距離%。<br>
         <b>注意</b>：情報提供のみで投資助言ではありません。投資判断は自己責任で。
       </div>
     </div>
@@ -798,15 +798,12 @@ function switchTab(t){
 const VCP_DATA={us:null,jp:null};
 state.vcpMkt='us'; state.vcpIdx=null; state.vcpQuery=''; state.vcpSort={k:'prio',dir:'desc'};
 function vcpCols(){return state.vcpMkt==='us'
-  ? [['prio','優先度','l'],['name','銘柄','l'],['vcp','VCP','r'],['dist','ピボット','r'],['rs','RS','r'],['mcap','時価総額','r'],['listing','上場','r'],['streak','継続','r'],['tl','最近の掲載','c']]
-  : [['prio','優先度','l'],['name','銘柄','l'],['vcp','VCP','r'],['dist','ピボット','r'],['rs','RS','r'],['streak','継続','r'],['tl','最近の掲載','c']];}
+  ? [['prio','優先度','r'],['name','銘柄','l'],['buy','Buy','c'],['vcp','VCP','r'],['dist','ピボット','r'],['rs','RS','r'],['mcap','時価総額','r'],['listing','上場','r'],['streak','継続','r'],['tl','最近の掲載','c']]
+  : [['prio','優先度','r'],['name','銘柄','l'],['buy','Buy','c'],['vcp','VCP','r'],['dist','ピボット','r'],['rs','RS','r'],['streak','継続','r'],['tl','最近の掲載','c']];}
 function loadVcp(mkt){
   if(VCP_DATA[mkt]!==null)return Promise.resolve(VCP_DATA[mkt]);
   return fetch('vcp_'+mkt+'.json?cb='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.json():{sessions:[]}).catch(()=>({sessions:[]})).then(j=>{VCP_DATA[mkt]=j;return j;});
 }
-function ptier(r){if(r.buy)return{t:'T1',lbl:'T1 BUY',col:'var(--pos)',bg:'color-mix(in srgb,var(--pos) 15%,var(--surface))'};
-  if(r.prio!=null)return{t:'T2',lbl:'T2',col:'var(--accent)',bg:'color-mix(in srgb,var(--accent) 13%,var(--surface))'};
-  return{t:'T3',lbl:'T3',col:'var(--muted)',bg:'var(--surface-2)'};}
 function vcpTL(sess,idx,code){const s=Math.max(0,idx-19);let g='<span class="vtl">';
   for(let i=s;i<=idx;i++){const on=sess[i].rows.some(r=>r.code===code);g+=`<i style="background:${on?'var(--accent)':'var(--surface-2)'}"></i>`;}
   return g+'</span>';}
@@ -819,8 +816,11 @@ function drawVcp(){
   slider.max=sess.length-1;slider.value=state.vcpIdx;
   const idx=state.vcpIdx,cur=sess[idx],prev=idx>0?sess[idx-1]:null;
   const prevCodes=new Set(prev?prev.rows.map(r=>r.code):[]),curCodes=new Set(cur.rows.map(r=>r.code));
+  const prevMap=new Map(prev?prev.rows.map(r=>[r.code,r]):[]);
   $('#vcp-daylabel').textContent=cur.date;$('#vcp-prev').disabled=idx<=0;$('#vcp-next').disabled=idx>=sess.length-1;
-  let rows=cur.rows.map(r=>Object.assign({},r,{_new:!!prev&&!prevCodes.has(r.code),_gone:false}));
+  let rows=cur.rows.map(r=>{const pr=prevMap.get(r.code);
+    return Object.assign({},r,{_new:!!prev&&!prevCodes.has(r.code),_gone:false,
+      _newprio:!!prev&&r.prio!=null&&!(pr&&pr.prio!=null)});});
   if(prev)prev.rows.filter(r=>!curCodes.has(r.code)).forEach(r=>rows.push(Object.assign({},r,{_gone:true,vcp:null,dist:null,prio:null,buy:false})));
   const q=state.vcpQuery.toLowerCase();
   if(q)rows=rows.filter(r=>(r.name||'').toLowerCase().includes(q)||(r.code||'').toLowerCase().includes(q));
@@ -835,13 +835,12 @@ function drawVcp(){
       :`<th class="${cl} srt" data-k="${c[0]}">${c[1]}<span class="ar" data-a="${c[0]}"></span></th>`;}).join('');
   $$('#vcp-head .ar').forEach(a=>a.textContent=a.dataset.a===k?(dir==='asc'?'▲':'▼'):'');
   body.innerHTML=rows.map(r=>{
-    const ti=ptier(r);
-    const badge=r._gone?'<span class="ptag" style="background:var(--surface-2);color:var(--muted)">—</span>'
-      :`<span class="ptag" style="background:${ti.bg};color:${ti.col}">${ti.lbl}</span>`;
     const nm=`<span class="t" title="${r.name}" style="${r._new?'color:var(--neg)':''}">${r.name}</span><span class="cat" style="margin-left:6px">${r.code}</span>`
       +(r._new?'<span class="vtag" style="color:var(--neg)">●新規</span>':'')+(r._gone?'<span class="vtag" style="color:var(--muted)">消失</span>':'');
     const cell=c=>{
-      if(c==='prio')return badge;
+      if(c==='prio'){if(r._gone||r.prio==null)return '<span style="color:var(--muted)">–</span>';
+        return `<span style="font-weight:600;${r._newprio?'background:#FAEEDA;color:#633806;padding:1px 7px;border-radius:5px':''}">${r.prio}</span>`;}
+      if(c==='buy')return (r.buy&&!r._gone)?'<span style="color:var(--pos);font-weight:600;font-size:11px">BUY</span>':'';
       if(c==='name')return nm;
       if(c==='vcp')return r.vcp!=null?`<b>${r.vcp}</b>`:'<span style="color:var(--muted)">–</span>';
       if(c==='dist')return r.dist!=null?`<span class="${r.dist>=0&&r.dist<=2?'pos':''}">${r.dist>=0?'+':''}${r.dist.toFixed(1)}%</span>`:'<span style="color:var(--muted)">–</span>';
