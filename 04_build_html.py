@@ -3,7 +3,7 @@
 Step 4: template.html に theme_flow.json を注入して site/index.html を生成。
 site/ フォルダが GitHub Pages で公開される中身。
 """
-import os, json
+import os, json, shutil
 from datetime import datetime, timezone
 
 BASE = os.path.dirname(os.path.abspath(__file__))
@@ -33,6 +33,12 @@ dst = os.path.join(SITE, "index.html")
 with open(dst, "w", encoding="utf-8") as f:
     f.write(out)
 
+# VCPスクリーナーの履歴JSONを site/ へ公開(ページが実行時fetch)。無ければタブ側で準備中表示。
+for fn in ("vcp_us.json", "vcp_jp.json"):
+    src = os.path.join(BASE, fn)
+    if os.path.exists(src):
+        shutil.copyfile(src, os.path.join(SITE, fn))
+
 # 軽量な版数ファイル(自動検知用ポーリング先)
 def _upd(path):
     try:
@@ -41,7 +47,8 @@ def _upd(path):
         return ""
 with open(os.path.join(SITE, "version.json"), "w", encoding="utf-8") as f:
     json.dump({"built": built, "jp": _upd("theme_flow.json"),
-               "us": _upd("us_theme_flow.json"), "world": _upd("macro.json")},
+               "us": _upd("us_theme_flow.json"), "world": _upd("macro.json"),
+               "vcp": _upd("vcp_us.json")},
               f, ensure_ascii=False)
 
 print(f"built {dst}  ({len(out):,} bytes)  built={built}")

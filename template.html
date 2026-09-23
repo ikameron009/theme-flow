@@ -84,6 +84,15 @@ h1{font-family:"Archivo","Noto Sans JP",sans-serif;font-weight:800;font-size:27p
 .search input::placeholder{color:var(--muted)}
 .search .x{cursor:pointer;color:var(--muted);font-size:13px;line-height:1;padding:0 2px;user-select:none}
 .search .x:hover{color:var(--ink)}
+.daybtn{font:inherit;font-size:15px;line-height:1;border:1px solid var(--border);background:var(--surface-2);color:var(--ink-2);border-radius:7px;width:30px;height:30px;cursor:pointer;flex:none}
+.daybtn:hover{background:var(--surface);color:var(--ink)}
+.daybtn:disabled{opacity:.4;cursor:default}
+.vtl{display:inline-flex;gap:1px;vertical-align:middle}
+.vtl i{width:4px;height:11px;border-radius:1px;background:var(--surface-2)}
+.vtag{font-size:9.5px;margin-left:6px;font-weight:600}
+.ptag{font-size:11px;padding:1px 7px;border-radius:6px;font-weight:600;white-space:nowrap}
+tr.gone td{opacity:.5}
+tr.gone .t{text-decoration:line-through}
 
 .legend{display:flex;flex-wrap:wrap;gap:6px 12px;margin:10px 0 6px}
 .chip{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--ink-2);cursor:pointer;padding:2px 4px;border-radius:6px}
@@ -185,6 +194,7 @@ table.sp .sc{font-size:9.5px;color:var(--muted);font-family:"IBM Plex Mono",mono
     <button data-t="jp" aria-pressed="true">日本株テーマ</button>
     <button data-t="us" aria-pressed="false">米国株テーマ</button>
     <button data-t="world" aria-pressed="false">世界のお金の流れ</button>
+    <button data-t="vcp" aria-pressed="false">VCPスクリーナー</button>
   </div>
 
   <div id="tab-jp">
@@ -364,6 +374,36 @@ table.sp .sc{font-size:9.5px;color:var(--muted);font-family:"IBM Plex Mono",mono
       <b>データ</b>：yfinance（先物・指数・ETF・為替の日次終値）。Finviz futuresの構成に準拠（鉄鉱石・鋼材・石炭等の一部は代替/省略）。<br>
       <b>指標</b>：native通貨建て・選択期間初日=100の指数（金利は利回り%）。「すべて」は各カテゴリの構成銘柄を等加重平均。金利のカテゴリ平均は米国債価格（ZT/ZF/ZN/ZB）を使用。<br>
       <b>注意</b>：EOD（引け後）更新でリアルタイムではない。先物は連続限月。情報提供のみで投資助言ではありません。
+    </div>
+  </div>
+
+  <div id="tab-vcp" hidden>
+    <div class="pdesc" style="margin:0 0 12px">
+      毎営業日のミネルヴィニ式トレンドテンプレート＋<b>VCP</b>判定の該当銘柄。優先度 <b>T1</b>(BUY発火)→<b>T2</b>(買い場近辺)→<b>T3</b>(監視)。
+      <b style="color:var(--neg)">赤＝新規</b>／<b style="color:var(--muted)">グレー＝消失（前回あり→今回消えた）</b>／継続＝掲載連続日数。◁▷または スライダーで過去（約半年）を1日ずつ遡れます。
+    </div>
+    <div class="panel">
+      <div class="ctlrow" style="margin-bottom:10px">
+        <div class="seg small" id="vcpmkt">
+          <button data-m="us" aria-pressed="true">米国株</button>
+          <button data-m="jp" aria-pressed="false">日本株</button>
+        </div>
+        <span class="search" style="margin-left:auto"><span style="color:var(--muted);font-size:12px">🔍</span><input id="vcpsearch" type="text" placeholder="銘柄名・コード" autocomplete="off"><span class="x" id="vcpsearch-x" hidden>✕</span></span>
+      </div>
+      <div class="ctlrow" style="gap:12px;margin-bottom:12px">
+        <button class="daybtn" id="vcp-prev" type="button" aria-label="前日">◁</button>
+        <input id="vcp-day" type="range" min="0" max="0" value="0" step="1" style="flex:1;min-width:180px">
+        <button class="daybtn" id="vcp-next" type="button" aria-label="翌日">▷</button>
+        <span id="vcp-daylabel" class="mono" style="font-weight:600;min-width:96px;text-align:right">–</span>
+        <span id="vcp-count" class="phint"></span>
+      </div>
+      <div class="rank" style="max-height:640px"><table class="rk" id="vcptbl">
+        <thead><tr id="vcp-head"></tr></thead><tbody id="vcp-body"></tbody></table></div>
+      <div class="foot">
+        <b>データ</b>：ミネルヴィニ式トレンドテンプレート（Stage2）＋VCP有効判定（真のVCPカウンター）× yfinance。米国は業績成長（EDGAR）フィルタ、日本は増収増益（EDINET）フィルタ。<br>
+        <b>優先度</b>：<b>T1</b>＝BUY発火（ピボット上抜け）／<b>T2</b>＝VCP有効かつ買い点近辺（ピボット距離≤8%）をスコア順／<b>T3</b>＝監視（RS順）。<b>VCP</b>＝収縮のタイトさ等のスコア0-100。<b>ピボット</b>＝買い点までの距離%。<br>
+        <b>注意</b>：情報提供のみで投資助言ではありません。投資判断は自己責任で。
+      </div>
     </div>
   </div>
 </div>
@@ -742,14 +782,80 @@ function renderMarket(){applyMarketLabels();drawTiles();drawChart();drawRank();d
 function switchTab(t){
   if(t==='us'&&!US_ON)t='jp';
   const isMk=(t==='jp'||t==='us');
-  $('#tab-jp').hidden=!isMk;$('#tab-world').hidden=(t!=='world');
+  $('#tab-jp').hidden=!isMk;$('#tab-world').hidden=(t!=='world');$('#tab-vcp').hidden=(t!=='vcp');
   $$('#tabbar button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.t===t));
   if(isMk){
     if(t!==market){bindMarket(t);marketReset();renderMarket();}
     $('#u-date').textContent=DATA.updated;
     $('#u-univ').textContent=`${market==='us'?'米国株':'日本株'} ${DATA.n_themes}テーマ / ${DATA.n_stocks.toLocaleString()}銘柄`;
-  }else{$('#u-date').textContent=MACRO.updated||'–';$('#u-univ').textContent='世界クロスアセット';
+  }else if(t==='world'){$('#u-date').textContent=MACRO.updated||'–';$('#u-univ').textContent='世界クロスアセット';
     if(!state.worldDrawn){state.worldDrawn=true;drawMacro();drawRatios();}}
+  else{$('#u-univ').textContent='VCPスクリーナー';
+    loadVcp(state.vcpMkt).then(()=>{drawVcp();const D=VCP_DATA[state.vcpMkt];$('#u-date').textContent=(D&&D.updated)||'–';});}
+}
+
+/* ---------- VCP screener tab (案②: 最新日+検索/ソート+日付スライダー+◁▷) ---------- */
+const VCP_DATA={us:null,jp:null};
+state.vcpMkt='us'; state.vcpIdx=null; state.vcpQuery=''; state.vcpSort={k:'prio',dir:'desc'};
+function vcpCols(){return state.vcpMkt==='us'
+  ? [['prio','優先度','l'],['name','銘柄','l'],['vcp','VCP','r'],['dist','ピボット','r'],['rs','RS','r'],['mcap','時価総額','r'],['listing','上場','r'],['streak','継続','r'],['tl','最近の掲載','c']]
+  : [['prio','優先度','l'],['name','銘柄','l'],['vcp','VCP','r'],['dist','ピボット','r'],['rs','RS','r'],['streak','継続','r'],['tl','最近の掲載','c']];}
+function loadVcp(mkt){
+  if(VCP_DATA[mkt]!==null)return Promise.resolve(VCP_DATA[mkt]);
+  return fetch('vcp_'+mkt+'.json?cb='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.json():{sessions:[]}).catch(()=>({sessions:[]})).then(j=>{VCP_DATA[mkt]=j;return j;});
+}
+function ptier(r){if(r.buy)return{t:'T1',lbl:'T1 BUY',col:'var(--pos)',bg:'color-mix(in srgb,var(--pos) 15%,var(--surface))'};
+  if(r.prio!=null)return{t:'T2',lbl:'T2',col:'var(--accent)',bg:'color-mix(in srgb,var(--accent) 13%,var(--surface))'};
+  return{t:'T3',lbl:'T3',col:'var(--muted)',bg:'var(--surface-2)'};}
+function vcpTL(sess,idx,code){const s=Math.max(0,idx-19);let g='<span class="vtl">';
+  for(let i=s;i<=idx;i++){const on=sess[i].rows.some(r=>r.code===code);g+=`<i style="background:${on?'var(--accent)':'var(--surface-2)'}"></i>`;}
+  return g+'</span>';}
+function drawVcp(){
+  const D=VCP_DATA[state.vcpMkt],head=$('#vcp-head'),body=$('#vcp-body'),slider=$('#vcp-day');
+  const sess=(D&&D.sessions)?D.sessions:[];
+  if(!sess.length){head.innerHTML='';body.innerHTML='<tr><td style="padding:16px;color:var(--muted)">データ準備中です（初回スクリーニング後に表示されます）。</td></tr>';
+    $('#vcp-daylabel').textContent='–';$('#vcp-count').textContent='';slider.max=0;$('#vcp-prev').disabled=true;$('#vcp-next').disabled=true;return;}
+  if(state.vcpIdx==null||state.vcpIdx>sess.length-1)state.vcpIdx=sess.length-1;
+  slider.max=sess.length-1;slider.value=state.vcpIdx;
+  const idx=state.vcpIdx,cur=sess[idx],prev=idx>0?sess[idx-1]:null;
+  const prevCodes=new Set(prev?prev.rows.map(r=>r.code):[]),curCodes=new Set(cur.rows.map(r=>r.code));
+  $('#vcp-daylabel').textContent=cur.date;$('#vcp-prev').disabled=idx<=0;$('#vcp-next').disabled=idx>=sess.length-1;
+  let rows=cur.rows.map(r=>Object.assign({},r,{_new:!!prev&&!prevCodes.has(r.code),_gone:false}));
+  if(prev)prev.rows.filter(r=>!curCodes.has(r.code)).forEach(r=>rows.push(Object.assign({},r,{_gone:true,vcp:null,dist:null,prio:null,buy:false})));
+  const q=state.vcpQuery.toLowerCase();
+  if(q)rows=rows.filter(r=>(r.name||'').toLowerCase().includes(q)||(r.code||'').toLowerCase().includes(q));
+  const nnew=prev?cur.rows.filter(r=>!prevCodes.has(r.code)).length:0,ngone=prev?prev.rows.filter(r=>!curCodes.has(r.code)).length:0;
+  $('#vcp-count').textContent=`該当 ${cur.rows.length}銘柄`+(prev?` ・ 新規${nnew} / 消失${ngone}`:'');
+  const{k,dir}=state.vcpSort,sgn=dir==='asc'?1:-1;
+  const gv=r=>{if(k==='name')return r.code;const v=r[k];return v==null?-1e9:v;};
+  rows.sort((a,b)=>{if(a._gone!==b._gone)return a._gone?1:-1;const x=gv(a),y=gv(b);return (x<y?-1:x>y?1:0)*sgn;});
+  const cols=vcpCols();
+  head.innerHTML=cols.map(c=>{const cl=c[2]==='l'?'l':(c[2]==='c'?'':'');
+    return c[0]==='tl'?`<th style="text-align:center">${c[1]}</th>`
+      :`<th class="${cl} srt" data-k="${c[0]}">${c[1]}<span class="ar" data-a="${c[0]}"></span></th>`;}).join('');
+  $$('#vcp-head .ar').forEach(a=>a.textContent=a.dataset.a===k?(dir==='asc'?'▲':'▼'):'');
+  body.innerHTML=rows.map(r=>{
+    const ti=ptier(r);
+    const badge=r._gone?'<span class="ptag" style="background:var(--surface-2);color:var(--muted)">—</span>'
+      :`<span class="ptag" style="background:${ti.bg};color:${ti.col}">${ti.lbl}</span>`;
+    const nm=`<span class="t" title="${r.name}" style="${r._new?'color:var(--neg)':''}">${r.name}</span><span class="cat" style="margin-left:6px">${r.code}</span>`
+      +(r._new?'<span class="vtag" style="color:var(--neg)">●新規</span>':'')+(r._gone?'<span class="vtag" style="color:var(--muted)">消失</span>':'');
+    const cell=c=>{
+      if(c==='prio')return badge;
+      if(c==='name')return nm;
+      if(c==='vcp')return r.vcp!=null?`<b>${r.vcp}</b>`:'<span style="color:var(--muted)">–</span>';
+      if(c==='dist')return r.dist!=null?`<span class="${r.dist>=0&&r.dist<=2?'pos':''}">${r.dist>=0?'+':''}${r.dist.toFixed(1)}%</span>`:'<span style="color:var(--muted)">–</span>';
+      if(c==='rs')return r.rs!=null?r.rs:'';
+      if(c==='mcap')return r.mcap?('$'+r.mcap+'B'):'<span style="color:var(--muted)">–</span>';
+      if(c==='listing')return r.listing?(String(r.listing).match(/[A-Za-z]/)?r.listing:r.listing+'年'):'';
+      if(c==='streak')return r._gone?'':r.streak;
+      if(c==='tl')return vcpTL(sess,idx,r.code);
+      return '';};
+    return `<tr class="${r._gone?'gone':''}" data-url="${r.url||''}">`+cols.map(c=>{
+      const al=c[0]==='tl'?'style="text-align:center"':(c[2]==='l'?'style="text-align:left"':'class="num"');
+      return `<td ${al}>${cell(c[0])}</td>`;}).join('')+'</tr>';
+  }).join('');
+  $$('#vcp-body tr').forEach(tr=>tr.onclick=()=>{const u=tr.dataset.url;if(u)window.open(u,'_blank','noopener');});
 }
 
 /* ---------- tiles ---------- */
@@ -792,9 +898,16 @@ function wireSearch(inputId,clearId,fn){const el=$('#'+inputId),x=$('#'+clearId)
   if(x)x.addEventListener('click',()=>{el.value='';x.hidden=true;fn('');el.focus();});}
 wireSearch('hsearch','hsearch-x',v=>{state.hquery=v;drawHeat();});
 wireSearch('rksearch','rksearch-x',v=>{state.rkQuery=v;drawRkList();});
+wireSearch('vcpsearch','vcpsearch-x',v=>{state.vcpQuery=v;drawVcp();});
+seg('vcpmkt',b=>{state.vcpMkt=b.dataset.m;state.vcpIdx=null;state.vcpQuery='';const s=$('#vcpsearch');if(s)s.value='';const x=$('#vcpsearch-x');if(x)x.hidden=true;loadVcp(state.vcpMkt).then(drawVcp);});
+$('#vcp-prev').onclick=()=>{if(state.vcpIdx>0){state.vcpIdx--;drawVcp();}};
+$('#vcp-next').onclick=()=>{const D=VCP_DATA[state.vcpMkt];if(D&&D.sessions&&state.vcpIdx<D.sessions.length-1){state.vcpIdx++;drawVcp();}};
+$('#vcp-day').addEventListener('input',e=>{state.vcpIdx=+e.target.value;drawVcp();});
+$('#vcptbl').addEventListener('click',e=>{const th=e.target.closest('th.srt');if(!th)return;const k=th.dataset.k;
+  if(state.vcpSort.k===k)state.vcpSort.dir=state.vcpSort.dir==='asc'?'desc':'asc';else state.vcpSort={k,dir:k==='name'?'asc':'desc'};drawVcp();});
 
 const mq=window.matchMedia('(prefers-color-scheme:dark)');
-function redrawAll(){drawChart();drawRank();drawHeat();drawStock();drawRkBump();if(state.worldDrawn){drawMacro();drawRatios();}}
+function redrawAll(){drawChart();drawRank();drawHeat();drawStock();drawRkBump();if(state.worldDrawn){drawMacro();drawRatios();}if(!$('#tab-vcp').hidden)drawVcp();}
 mq.addEventListener?.('change',redrawAll);
 new MutationObserver(redrawAll).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
 
