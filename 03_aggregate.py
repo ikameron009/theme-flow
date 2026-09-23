@@ -147,13 +147,14 @@ for c in rankset:
     ratio = (to_yen / mcap * 100) if mcap else None     # 代金/時価 (%)
     rt_prev = to_rank[c].iloc[-2] if RD >= 2 else None
     rv_prev = vo_rank[c].iloc[-2] if RD >= 2 else None
+    rt_now, rv_now = to_rank[c].iloc[-1], vo_rank[c].iloc[-1]  # top_vol由来だと当日turnoverがNaNのことがある
     rk_stocks[c] = {
         "name": name_of.get(c, c),
         "to": round(to_yen / 1e8, 1),                   # 売買代金 億円(1日)
         "mcap": round(mcap / 1e8) if mcap else None,    # 時価総額 億円
         "ratio": round(ratio, 2) if ratio is not None else None,
-        "d_to": int(rt_prev - to_rank[c].iloc[-1]) if pd.notna(rt_prev) else None,
-        "d_vol": int(rv_prev - vo_rank[c].iloc[-1]) if pd.notna(rv_prev) else None,
+        "d_to": int(rt_prev - rt_now) if (pd.notna(rt_prev) and pd.notna(rt_now)) else None,
+        "d_vol": int(rv_prev - rv_now) if (pd.notna(rv_prev) and pd.notna(rv_now)) else None,
         "rt": ser_int(to_rank[c]),
         "rv": ser_int(vo_rank[c]),
     }
