@@ -2,14 +2,18 @@ name: Update theme flow
 
 on:
   schedule:
-    # 22:00 UTC = 翌07:00 JST(UTC日-木 = JST月-金)。毎朝7時に全タブ更新。
-    # この時刻は「直近の確定した取引日」を集計: 日本株=前営業日(当日はまだ寄り前)、
-    # 米国株/世界=数時間前に引けた直近セッション(=17:00JSTより新しい米国データが載る)。
-    # ※GitHubの定時cronは混雑で数十分〜数時間遅れることがある(無料枠の仕様)。
-    - cron: '0 22 * * 0-4'
-  workflow_dispatch:        # 手動実行ボタン
+    # 2段階: 18:00 UTC = 翌03:00 JST → 日本株のみ取得(前営業日の確定足・寄付き前)。
+    #        22:00 UTC = 翌07:00 JST → 米国株+世界のみ取得(米引け後で確定)。
+    # UTCの日-木 = JSTの月-金(取引日)。※GitHubの定時cronは数十分〜数時間遅れることがある。
+    - cron: '0 18 * * 0-4'   # 03:00 JST 日本株
+    - cron: '0 22 * * 0-4'   # 07:00 JST 米国株+世界
+  workflow_dispatch:
+    inputs:
+      market:
+        description: 'jp / us / both'
+        default: 'both'
   push:
-    branches: [ main ]      # push時にも一度ビルド（初回確認用）
+    branches: [ main ]       # コード/JSON(VCP)更新時は再取得せずキャッシュから再ビルド&デプロイ
 
 permissions:
   contents: read
@@ -34,35 +38,64 @@ jobs:
       - name: Install deps
         run: pip install -r requirements.txt
 
-      # 注: 01(株探スクレイプ)はクラウドIPから弾かれやすいためCIでは実行しない。
-      # コミット済みの themes_map.csv を使う。テーマ更新はローカルで 01 を回して push。
+      # 直近ランのpkl(両市場の価格)を復元。市場別に「自分だけ取得・相手はキャッシュ」で
+      # フルサイトを作るために使う。run_idキー+restore-keysで常に最新を復元。
+      - name: Restore price cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ./*.pkl
+            ./macro_fresh.csv
+          key: data-${{ github.run_id }}
+          restore-keys: data-
 
-      - name: 02 価格・出来高取得（yfinance）
+      - name: Decide market
+        id: mkt
+        run: |
+          if [ "${{ github.event_name }}" = "schedule" ]; then
+            if [ "${{ github.event.schedule }}" = "0 18 * * 0-4" ]; then M=jp; else M=us; fi
+          elif [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            M="${{ github.event.inputs.market }}"; [ -z "$M" ] && M=both
+          else
+            M=skip
+          fi
+          # キャッシュにpklが無い(初回/失効)なら全取得にフォールバック
+          if [ ! -f close.pkl ] || [ ! -f us_close.pkl ]; then M=both; fi
+          echo "market=$M" >> "$GITHUB_OUTPUT"
+          echo "MARKET=$M"
+
+      # ---- 日本株の取得(3:00 JSTの回 / both / 初回) ----
+      - name: 02 JP 価格取得
+        if: steps.mkt.outputs.market == 'jp' || steps.mkt.outputs.market == 'both'
         run: python 02_fetch_prices.py
 
-      - name: 03 テーマ別集計
-        run: python 03_aggregate.py
+      # ---- 米国株+世界の取得(7:00 JSTの回 / both / 初回) ----
+      - name: US 02 米国株 価格取得
+        if: steps.mkt.outputs.market == 'us' || steps.mkt.outputs.market == 'both'
+        run: python us_02_fetch.py || echo "US価格取得失敗; 前回分を維持"
 
-      - name: 07 ローソク足用OHLC出力(site/ohlc)
-        run: python 07_write_ohlc.py || echo "ohlc生成スキップ"
+      - name: 05 クロスアセット取得(世界)
+        if: steps.mkt.outputs.market == 'us' || steps.mkt.outputs.market == 'both'
+        run: python 05_fetch_macro.py || echo "macro fetch failed; 前回分を維持"
 
-      # --- 米国株テーマ(失敗しても日本株/世界タブは維持) ---
-      - name: US 02 米国株 価格取得（yfinance）
-        run: python us_02_fetch.py || echo "US価格取得失敗; 米国株タブは今回休止"
+      - name: 08 金利取得(日本MOF・先進国)
+        if: steps.mkt.outputs.market == 'us' || steps.mkt.outputs.market == 'both'
+        run: python 08_fetch_rates.py || echo "rates fetch failed"
+
+      # ---- 集計・OHLC・ビルドは毎回実行(取得しなかった市場はキャッシュのpklから再生成) ----
+      - name: 03 日本株テーマ別集計
+        run: python 03_aggregate.py || echo "JP集計スキップ(pkl未取得?)"
+
+      - name: 07 日本株OHLC(site/ohlc)
+        run: python 07_write_ohlc.py || echo "JP OHLC生成スキップ"
 
       - name: US 03 米国テーマ別集計
         run: python us_03_aggregate.py || echo "US集計スキップ"
 
-      - name: US 07 米国ローソク足OHLC出力(site/us_ohlc)
+      - name: US 07 米国OHLC(site/us_ohlc)
         run: python us_07_ohlc.py || echo "US OHLC生成スキップ"
 
-      - name: 05 クロスアセット取得(世界のお金の流れ・失敗しても継続)
-        run: python 05_fetch_macro.py || echo "macro fetch failed; 世界タブは今回休止"
-
-      - name: 08 金利取得(日本MOF・先進国FRED・失敗しても継続)
-        run: python 08_fetch_rates.py || echo "rates fetch failed"
-
-      - name: 06 クロスアセット集計(失敗時は空jsonでビルド継続)
+      - name: 06 クロスアセット集計
         run: |
           python 06_macro_agg.py || python -c "import json;open('macro.json','w',encoding='utf-8').write(json.dumps({'updated':'','start':'','dates':[],'cats':[],'ratesPx':[],'inst':{},'ratios':[]},ensure_ascii=False))"
 

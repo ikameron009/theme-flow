@@ -185,7 +185,7 @@ table.sp .sc{font-size:9.5px;color:var(--muted);font-family:"IBM Plex Mono",mono
       <h1>テーマ別 資金フロー</h1>
       <div class="sub">日本株・米国株のテーマ構成銘柄を横断集計。売買代金（＝終値×出来高）で、どこから資金が抜け、どこへ入っているかを時系列で追う。</div>
     </div>
-    <div class="updated">最終更新 <b id="u-date">–</b><a class="upd-btn" id="upd-btn" href="https://github.com/ikameron009/theme-flow/actions/workflows/update.yml" target="_blank" rel="noopener">🔄 更新</a><br><span id="u-univ">–</span><span id="upd-hint" hidden></span></div>
+    <div class="updated">最終更新 <b id="u-date">–</b><a class="upd-btn" id="upd-btn" href="https://github.com/ikameron009/theme-flow/actions/workflows/update.yml" target="_blank" rel="noopener">🔄 更新</a><br><span id="u-univ">–</span><br><span id="u-sched" style="color:var(--muted)"></span><span id="upd-hint" hidden></span></div>
   </header>
 
   <div class="upd-banner" id="upd-banner" hidden><b>新しいデータがあります。</b><span>手動更新が完了しました。</span><button id="upd-reload" type="button">再読込</button></div>
@@ -788,11 +788,13 @@ function switchTab(t){
     if(t!==market){bindMarket(t);marketReset();renderMarket();}
     $('#u-date').textContent=DATA.updated;
     $('#u-univ').textContent=`${market==='us'?'米国株':'日本株'} ${DATA.n_themes}テーマ / ${DATA.n_stocks.toLocaleString()}銘柄`;
-  }else if(t==='world'){$('#u-date').textContent=MACRO.updated||'–';$('#u-univ').textContent='世界クロスアセット';
+    $('#u-sched').textContent=SCHED[market];
+  }else if(t==='world'){$('#u-date').textContent=MACRO.updated||'–';$('#u-univ').textContent='世界クロスアセット';$('#u-sched').textContent=SCHED.world;
     if(!state.worldDrawn){state.worldDrawn=true;drawMacro();drawRatios();}}
-  else{$('#u-univ').textContent='VCPスクリーナー';
+  else{$('#u-univ').textContent='VCPスクリーナー';$('#u-sched').textContent=SCHED[state.vcpMkt];
     loadVcp(state.vcpMkt).then(()=>{drawVcp();const D=VCP_DATA[state.vcpMkt];$('#u-date').textContent=(D&&D.updated)||'–';});}
 }
+const SCHED={jp:'毎日 3:00 JST 更新',us:'毎日 7:00 JST 更新',world:'毎日 7:00 JST 更新'};
 
 /* ---------- VCP screener tab (案②: 最新日+検索/ソート+日付スライダー+◁▷) ---------- */
 const VCP_DATA={us:null,jp:null};
@@ -898,7 +900,9 @@ function wireSearch(inputId,clearId,fn){const el=$('#'+inputId),x=$('#'+clearId)
 wireSearch('hsearch','hsearch-x',v=>{state.hquery=v;drawHeat();});
 wireSearch('rksearch','rksearch-x',v=>{state.rkQuery=v;drawRkList();});
 wireSearch('vcpsearch','vcpsearch-x',v=>{state.vcpQuery=v;drawVcp();});
-seg('vcpmkt',b=>{state.vcpMkt=b.dataset.m;state.vcpIdx=null;state.vcpQuery='';const s=$('#vcpsearch');if(s)s.value='';const x=$('#vcpsearch-x');if(x)x.hidden=true;loadVcp(state.vcpMkt).then(drawVcp);});
+seg('vcpmkt',b=>{state.vcpMkt=b.dataset.m;state.vcpIdx=null;state.vcpQuery='';const s=$('#vcpsearch');if(s)s.value='';const x=$('#vcpsearch-x');if(x)x.hidden=true;
+  $('#u-sched').textContent=SCHED[state.vcpMkt];
+  loadVcp(state.vcpMkt).then(()=>{drawVcp();const D=VCP_DATA[state.vcpMkt];$('#u-date').textContent=(D&&D.updated)||'–';});});
 $('#vcp-prev').onclick=()=>{if(state.vcpIdx>0){state.vcpIdx--;drawVcp();}};
 $('#vcp-next').onclick=()=>{const D=VCP_DATA[state.vcpMkt];if(D&&D.sessions&&state.vcpIdx<D.sessions.length-1){state.vcpIdx++;drawVcp();}};
 $('#vcp-day').addEventListener('input',e=>{state.vcpIdx=+e.target.value;drawVcp();});
@@ -913,7 +917,7 @@ new MutationObserver(redrawAll).observe(document.documentElement,{attributes:tru
 state.mapTheme=state.selected[0]||themes[0]?.name||null;
 window.addEventListener('resize',()=>syncPanelHeight());
 if(!US_ON){const ub=document.querySelector('#tabbar button[data-t="us"]');if(ub)ub.hidden=true;}
-applyMarketLabels();
+applyMarketLabels();$('#u-sched').textContent=SCHED.jp;
 drawTiles();drawChart();bindTip();drawRank();drawHeat();drawStock();drawRk();
 
 /* ---------- 手動更新ボタン & 新デプロイ自動検知 ---------- */
