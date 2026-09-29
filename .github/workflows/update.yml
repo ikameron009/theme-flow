@@ -4,25 +4,26 @@ on:
   schedule:
     # 2段階: 18:00 UTC = 翌03:00 JST → 日本株のみ取得(前営業日の確定足・寄付き前)。
     #        22:00 UTC = 翌07:00 JST → 米国株+世界のみ取得(米引け後で確定)。
-    # UTCの日-木 = JSTの月-金(取引日)。※GitHubの定時cronは数十分〜数時間遅れることがある。
+    # ※GitHubの定時cronは数十分〜数時間遅れることがある(無料枠の仕様)。
     - cron: '0 18 * * 0-4'   # 03:00 JST 日本株
     - cron: '0 22 * * 0-4'   # 07:00 JST 米国株+世界
   workflow_dispatch:
     inputs:
       market:
-        description: 'jp / us / both'
+        description: 'jp / us / both / skip'
         default: 'both'
   push:
-    branches: [ main ]       # コード/JSON(VCP)更新時は再取得せずキャッシュから再ビルド&デプロイ
+    branches: [ main ]       # コード/VCP JSON更新時: 再取得も再集計もせずキャッシュから軽量デプロイ
 
 permissions:
   contents: read
   pages: write
   id-token: write
 
+# ★衝突しても"キャンセルしない"= 定時フェッチがVCP pushに殺されない(順番待ち)
 concurrency:
   group: pages
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   build:
@@ -38,14 +39,19 @@ jobs:
       - name: Install deps
         run: pip install -r requirements.txt
 
-      # 直近ランのpkl(両市場の価格)を復元。市場別に「自分だけ取得・相手はキャッシュ」で
-      # フルサイトを作るために使う。run_idキー+restore-keysで常に最新を復元。
-      - name: Restore price cache
+      # 価格pklだけでなく、集計JSONとOHLCもキャッシュ。
+      # → 自市場だけ取得・再集計し、相手市場とpush時(skip)はキャッシュから即デプロイできる。
+      - name: Restore data cache
         uses: actions/cache@v4
         with:
           path: |
             ./*.pkl
             ./macro_fresh.csv
+            ./theme_flow.json
+            ./us_theme_flow.json
+            ./macro.json
+            ./site/ohlc
+            ./site/us_ohlc
           key: data-${{ github.run_id }}
           restore-keys: data-
 
@@ -59,17 +65,18 @@ jobs:
           else
             M=skip
           fi
-          # キャッシュにpklが無い(初回/失効)なら全取得にフォールバック
-          if [ ! -f close.pkl ] || [ ! -f us_close.pkl ]; then M=both; fi
+          # キャッシュに必要物が無い(初回/失効)なら全取得にフォールバック
+          if [ ! -f close.pkl ] || [ ! -f us_close.pkl ] || [ ! -f theme_flow.json ] || [ ! -f us_theme_flow.json ]; then
+            M=both
+          fi
           echo "market=$M" >> "$GITHUB_OUTPUT"
           echo "MARKET=$M"
 
-      # ---- 日本株の取得(3:00 JSTの回 / both / 初回) ----
+      # ---- 取得(自市場のみ) ----
       - name: 02 JP 価格取得
         if: steps.mkt.outputs.market == 'jp' || steps.mkt.outputs.market == 'both'
         run: python 02_fetch_prices.py
 
-      # ---- 米国株+世界の取得(7:00 JSTの回 / both / 初回) ----
       - name: US 02 米国株 価格取得
         if: steps.mkt.outputs.market == 'us' || steps.mkt.outputs.market == 'both'
         run: python us_02_fetch.py || echo "US価格取得失敗; 前回分を維持"
@@ -82,23 +89,29 @@ jobs:
         if: steps.mkt.outputs.market == 'us' || steps.mkt.outputs.market == 'both'
         run: python 08_fetch_rates.py || echo "rates fetch failed"
 
-      # ---- 集計・OHLC・ビルドは毎回実行(取得しなかった市場はキャッシュのpklから再生成) ----
+      # ---- 集計+OHLC(自市場のみ再生成。相手市場・skip時はキャッシュのJSON/OHLCをそのまま使う) ----
       - name: 03 日本株テーマ別集計
-        run: python 03_aggregate.py || echo "JP集計スキップ(pkl未取得?)"
+        if: steps.mkt.outputs.market == 'jp' || steps.mkt.outputs.market == 'both'
+        run: python 03_aggregate.py || echo "JP集計スキップ"
 
       - name: 07 日本株OHLC(site/ohlc)
+        if: steps.mkt.outputs.market == 'jp' || steps.mkt.outputs.market == 'both'
         run: python 07_write_ohlc.py || echo "JP OHLC生成スキップ"
 
       - name: US 03 米国テーマ別集計
+        if: steps.mkt.outputs.market == 'us' || steps.mkt.outputs.market == 'both'
         run: python us_03_aggregate.py || echo "US集計スキップ"
 
       - name: US 07 米国OHLC(site/us_ohlc)
+        if: steps.mkt.outputs.market == 'us' || steps.mkt.outputs.market == 'both'
         run: python us_07_ohlc.py || echo "US OHLC生成スキップ"
 
-      - name: 06 クロスアセット集計
+      - name: 06 クロスアセット集計(世界)
+        if: steps.mkt.outputs.market == 'us' || steps.mkt.outputs.market == 'both'
         run: |
           python 06_macro_agg.py || python -c "import json;open('macro.json','w',encoding='utf-8').write(json.dumps({'updated':'','start':'','dates':[],'cats':[],'ratesPx':[],'inst':{},'ratios':[]},ensure_ascii=False))"
 
+      # ---- index.html生成(毎回・キャッシュ済JSON/OHLC + コミット済VCP JSONを反映) ----
       - name: 04 index.html 生成
         run: python 04_build_html.py
 
