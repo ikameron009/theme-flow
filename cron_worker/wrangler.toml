@@ -1,6 +1,9 @@
 name = "theme-flow-cron"
 main = "src/index.js"
 compatibility_date = "2026-09-01"
+# workers.dev のURLは不要(定時起動のみ)。/status を使う時だけ true にする
+workers_dev = false
+preview_urls = false
 
 # UTC。JST = UTC+9。UTC日-木 = JST月-金
 [triggers]
