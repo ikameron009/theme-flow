@@ -1,4 +1,6 @@
 name: Update theme flow
+# Cloudflare Worker(cron_worker/)が workflow_dispatch で時刻どおり起動する。run-nameの[市場]で見張り/予備判定が識別する
+run-name: ${{ github.event_name == 'workflow_dispatch' && format('Update theme flow [{0}]', inputs.market) || (github.event_name == 'schedule' && 'Update theme flow (backup cron)' || github.event.head_commit.message) }}
 
 on:
   schedule:
@@ -19,6 +21,7 @@ permissions:
   contents: read
   pages: write
   id-token: write
+  actions: read
 
 # ★衝突しても"キャンセルしない"= 定時フェッチがVCP pushに殺されない(順番待ち)
 concurrency:
@@ -26,7 +29,26 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  # ---- 予備cronの判定: Workerの起動分が済んでいれば(成功 or 実行中)何もしない ----
+  gate:
+    runs-on: ubuntu-latest
+    outputs:
+      go: ${{ steps.g.outputs.go }}
+    steps:
+      - id: g
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ "${{ github.event_name }}" != "schedule" ]; then echo "go=true" >> "$GITHUB_OUTPUT"; exit 0; fi
+          if [ "${{ github.event.schedule }}" = "0 18 * * 0-4" ]; then M=jp; else M=us; fi
+          SINCE=$(date -u -d '12 hours ago' +%Y-%m-%dT%H:%M:%SZ)
+          N=$(gh run list -R "${{ github.repository }}" --workflow update.yml --event workflow_dispatch --created ">=$SINCE" --limit 20 --json displayTitle,status,conclusion --jq "[.[] | select((.displayTitle|contains(\"[$M]\")) or (.displayTitle|contains(\"[both]\"))) | select(.conclusion==\"success\" or .status!=\"completed\")] | length") || N=0
+          echo "market=$M 済み件数=$N"
+          if [ "$N" -gt 0 ]; then echo "go=false" >> "$GITHUB_OUTPUT"; else echo "go=true" >> "$GITHUB_OUTPUT"; fi
+
   build:
+    needs: gate
+    if: needs.gate.outputs.go == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -128,3 +150,4 @@ jobs:
     steps:
       - id: deployment
         uses: actions/deploy-pages@v4
+
