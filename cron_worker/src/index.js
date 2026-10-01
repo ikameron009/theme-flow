@@ -7,7 +7,7 @@
 //   GH_TOKEN        fine-grained PAT。対象repo=theme-flow, vcp-screener / 権限=Actions: Read and write
 //   NOTIFY_WEBHOOK  任意。Discord の Webhook URL。未設定なら通知はログのみ
 //
-// 時刻はすべてUTC(JST-9h)。UTC日-木 = JST月-金。
+// 時刻はすべてUTC(JST-9h)。UTC月-金 = JST火-土(金曜の結果は土曜朝。JST月曜朝はNYがまだ日曜で日付がずれるため)。
 
 const OWNER = "ikameron009";
 const TARGETS = [
@@ -17,10 +17,10 @@ const TARGETS = [
 
 // cron式 → 役割
 const JOBS = {
-  "0 18 * * SUN-THU": { kind: "dispatch", market: "jp" }, // 03:00 JST 日本株
-  "0 22 * * SUN-THU": { kind: "dispatch", market: "us" }, // 07:00 JST 米国株+世界
-  "0 19 * * SUN-THU": { kind: "watch", market: "jp", sinceH: 2 }, // 04:00 JST 日本株の完了確認
-  "0 23 * * SUN-THU": { kind: "watch", market: "us", sinceH: 2 }, // 08:00 JST 米国株の完了確認
+  "0 18 * * MON-FRI": { kind: "dispatch", market: "jp" }, // 03:00 JST 日本株
+  "0 22 * * MON-FRI": { kind: "dispatch", market: "us" }, // 07:00 JST 米国株+世界
+  "0 19 * * MON-FRI": { kind: "watch", market: "jp", sinceH: 2 }, // 04:00 JST 日本株の完了確認
+  "0 23 * * MON-FRI": { kind: "watch", market: "us", sinceH: 2 }, // 08:00 JST 米国株の完了確認
 };
 
 const gh = (env, path, init = {}) =>

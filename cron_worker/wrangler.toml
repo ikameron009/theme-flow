@@ -5,11 +5,11 @@ compatibility_date = "2026-09-01"
 workers_dev = false
 preview_urls = false
 
-# UTC。JST = UTC+9。UTC日-木 = JST月-金
+# UTC。JST = UTC+9。UTC月-金 = JST火-土(金曜の結果は土曜朝。JST月曜朝はNYがまだ日曜で日付がずれるため)
 [triggers]
 crons = [
-  "0 18 * * SUN-THU",  # 03:00 JST 日本株を起動
-  "0 22 * * SUN-THU",  # 07:00 JST 米国株+世界を起動
-  "0 19 * * SUN-THU",  # 04:00 JST 日本株の完了確認(失敗なら再実行+通知)
-  "0 23 * * SUN-THU",  # 08:00 JST 米国株の完了確認(失敗なら再実行+通知)
+  "0 18 * * MON-FRI",  # 03:00 JST 日本株を起動
+  "0 22 * * MON-FRI",  # 07:00 JST 米国株+世界を起動
+  "0 19 * * MON-FRI",  # 04:00 JST 日本株の完了確認(失敗なら再実行+通知)
+  "0 23 * * MON-FRI",  # 08:00 JST 米国株の完了確認(失敗なら再実行+通知)
 ]
