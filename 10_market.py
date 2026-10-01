@@ -36,6 +36,9 @@ CFG = {
                indices=[("^GSPC", "S&P500"), ("^IXIC", "NASDAQ総合"), ("^RUT", "ラッセル2000"),
                         ("^VIX", "VIX"), ("^DJI", "NYダウ")]),
 }
+# 指数が取れない時の代用(連動ETF)
+PROXY = {"^N225": ("1321.T", "日経平均（ETF）"), "^GSPC": ("SPY", "S&P500（ETF）"), "^IXIC": ("QQQ", "NASDAQ100（ETF）"),
+         "^RUT": ("IWM", "ラッセル2000（ETF）"), "^DJI": ("DIA", "NYダウ（ETF）")}
 US_SECTORS = [("XLK", "情報技術"), ("XLC", "通信"), ("XLY", "一般消費財"), ("XLF", "金融"),
               ("XLV", "ヘルスケア"), ("XLI", "資本財"), ("XLE", "エネルギー"), ("XLB", "素材"),
               ("XLP", "生活必需品"), ("XLRE", "不動産"), ("XLU", "公益")]
@@ -48,27 +51,50 @@ def r1(x, d=1):
     return None if x is None or (isinstance(x, float) and not np.isfinite(x)) else round(float(x), d)
 
 
+def _norm(c):
+    c = c.dropna()
+    c.index = pd.to_datetime(c.index)
+    if getattr(c.index, "tz", None) is not None:
+        c.index = c.index.tz_localize(None)
+    c.index = c.index.normalize()
+    return c[~c.index.duplicated(keep="last")]
+
+
 def fetch(tickers):
-    """yfinanceで日次終値(2年)。失敗した銘柄は含めない。"""
+    """日次終値(2年)。①一括download(個別株と同じ方法=GitHubからも安定) ②取れなかった分だけ1本ずつ。"""
     import yfinance as yf
-    try:
-        from curl_cffi import requests as cr
-        sess = cr.Session(impersonate="chrome")
-    except Exception:
-        sess = None
     out = {}
-    for t in tickers:
-        for attempt in (1, 2):
+    for attempt in (1, 2):
+        try:
+            df = yf.download(tickers, period="2y", auto_adjust=False, progress=False,
+                             group_by="ticker", threads=True)
+            for t in tickers:
+                try:
+                    c = _norm(df[t]["Close"])
+                    if len(c):
+                        out[t] = c
+                except Exception:
+                    pass
+            break
+        except Exception as e:
+            print(f"  download attempt {attempt}: {str(e)[:80]}", file=sys.stderr)
+            time.sleep(3)
+    miss = [t for t in tickers if t not in out]
+    if miss:
+        try:
+            from curl_cffi import requests as cr
+            sess = cr.Session(impersonate="chrome")
+        except Exception:
+            sess = None
+        for t in miss:
             try:
-                h = yf.Ticker(t, session=sess).history(period="2y", auto_adjust=False)
-                c = h["Close"].dropna()
+                c = _norm(yf.Ticker(t, session=sess).history(period="2y", auto_adjust=False)["Close"])
                 if len(c):
-                    c.index = pd.to_datetime(c.index).tz_localize(None).normalize()
-                    out[t] = c[~c.index.duplicated(keep="last")]
-                break
+                    out[t] = c
             except Exception as e:
-                print(f"  {t} attempt {attempt}: {str(e)[:80]}", file=sys.stderr)
-                time.sleep(2)
+                print(f"  {t}: {str(e)[:80]}", file=sys.stderr)
+            time.sleep(1)
+    print(f"  指数/ETF 取得 {len(out)}/{len(tickers)}  未取得={[t for t in tickers if t not in out]}")
     return out
 
 
@@ -145,10 +171,16 @@ def main():
 
     # ---- 指数 ----
     tick = [t for t, _ in c["indices"]] + ([t for t, _ in US_SECTORS] if mk == "us" else [])
+    tick += [PROXY[t][0] for t, _ in c["indices"] if t in PROXY]
     px = fetch(tick)
     names = dict(c["indices"])
+    for t, (pt, pn) in PROXY.items():
+        if t in names and (px.get(t) is None or len(px[t]) < 3) and px.get(pt) is not None:
+            px[t] = px[pt]
+            names[t] = pn
     indices = []
-    for t, nm in c["indices"]:
+    for t, _nm in c["indices"]:
+        nm = names[t]
         s = px.get(t)
         if s is None or len(s) < 3:
             old = next((x for x in prev.get("indices", []) if x["key"] == t), None)
