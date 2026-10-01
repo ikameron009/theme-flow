@@ -1,935 +1,537 @@
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>テーマ資金フロー</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>テーマ別資金フロー</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=IBM+Plex+Mono:wght@400;500;600&family=Noto+Sans+JP:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@600;800&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 <style>
+/* A案(明るい誌面型): 白地＋細罫線・ブランド色=ハシビロコウの深い青緑を1色だけ。主役は「本日の地合い」1つ */
 :root{
   color-scheme:light;
-  --plane:#f4f5f3; --surface:#fcfcfb; --surface-2:#f0f1ee;
-  --ink:#111311; --ink-2:#54574f; --muted:#8a8d84;
-  --grid:#e4e5de; --axis:#c7c8bf; --border:rgba(17,19,17,.10);
-  --accent:#2158b8; --pos:#2158b8; --neg:#d0453f;
-  --posrgb:37,120,216; --negrgb:208,69,63;
-  --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a; --s4:#eda100;
-  --s5:#e87ba4; --s6:#008300; --s7:#4a3aa7; --s8:#e34948;
+  --bg:#F6F8F7; --surface:#FFFFFF; --surface-2:#EEF3F2; --ink:#132322; --ink-2:#3E504E; --muted:#5A6B69; --faint:#8C9B99;
+  --line:#DCE4E2; --line-strong:#C3CFCC;
+  --brand:#0D5B5E; --brand-ink:#FFFFFF; --brand-soft:#E3EFEE; --brandrgb:13,91,94;
+  --up:#0B7A55; --up-soft:#E1F2EA; --down:#C23B3F; --down-soft:#F8E5E5; --downrgb:194,59,63;
+  --grey-line:#B9C5C3; --warn-bg:#FAEEDA; --warn-ink:#633806;
+  --c1:#0D5B5E; --c2:#C8813A; --c3:#4F72B0; --c4:#8A64AE; --c5:#3D9468; --c6:#B5524A; --c7:#8F8433; --c8:#6B7B79;
+  --f-display:"Shippori Mincho B1","Hiragino Mincho ProN","Yu Mincho",serif;
+  --f-body:"Zen Kaku Gothic New","Hiragino Sans","Yu Gothic",system-ui,sans-serif;
+  --f-num:"IBM Plex Sans","Zen Kaku Gothic New",system-ui,sans-serif;
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
   color-scheme:dark;
-  --plane:#0c0d0c; --surface:#1a1b19; --surface-2:#232420;
-  --ink:#f7f8f4; --ink-2:#c3c2b7; --muted:#8a8d84;
-  --grid:#2a2b28; --axis:#3a3b37; --border:rgba(255,255,255,.10);
-  --accent:#4f93ea; --pos:#4f93ea; --neg:#e56b66;
-  --posrgb:79,147,234; --negrgb:229,107,102;
-  --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500;
-  --s5:#d55181; --s6:#22a022; --s7:#9085e9; --s8:#e66767;
+  --bg:#0E1716; --surface:#142120; --surface-2:#1A2B29; --ink:#E4ECEA; --ink-2:#C2D0CD; --muted:#9AAFAC; --faint:#6E8481;
+  --line:#243533; --line-strong:#33504D;
+  --brand:#5FB5B1; --brand-ink:#0B1514; --brand-soft:#1B3432; --brandrgb:95,181,177;
+  --up:#4CC08E; --up-soft:#15302A; --down:#EE7A7D; --down-soft:#3A1F21; --downrgb:238,122,125;
+  --grey-line:#3E5654; --warn-bg:#4A3A1C; --warn-ink:#F2D9A8;
+  --c1:#5FB5B1; --c2:#E0A060; --c3:#86A6E0; --c4:#B697D8; --c5:#6CC495; --c6:#E58A80; --c7:#CFC36A; --c8:#9AAFAC;
 }}
 :root[data-theme="dark"]{
   color-scheme:dark;
-  --plane:#0c0d0c; --surface:#1a1b19; --surface-2:#232420;
-  --ink:#f7f8f4; --ink-2:#c3c2b7; --muted:#8a8d84;
-  --grid:#2a2b28; --axis:#3a3b37; --border:rgba(255,255,255,.10);
-  --accent:#4f93ea; --pos:#4f93ea; --neg:#e56b66;
-  --posrgb:79,147,234; --negrgb:229,107,102;
-  --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500;
-  --s5:#d55181; --s6:#22a022; --s7:#9085e9; --s8:#e66767;
+  --bg:#0E1716; --surface:#142120; --surface-2:#1A2B29; --ink:#E4ECEA; --ink-2:#C2D0CD; --muted:#9AAFAC; --faint:#6E8481;
+  --line:#243533; --line-strong:#33504D;
+  --brand:#5FB5B1; --brand-ink:#0B1514; --brand-soft:#1B3432; --brandrgb:95,181,177;
+  --up:#4CC08E; --up-soft:#15302A; --down:#EE7A7D; --down-soft:#3A1F21; --downrgb:238,122,125;
+  --grey-line:#3E5654; --warn-bg:#4A3A1C; --warn-ink:#F2D9A8;
+  --c1:#5FB5B1; --c2:#E0A060; --c3:#86A6E0; --c4:#B697D8; --c5:#6CC495; --c6:#E58A80; --c7:#CFC36A; --c8:#9AAFAC;
 }
 *{box-sizing:border-box}
 [hidden]{display:none!important}
-body{margin:0;background:var(--plane);color:var(--ink);
-  font-family:"Noto Sans JP",system-ui,-apple-system,"Segoe UI",sans-serif;
-  font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
-.wrap{max-width:1180px;margin:0 auto;padding:28px 22px 60px}
-.mono{font-family:"IBM Plex Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums}
+html{scroll-behavior:smooth;scroll-padding-top:118px}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:14px;line-height:1.7;-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}
+button{font-family:inherit}
+:focus-visible{outline:2px solid var(--brand);outline-offset:2px;border-radius:4px}
+.wrap{max-width:1200px;margin:0 auto;padding-inline:20px}
+.num,.mono{font-family:var(--f-num);font-variant-numeric:tabular-nums}
+.up,.pos{color:var(--up)} .down,.neg{color:var(--down)}
+.muted{color:var(--faint)}
 
-header{display:flex;flex-wrap:wrap;align-items:flex-end;gap:16px 24px;justify-content:space-between;margin-bottom:22px}
-.eyebrow{font-family:"Archivo",sans-serif;text-transform:uppercase;letter-spacing:.14em;font-size:11px;font-weight:700;color:var(--accent)}
-h1{font-family:"Archivo","Noto Sans JP",sans-serif;font-weight:800;font-size:27px;line-height:1.12;margin:.18em 0 0;text-wrap:balance;letter-spacing:-.01em}
-.sub{color:var(--ink-2);font-size:13px;margin-top:6px;max-width:62ch}
-.updated{font-size:12px;color:var(--muted);text-align:right;white-space:nowrap}
-.updated b{color:var(--ink);font-weight:600}
-.upd-btn{display:inline-block;font-size:11px;font-weight:600;color:var(--accent);border:1px solid var(--border);border-radius:6px;padding:2px 8px;margin-left:6px;cursor:pointer;text-decoration:none}
-.upd-btn:hover{background:var(--surface-2)}
-#upd-hint{display:block;font-size:11px;color:var(--muted);margin-top:4px;max-width:280px;white-space:normal;text-align:right}
-.upd-banner{background:var(--surface);border:1px solid var(--accent);border-radius:8px;padding:8px 12px;margin:0 0 14px;font-size:13px;color:var(--ink);display:flex;align-items:center;gap:10px}
-.upd-banner b{color:var(--accent)}
-.upd-banner button{font:inherit;font-size:12px;border:1px solid var(--accent);background:var(--accent);color:#fff;border-radius:6px;padding:4px 10px;cursor:pointer;white-space:nowrap}
+/* ---------- header ---------- */
+header.top{background:var(--surface);border-bottom:1px solid var(--line);position:sticky;top:env(safe-area-inset-top,0px);z-index:30}
+.hbar{display:flex;align-items:center;gap:16px;height:60px}
+.logo{display:flex;align-items:center;gap:10px;flex-shrink:0}
+.logo svg{width:30px;height:30px}
+.logo b{font-family:var(--f-display);font-weight:800;font-size:19px;letter-spacing:.02em;white-space:nowrap}
+.mseg{display:inline-flex;background:var(--bg);border:1px solid var(--line);border-radius:999px;padding:3px;flex-shrink:0}
+.mseg button{border:0;background:transparent;font:500 13px var(--f-body);color:var(--muted);padding:4px 14px;border-radius:999px;cursor:pointer}
+.mseg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.hsearch{flex:1;min-width:0;display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:999px;padding:6px 14px;color:var(--faint);background:var(--bg)}
+.hsearch input{border:0;background:transparent;font:14px var(--f-body);color:var(--ink);width:100%;outline:none}
+.hlink{font-size:13px;color:var(--muted);white-space:nowrap}
+.hlink:hover{color:var(--brand)}
+.btn{display:inline-flex;align-items:center;gap:6px;background:var(--brand);color:var(--brand-ink);font:700 13px var(--f-body);padding:8px 16px;border-radius:999px;white-space:nowrap;border:0;cursor:pointer}
+.btn.ghost{background:transparent;color:var(--brand);border:1px solid var(--brand)}
+.btn.sm{font-size:12px;padding:5px 12px}
 
-.tabbar{display:inline-flex;background:var(--surface-2);border:1px solid var(--border);border-radius:11px;padding:4px;gap:3px;margin-bottom:20px}
-.tabbar button{font:inherit;font-size:14px;font-weight:500;border:0;background:transparent;color:var(--ink-2);padding:9px 18px;border-radius:8px;cursor:pointer}
-.tabbar button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.1)}
-.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:22px}
-.tile{background:var(--surface);border:1px solid var(--border);border-radius:11px;padding:13px 15px}
-.tile .k{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:600}
-.tile .v{font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums;font-size:23px;font-weight:600;margin-top:4px;line-height:1}
-.tile .d{font-size:12px;color:var(--ink-2);margin-top:5px}
-.tile .v.big{font-family:"Archivo",sans-serif;font-size:18px;font-weight:700}
+/* ---------- index strip ---------- */
+.strip{border-bottom:1px solid var(--line);background:var(--surface)}
+.strip .wrap{display:flex;overflow-x:auto;scrollbar-width:none}
+.strip .wrap::-webkit-scrollbar{display:none}
+.tick{display:flex;flex-direction:column;padding:7px 20px 7px 0;margin-right:20px;border-right:1px solid var(--line);white-space:nowrap}
+.tick:last-child{border-right:0}
+.tick small{font-size:11px;color:var(--muted);line-height:1.4}
+.tick span{font-size:14px;font-weight:500;line-height:1.4}
+.tick em{font-style:normal;font-size:12px;margin-left:6px}
 
-.panel{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px 18px 14px;margin-bottom:16px}
-.grid-main{display:grid;grid-template-columns:1fr 372px;gap:16px;align-items:start}
-.phead{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:4px}
-.ptitle{font-family:"Archivo","Noto Sans JP",sans-serif;font-weight:700;font-size:15px}
-.phint{font-size:11.5px;color:var(--muted)}
-.pdesc{font-size:11.5px;color:var(--ink-2);margin:2px 0 12px;line-height:1.55}
+/* ---------- jump nav ---------- */
+nav.jump{position:sticky;top:calc(env(safe-area-inset-top,0px) + 60px);z-index:25;background:var(--bg);border-bottom:1px solid var(--line)}
+nav.jump .wrap{display:flex;align-items:center;gap:28px;overflow-x:auto;scrollbar-width:none}
+nav.jump a{padding:12px 0;font-size:14px;font-weight:500;color:var(--muted);border-bottom:2px solid transparent;white-space:nowrap}
+nav.jump a.on{color:var(--ink);border-bottom-color:var(--brand)}
+nav.jump .upd{margin-left:auto;font-size:12px;color:var(--faint);white-space:nowrap}
+nav.jump .upd a{color:var(--brand);margin-left:8px;font-weight:600}
+.upd-banner{background:var(--brand-soft);border:1px solid var(--brand);border-radius:10px;padding:8px 14px;margin-top:14px;font-size:13px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.upd-hint{font-size:12px;color:var(--muted);margin-top:8px}
 
-.ctlrow{display:flex;align-items:center;gap:9px;margin-bottom:8px;flex-wrap:wrap}
-.ctl-label{font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:700;min-width:38px}
-.seg{display:inline-flex;background:var(--surface-2);border:1px solid var(--border);border-radius:9px;padding:3px;gap:2px;flex-wrap:wrap}
-.seg button{font:inherit;font-size:12.5px;border:0;background:transparent;color:var(--ink-2);padding:6px 11px;border-radius:6px;cursor:pointer;font-weight:500;white-space:nowrap}
-.seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,.08)}
-.seg.small button{padding:5px 9px;font-size:12px}
-.search{display:inline-flex;align-items:center;gap:6px;background:var(--surface-2);border:1px solid var(--border);border-radius:9px;padding:4px 10px}
-.search input{font:inherit;font-size:12.5px;border:0;background:transparent;color:var(--ink);width:120px;outline:none}
-.search input::placeholder{color:var(--muted)}
-.search .x{cursor:pointer;color:var(--muted);font-size:13px;line-height:1;padding:0 2px;user-select:none}
-.search .x:hover{color:var(--ink)}
-.daybtn{font:inherit;font-size:15px;line-height:1;border:1px solid var(--border);background:var(--surface-2);color:var(--ink-2);border-radius:7px;width:30px;height:30px;cursor:pointer;flex:none}
-.daybtn:hover{background:var(--surface);color:var(--ink)}
-.daybtn:disabled{opacity:.4;cursor:default}
-.vtl{display:inline-flex;gap:1px;vertical-align:middle}
-.vtl i{width:4px;height:11px;border-radius:1px;background:var(--surface-2)}
-.vtag{font-size:9.5px;margin-left:6px;font-weight:600}
-.ptag{font-size:11px;padding:1px 7px;border-radius:6px;font-weight:600;white-space:nowrap}
-tr.gone td{opacity:.5}
-tr.gone .t{text-decoration:line-through}
+/* ---------- sections ---------- */
+section.sec{padding-block:40px 6px}
+.sec-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:18px;flex-wrap:wrap}
+.eyebrow{font:600 11px var(--f-num);letter-spacing:.14em;color:var(--brand);text-transform:uppercase}
+h2{font-family:var(--f-display);font-weight:800;font-size:28px;line-height:1.3;margin:2px 0 0;text-wrap:balance}
+h3{font-size:15px;font-weight:700;margin:0;line-height:1.5}
+h3 .sub,.meta{font-size:12px;color:var(--faint);font-weight:400}
+.sub-h{font-family:var(--f-display);font-weight:800;font-size:20px;margin:30px 0 12px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px;min-width:0}
+.panel+.panel{margin-top:18px}
+.grid>.panel+.panel,.cards4>.panel+.panel{margin-top:0}
+.grid{display:grid;gap:18px}
+.g-hero{grid-template-columns:minmax(0,1.6fr) minmax(0,1fr)}
+.g-2{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+.g-main{grid-template-columns:minmax(0,1fr) 380px;align-items:start}
+.g-map{grid-template-columns:minmax(0,1fr) 340px;align-items:start}
+.mt{margin-top:18px}
+.phead{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:6px;flex-wrap:wrap}
+.pdesc{font-size:12px;color:var(--muted);margin:2px 0 12px;line-height:1.65;max-width:80ch}
+@media (max-width:980px){.g-main,.g-map{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:860px){.g-hero,.g-2{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:760px){.hlink,.hsearch{display:none}.hbar{gap:10px}.logo b{font-size:16px}.hbar .btn{margin-left:auto}nav.jump .upd{display:none}h2{font-size:24px}}
+@media (max-width:520px){.logo b{display:none}.mseg button{padding:4px 11px}}
 
-.legend{display:flex;flex-wrap:wrap;gap:6px 12px;margin:10px 0 6px}
-.chip{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--ink-2);cursor:pointer;padding:2px 4px;border-radius:6px}
-.chip .sw{width:11px;height:11px;border-radius:3px;flex:none}
-.chip b{color:var(--ink);font-weight:600}
+/* ---------- controls ---------- */
+.ctlrow{display:flex;align-items:center;gap:8px 10px;margin-bottom:8px;flex-wrap:wrap}
+.ctl-label{font-size:11px;color:var(--faint);min-width:30px}
+.seg{display:inline-flex;gap:4px;flex-wrap:wrap}
+.seg button{border:1px solid var(--line);background:var(--surface);color:var(--muted);font:500 12px var(--f-body);padding:3px 11px;border-radius:999px;cursor:pointer;white-space:nowrap}
+.seg button:hover{color:var(--ink)}
+.seg button[aria-pressed="true"]{border-color:var(--brand);color:var(--brand);background:var(--brand-soft)}
+.search{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:999px;padding:3px 12px;background:var(--surface)}
+.search input{font:12.5px var(--f-body);border:0;background:transparent;color:var(--ink);width:130px;outline:none}
+.search input::placeholder{color:var(--faint)}
+.search .x{cursor:pointer;color:var(--faint);font-size:13px;line-height:1;padding:0 2px;user-select:none}
+.phint{font-size:11.5px;color:var(--faint)}
+.chips{display:flex;gap:6px 8px;flex-wrap:wrap}
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:12px;border:1px solid var(--line);border-radius:999px;padding:2px 10px;cursor:pointer;background:var(--surface);color:var(--muted);line-height:1.6}
+.chip i.sw{width:14px;height:3px;border-radius:2px;background:var(--grey-line)}
+.chip.on{color:var(--ink);border-color:var(--brand)}
+.chip.on i.sw{background:var(--brand)}
+.chip .x{color:var(--faint);margin-left:2px}
+.chip .x:hover{color:var(--down)}
+.tag{font-size:11px;padding:1px 8px;border-radius:999px;border:1px solid var(--line-strong);color:var(--muted);white-space:nowrap}
 
-.rank{max-height:470px;overflow-y:auto;margin:-2px -6px 0}
-table.rk{width:100%;border-collapse:collapse;font-size:12.5px}
-table.rk th{position:sticky;top:0;background:var(--surface);text-align:right;font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;font-weight:600;padding:6px 8px;border-bottom:1px solid var(--border);z-index:1}
-table.rk th.l{text-align:left}
-table.rk td{padding:5px 8px;border-bottom:1px solid var(--grid);vertical-align:middle}
-table.rk tr{cursor:pointer}
-table.rk tr:hover td{background:var(--surface-2)}
-table.rk tr.on td{background:color-mix(in srgb,var(--accent) 9%,var(--surface))}
-.nm{display:flex;align-items:center;gap:7px}
-.nm .sw{width:9px;height:9px;border-radius:2px;flex:none;outline:1px solid var(--border)}
-.nm .sw.off{background:var(--surface-2)!important}
-.nm .t{font-weight:500;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:118px}
-.nm .cat{font-size:10px;color:var(--muted)}
-.num{font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
-.pos{color:var(--pos)} .neg{color:var(--neg)}
-.sbar{position:relative;height:16px;width:66px}
-/* 資金の初動ランキングは狭い右カラムに全列を収める（横スクロール排除） */
-#rk td,#rk th{padding-left:5px;padding-right:5px}
-#rk .nm .t{max-width:110px}
-#rk .sbar{width:44px}
-.sbar .mid{position:absolute;left:50%;top:0;bottom:0;width:1px;background:var(--axis)}
-.sbar i{position:absolute;top:3px;height:10px;border-radius:2px}
+/* ---------- verdict ---------- */
+.verdict{display:flex;flex-direction:column;gap:16px}
+.v-top{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap}
+.v-label{font-family:var(--f-display);font-weight:800;font-size:52px;line-height:1;letter-spacing:.01em}
+.v-label.on{color:var(--up)} .v-label.off{color:var(--down)} .v-label.mid{color:var(--ink-2)}
+.v-sub{font-size:13px;color:var(--muted);margin-top:8px}
+.pill{display:inline-block;font-size:11px;font-weight:700;padding:2px 10px;border-radius:999px;background:var(--surface-2);color:var(--muted);white-space:nowrap}
+.meter-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+@media (max-width:560px){.meter-row{grid-template-columns:minmax(0,1fr)}.v-label{font-size:40px}}
+.meter small{display:block;font-size:11px;color:var(--muted);line-height:1.5}
+.meter .val{font-size:21px;font-weight:600;margin-top:2px}
+.meter .ok{font-size:11px;font-weight:700}
+.bar2{height:6px;border-radius:3px;background:var(--down-soft);overflow:hidden;margin-top:6px}
+.bar2 i{display:block;height:100%;background:var(--up);border-radius:3px}
+.summary{border-top:1px solid var(--line);padding-top:14px;display:grid;gap:8px}
+.summary p{margin:0;max-width:64ch}
 
-th.srt{cursor:pointer;user-select:none}
-th.srt:hover{color:var(--ink-2)}
-.ar{font-size:9px;margin-left:2px;color:var(--accent)}
-#rkbump .rkhit{cursor:pointer}
+/* ---------- flow list ---------- */
+.flow-list{list-style:none;margin:0;padding:0}
+.flow-list li{display:grid;grid-template-columns:22px minmax(0,1fr) 84px 60px;align-items:center;gap:10px;padding:8px 0;border-top:1px solid var(--line);cursor:pointer}
+.flow-list li:first-child{border-top:0}
+.flow-list li:hover .nm{color:var(--brand)}
+.flow-list .rk{font:600 13px var(--f-num);color:var(--faint)}
+.flow-list .nm{font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.flow-list .cat{display:block;font-size:11px;color:var(--faint);font-weight:400}
+.hbar1{height:6px;background:var(--surface-2);border-radius:3px;position:relative}
+.hbar1 i{position:absolute;left:0;top:0;bottom:0;border-radius:3px;background:var(--brand)}
+.flow-list .pct{text-align:right;font-weight:600}
+.subh{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:6px;flex-wrap:wrap}
+.divider{border-top:1px solid var(--line);margin:12px 0 6px}
+
+/* ---------- index cards ---------- */
+.cards4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px;margin-top:18px}
+@media (max-width:860px){.cards4{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.icard{padding:14px 16px 10px}
+.icard .nm{font-size:12px;color:var(--muted);display:flex;justify-content:space-between;gap:6px}
+.icard .px{font-size:20px;font-weight:600;margin-top:2px;line-height:1.3}
+.icard .ch{font-size:12px;font-weight:600}
+.icard svg{display:block;width:100%;height:44px;margin-top:6px}
+
+/* ---------- sectors / calendar ---------- */
+.sectors{display:grid;gap:6px}
+.srow{display:grid;grid-template-columns:104px minmax(0,1fr) 62px;align-items:center;gap:10px;font-size:13px}
+.srow .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.srow .track{height:8px;position:relative}
+.srow .track::before{content:"";position:absolute;left:50%;top:-3px;bottom:-3px;border-left:1px solid var(--line-strong)}
+.srow .track i{position:absolute;top:0;bottom:0;border-radius:2px}
+.srow .v{text-align:right;font-weight:500}
+.sgap{border-top:1px dashed var(--line);margin:4px 0}
+.cal{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:5px}
+.cal .dow{font-size:11px;color:var(--faint);text-align:center}
+.cal .d{aspect-ratio:1.6;max-width:100%;border-radius:6px;display:flex;flex-direction:column;justify-content:center;align-items:center;font-size:10px;line-height:1.25;cursor:default}
+.cal .d b{font:600 12px var(--f-num)}
+.cal .d.today{outline:2px solid var(--brand);outline-offset:1px}
+.legend{display:flex;gap:6px 14px;font-size:11px;color:var(--muted);margin-top:10px;flex-wrap:wrap;align-items:center}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+
+/* ---------- charts ---------- */
 .chartbox{width:100%;position:relative}
-svg{display:block;width:100%;height:auto;overflow:visible}
-.gl{stroke:var(--grid);stroke-width:1}
-.axl{fill:var(--muted);font-size:11px;font-family:"IBM Plex Mono",monospace}
-.ln{fill:none;stroke-width:2;stroke-linejoin:round;stroke-linecap:round}
-.cross{stroke:var(--axis);stroke-width:1;stroke-dasharray:3 3}
-.tip{position:absolute;pointer-events:none;background:var(--surface);border:1px solid var(--border);border-radius:9px;padding:9px 11px;font-size:12px;box-shadow:0 6px 22px rgba(0,0,0,.16);min-width:150px;opacity:0;transition:opacity .08s;z-index:5}
-.tip .td{font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--muted);margin-bottom:5px}
+.chartbox svg,.hm-scroll svg{display:block;width:100%;height:auto;overflow:visible}
+.hsearch svg,.bigsearch svg,.logo svg,.lockcard svg{flex:none}
+.gl{stroke:var(--line);stroke-width:1}
+.axl{fill:var(--faint);font-size:11px;font-family:var(--f-num)}
+.ln{fill:none;stroke-width:1.6;stroke-linejoin:round;stroke-linecap:round}
+.cross{stroke:var(--line-strong);stroke-width:1;stroke-dasharray:3 3}
+.tip{position:absolute;pointer-events:none;background:var(--surface);border:1px solid var(--line-strong);border-radius:10px;padding:9px 11px;font-size:12px;box-shadow:0 8px 24px rgba(10,40,40,.14);min-width:150px;opacity:0;transition:opacity .08s;z-index:5}
+.tip .td{font-family:var(--f-num);font-size:11px;color:var(--faint);margin-bottom:5px}
 .tip .row{display:flex;align-items:center;gap:7px;justify-content:space-between;margin:2px 0}
 .tip .row .l{display:flex;align-items:center;gap:6px;overflow:hidden}
 .tip .row .sw{width:9px;height:9px;border-radius:2px;flex:none}
-.tip .row .nm2{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:110px}
-.tip .row .val{font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums;font-weight:600}
+.tip .row .nm2{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:130px}
+.tip .row .val{font-family:var(--f-num);font-variant-numeric:tabular-nums;font-weight:600}
 
-/* map + stock */
-.map-grid{display:grid;grid-template-columns:1fr 330px;gap:16px;align-items:start}
-.hm-scroll{overflow:auto;max-height:620px;border:1px solid var(--border);border-radius:9px}
-.hlegend{display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--ink-2);margin-top:10px;flex-wrap:wrap}
-.hscale{display:flex;height:11px;width:170px;border-radius:3px;overflow:hidden;border:1px solid var(--border)}
+/* ---------- tables ---------- */
+.rank{max-height:470px;overflow-y:auto;margin:0 -6px}
+table.rk{width:100%;border-collapse:collapse;font-size:12.5px}
+table.rk th{position:sticky;top:0;background:var(--surface);text-align:right;font-size:11px;color:var(--faint);font-weight:500;padding:7px 8px;border-bottom:1px solid var(--line-strong);z-index:1;white-space:nowrap}
+table.rk th.l{text-align:left}
+table.rk td{padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:middle}
+table.rk tbody tr{cursor:pointer}
+table.rk tbody tr:hover td{background:var(--brand-soft)}
+table.rk tr.on td{background:color-mix(in srgb,var(--brand) 10%,var(--surface))}
+.nm{display:flex;align-items:center;gap:7px}
+.nm .sw{width:9px;height:9px;border-radius:2px;flex:none;background:var(--surface-2);outline:1px solid var(--line)}
+.nm .sw.on{background:var(--brand);outline:0}
+.nm .t{font-weight:500;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:150px}
+.nm .cat,.cat{font-size:10.5px;color:var(--faint)}
+td.num,th.num{text-align:right;white-space:nowrap}
+.sbar{position:relative;height:14px;width:50px}
+#rk td,#rk th{padding-left:5px;padding-right:5px}
+#rk .nm .t{max-width:118px}
+#rk .sbar{width:40px}
+.sbar .mid{position:absolute;left:50%;top:0;bottom:0;width:1px;background:var(--line-strong)}
+.sbar i{position:absolute;top:3px;height:8px;border-radius:2px}
+th.srt{cursor:pointer;user-select:none}
+th.srt:hover{color:var(--ink-2)}
+.ar{font-size:9px;margin-left:2px;color:var(--brand)}
+.ratio-hi{background:var(--down-soft);color:var(--down);border-radius:4px;padding:1px 6px;font-weight:600}
+
+/* heatmap + stock panel */
+.hm-scroll{overflow:auto;max-height:620px;border:1px solid var(--line);border-radius:10px}
+.hscale{display:flex;height:10px;width:160px;border-radius:3px;overflow:hidden}
 .hscale i{flex:1}
 rect.hcell{cursor:pointer}
 rect.rowhit{cursor:pointer;fill:transparent}
 rect.rowhit:hover{fill:rgba(128,128,128,.08)}
-
-.stockpanel{background:var(--surface-2);border:1px solid var(--border);border-radius:11px;padding:12px 12px 8px;position:sticky;top:12px;display:flex;flex-direction:column;overflow:hidden}
-.sp-h{font-family:"Archivo","Noto Sans JP",sans-serif;font-weight:700;font-size:14px;display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
-.sp-h .c{font-size:10.5px;color:var(--muted);font-weight:600}
-.sp-sub{font-size:11px;color:var(--muted);margin:2px 0 8px}
+.stockpanel{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:12px 12px 8px;position:sticky;top:130px;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+.sp-h{font-weight:700;font-size:14px;display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.sp-h .c{font-size:11px;color:var(--faint);font-weight:400}
+.sp-sub{font-size:11px;color:var(--faint);margin:2px 0 8px}
 .sp-list{flex:1 1 0;min-height:60px;overflow-y:auto;margin:0 -4px}
 table.sp{width:100%;border-collapse:collapse;font-size:12px}
-table.sp th{position:sticky;top:0;background:var(--surface-2);text-align:right;font-size:10px;color:var(--muted);font-weight:600;padding:5px 6px;border-bottom:1px solid var(--border);cursor:pointer;white-space:nowrap}
+table.sp th{position:sticky;top:0;background:var(--bg);text-align:right;font-size:10.5px;color:var(--faint);font-weight:500;padding:5px 6px;border-bottom:1px solid var(--line-strong);cursor:pointer;white-space:nowrap}
 table.sp th.l{text-align:left}
-table.sp td{padding:4px 6px;border-bottom:1px solid var(--grid);vertical-align:middle}
+table.sp td{padding:5px 6px;border-bottom:1px solid var(--line);vertical-align:middle}
 table.sp tbody tr{cursor:pointer}
 table.sp tbody tr:hover td{background:var(--surface)}
-table.sp tbody tr.on td{background:color-mix(in srgb,var(--accent) 10%,var(--surface-2))}
-table.sp .snm{font-weight:500;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:96px}
-table.sp tbody tr:hover .snm{text-decoration:underline;text-decoration-color:var(--accent)}
-table.sp .sc{font-size:9.5px;color:var(--muted);font-family:"IBM Plex Mono",monospace}
+table.sp tbody tr.on td{background:var(--brand-soft)}
+table.sp .snm{font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:110px}
+table.sp .sc{font-size:10px;color:var(--faint);font-family:var(--f-num)}
+.extl{font-size:11px;margin-left:10px;color:var(--brand)}
 
-.foot{margin-top:8px;font-size:11.5px;color:var(--muted);line-height:1.7;border-top:1px solid var(--border);padding-top:14px}
-.foot b{color:var(--ink-2);font-weight:600}
+/* ---------- stock search ---------- */
+.bigsearch{display:flex;align-items:center;gap:10px;border:1px solid var(--line-strong);border-radius:12px;padding:12px 16px;background:var(--surface)}
+.bigsearch input{border:0;outline:none;background:transparent;font:16px var(--f-body);color:var(--ink);width:100%}
+.results{margin-top:8px;border:1px solid var(--line);border-radius:10px;max-height:300px;overflow-y:auto;background:var(--surface)}
+.results button{display:flex;width:100%;gap:10px;align-items:baseline;border:0;border-bottom:1px solid var(--line);background:transparent;padding:8px 14px;text-align:left;cursor:pointer;color:var(--ink);font-size:13px}
+.results button:hover,.results button.kb{background:var(--brand-soft)}
+.results button small{color:var(--faint);font-family:var(--f-num)}
+.scard{margin-top:16px}
+.scard .shead{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.scard .shead b{font-family:var(--f-display);font-size:22px;font-weight:800}
+.kv{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:14px 0}
+@media (max-width:640px){.kv{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.kv div{border-top:1px solid var(--line);padding-top:6px}
+.kv small{display:block;font-size:11px;color:var(--muted)}
+.kv b{font:600 17px var(--f-num)}
 
-@media (max-width:860px){
-  .grid-main{grid-template-columns:1fr}
-  .map-grid{grid-template-columns:1fr}
-  .tiles{grid-template-columns:repeat(2,1fr)}
-  .rank{max-height:340px}
-  .stockpanel{position:static}
-}
+/* ---------- screening ---------- */
+.method{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:18px;align-items:start}
+@media (max-width:640px){.method{grid-template-columns:minmax(0,1fr)}}
+.method h3{font-family:var(--f-display);font-size:19px;font-weight:800}
+.stats{display:flex;gap:26px}
+.stats small{display:block;font-size:11px;color:var(--muted)}
+.stats b{font:600 28px var(--f-num)}
+.daybtn{font-size:14px;line-height:1;border:1px solid var(--line);background:var(--surface);color:var(--muted);border-radius:999px;width:30px;height:30px;cursor:pointer;flex:none}
+.daybtn:hover{color:var(--ink)}
+.daybtn:disabled{opacity:.4;cursor:default}
+.vtl{display:inline-flex;gap:1px;vertical-align:middle}
+.vtl i{width:4px;height:11px;border-radius:1px;background:var(--surface-2)}
+.vtag{font-size:10px;margin-left:6px;font-weight:700}
+tr.gone td{opacity:.5}
+tr.gone .t{text-decoration:line-through}
+input[type=range]{accent-color:var(--brand)}
+
+/* ---------- locked (会員限定) ---------- */
+.locked{position:relative;margin-top:2px}
+.locked .veil{filter:blur(5px);opacity:.55;pointer-events:none;user-select:none}
+.lockcard{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:16px}
+.lockcard>div{background:var(--surface);border:1px solid var(--line-strong);border-radius:14px;padding:16px 20px;max-width:380px;text-align:center;box-shadow:0 10px 30px rgba(10,40,40,.10)}
+.lockcard h4{margin:4px 0 6px;font-family:var(--f-display);font-size:17px}
+.lockcard p{margin:0 0 12px;font-size:12.5px;color:var(--muted)}
+.lockcard .row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+
+footer{margin-top:56px;border-top:1px solid var(--line);background:var(--surface)}
+footer .wrap{display:flex;justify-content:space-between;gap:24px;flex-wrap:wrap;padding-block:26px;font-size:12.5px;color:var(--muted);line-height:1.8}
+footer nav{display:flex;gap:20px;flex-wrap:wrap}
+footer a:hover{color:var(--brand)}
+.foot{font-size:11.5px;color:var(--faint);line-height:1.75;margin-top:12px;border-top:1px solid var(--line);padding-top:12px}
+.foot b{color:var(--muted);font-weight:500}
 </style>
 
-<div class="wrap">
-  <header>
-    <div>
-      <div class="eyebrow">Global Equities · Thematic Money Flow</div>
-      <h1>テーマ別 資金フロー</h1>
-      <div class="sub">日本株・米国株のテーマ構成銘柄を横断集計。売買代金（＝終値×出来高）で、どこから資金が抜け、どこへ入っているかを時系列で追う。</div>
+<header class="top">
+  <div class="wrap hbar">
+    <a class="logo" href="#market" aria-label="テーマ別資金フロー トップ">
+      <svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="15" fill="var(--brand)"/><path d="M9 20c3-7 9-10 15-9-3 1-5 3-6 6l-9 3z" fill="var(--brand-ink)"/><circle cx="19" cy="13" r="1.4" fill="var(--brand)"/></svg>
+      <b>テーマ別 資金フロー</b>
+    </a>
+    <div class="mseg" role="group" aria-label="市場" id="mseg">
+      <button data-m="jp" aria-pressed="true">日本株</button><button data-m="us" aria-pressed="false">米国株</button>
     </div>
-    <div class="updated">最終更新 <b id="u-date">–</b><a class="upd-btn" id="upd-btn" href="https://github.com/ikameron009/theme-flow/actions/workflows/update.yml" target="_blank" rel="noopener">🔄 更新</a><br><span id="u-univ">–</span><br><span id="u-sched" style="color:var(--muted)"></span><span id="upd-hint" hidden></span></div>
-  </header>
+    <label class="hsearch"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="hq" placeholder="銘柄・コード・テーマを検索" autocomplete="off"></label>
+    <a class="hlink" href="note.html">note紹介銘柄検証</a>
+    <a class="btn" href="join.html">ログイン</a>
+  </div>
+</header>
 
-  <div class="upd-banner" id="upd-banner" hidden><b>新しいデータがあります。</b><span>手動更新が完了しました。</span><button id="upd-reload" type="button">再読込</button></div>
+<div class="strip"><div class="wrap" id="strip"></div></div>
 
-  <div class="tabbar" id="tabbar">
-    <button data-t="jp" aria-pressed="true">日本株テーマ</button>
-    <button data-t="us" aria-pressed="false">米国株テーマ</button>
-    <button data-t="world" aria-pressed="false">世界のお金の流れ</button>
-    <button data-t="vcp" aria-pressed="false">VCPスクリーナー</button>
+<nav class="jump" aria-label="セクション">
+  <div class="wrap">
+    <a href="#market" class="on">市場概況</a>
+    <a href="#themes">テーマ別資金フロー</a>
+    <a href="#stocks">銘柄を探す</a>
+    <a href="#screening">スクリーニング</a>
+    <span class="upd">データ <b class="num" id="u-date">–</b> ・ <span id="u-sched"></span><a id="upd-btn" href="https://github.com/ikameron009/theme-flow/actions/workflows/update.yml" target="_blank" rel="noopener">更新</a></span>
+  </div>
+</nav>
+
+<main class="wrap">
+<div class="upd-banner" id="upd-banner" hidden><b>新しいデータがあります。</b><span>更新が完了しました。</span><button class="btn sm" id="upd-reload" type="button">再読み込み</button></div>
+<div class="upd-hint" id="upd-hint" hidden></div>
+
+<!-- ================= 市場概況 ================= -->
+<section class="sec" id="market">
+  <div class="sec-head">
+    <div><div class="eyebrow">Market overview</div><h2>市場概況</h2></div>
+    <div class="meta num" id="mk-meta"></div>
   </div>
 
-  <div id="tab-jp">
-  <div class="tiles" id="tiles"></div>
-
-  <div class="grid-main">
+  <div class="grid g-hero">
+    <div class="panel verdict" id="verdict"></div>
     <div class="panel">
-      <div class="phead"><div class="ptitle" id="chart-title">売買代金の推移</div><div class="phint" id="chart-hint"></div></div>
+      <div class="subh"><h3>資金が流入しているテーマ</h3><span class="meta">直近5日 ÷ 前20日</span></div>
+      <ul class="flow-list" id="inflow"></ul>
+      <div class="divider"></div>
+      <div class="subh"><h3 style="font-size:13px;color:var(--muted)">流出しているテーマ</h3></div>
+      <ul class="flow-list" id="outflow"></ul>
+    </div>
+  </div>
+
+  <div class="cards4" id="icards"></div>
+
+  <div class="grid g-2 mt">
+    <div class="panel">
+      <div class="subh"><h3>強い業種・弱い業種 <span class="sub" id="sec-sub"></span></h3>
+        <div class="seg" id="secper"><button data-p="1" aria-pressed="true">1日</button><button data-p="5" aria-pressed="false">1週</button><button data-p="20" aria-pressed="false">1か月</button></div></div>
+      <div class="sectors" id="sectors"></div>
+    </div>
+    <div class="panel">
+      <div class="subh"><h3>市場健全度カレンダー <span class="sub">新高値と新安値のバランス</span></h3></div>
+      <div class="cal" id="cal"></div>
+      <div class="legend"><span><i style="background:var(--up)"></i>新高値が優勢</span><span><i style="background:var(--up-soft)"></i>やや優勢</span><span><i style="background:var(--line)"></i>拮抗</span><span><i style="background:var(--down-soft)"></i>やや劣勢</span><span><i style="background:var(--down)"></i>新安値が優勢</span></div>
+    </div>
+  </div>
+
+  <div class="panel mt">
+    <div class="phead"><h3 id="br-title">市場全体の売買代金</h3>
+      <div class="seg" id="brm"><button data-b="turnover" aria-pressed="true">売買代金</button><button data-b="hl" aria-pressed="false">新高値・新安値</button><button data-b="above" aria-pressed="false" id="brm-above">移動平均線より上</button><button data-b="ad" aria-pressed="false">値上がり・値下がり</button></div></div>
+    <div class="pdesc" id="br-desc"></div>
+    <div class="chartbox"><svg id="brchart" viewBox="0 0 900 240" preserveAspectRatio="xMidYMid meet"></svg><div class="tip" id="brtip"></div></div>
+  </div>
+
+  <h3 class="sub-h">世界のお金の流れ <span class="meta" id="w-period"></span></h3>
+  <div class="panel">
+    <div class="phead"><h3 id="mc-title">クロスアセット・パフォーマンス</h3><span class="meta" id="mc-hint"></span></div>
+    <div class="pdesc" id="mc-desc">株価指数・金利・エネルギー・貴金属・穀物・ソフト・通貨を横断。各資産の現地通貨建てで、期間の初日＝100にそろえた推移。「すべて」は7分類の平均。金利だけは利回り（%）そのもの。</div>
+    <div class="ctlrow"><span class="ctl-label">分類</span>
+      <div class="seg" id="mccat">
+        <button data-c="all" aria-pressed="true">すべて</button><button data-c="Indices" aria-pressed="false">株価指数</button><button data-c="Rates" aria-pressed="false">金利</button><button data-c="Energy" aria-pressed="false">エネルギー</button><button data-c="Metals" aria-pressed="false">貴金属・鉱物</button><button data-c="Grains" aria-pressed="false">穀物</button><button data-c="Softs" aria-pressed="false">ソフト・畜産</button><button data-c="FX" aria-pressed="false">通貨</button>
+      </div></div>
+    <div class="ctlrow"><span class="ctl-label">期間</span>
+      <div class="seg" id="mcper"><button data-p="21" aria-pressed="false">1か月</button><button data-p="63" aria-pressed="false">3か月</button><button data-p="126" aria-pressed="true">6か月</button><button data-p="252" aria-pressed="false">1年</button><button data-p="520" aria-pressed="false">2年</button></div></div>
+    <div class="ctlrow" id="ratesub-row" hidden><span class="ctl-label">国</span>
+      <div class="seg" id="ratesub"><button data-r="jp" aria-pressed="true">日本</button><button data-r="us" aria-pressed="false">米国</button><button data-r="world" aria-pressed="false">先進国(10年)</button></div></div>
+    <div class="chips" id="mclegend" style="margin:6px 0 8px"></div>
+    <div class="chartbox"><svg id="mcchart" viewBox="0 0 720 340" preserveAspectRatio="xMidYMid meet"></svg><div class="tip" id="mctip"></div></div>
+  </div>
+  <div class="panel">
+    <div class="phead"><h3>資金移動の比率</h3><span class="meta">期間の初日＝100・上の期間と連動</span></div>
+    <div class="pdesc">2つの資産の比。上向きなら左側の資産に資金が移っている。</div>
+    <div class="chips" id="rtlegend" style="margin:6px 0 8px"></div>
+    <div class="chartbox"><svg id="rtchart" viewBox="0 0 720 300" preserveAspectRatio="xMidYMid meet"></svg><div class="tip" id="rttip"></div></div>
+    <div id="rtdesc" style="margin-top:10px;font-size:12px;color:var(--muted);line-height:1.8"></div>
+  </div>
+</section>
+
+<!-- ================= テーマ別資金フロー ================= -->
+<section class="sec" id="themes">
+  <div class="sec-head">
+    <div><div class="eyebrow">Theme money flow</div><h2>テーマ別資金フロー</h2></div>
+    <div class="meta num" id="th-meta"></div>
+  </div>
+
+  <div class="grid g-main">
+    <div class="panel">
+      <div class="phead"><h3 id="chart-title">売買代金の推移</h3><span class="meta" id="chart-hint"></span></div>
       <div class="pdesc" id="chart-desc"></div>
       <div class="ctlrow"><span class="ctl-label">指標</span>
-        <div class="seg" id="metric">
-          <button data-m="index" aria-pressed="true">売買代金 指数</button>
-          <button data-m="oku" aria-pressed="false">実額 億円</button>
-          <button data-m="share" aria-pressed="false">シェア %</button>
-          <button data-m="ret" aria-pressed="false">株価(騰落)</button>
-        </div></div>
+        <div class="seg" id="metric"><button data-m="index" aria-pressed="true">売買代金（指数）</button><button data-m="oku" aria-pressed="false">実額</button><button data-m="share" aria-pressed="false">シェア</button><button data-m="ret" aria-pressed="false">株価</button></div></div>
       <div class="ctlrow"><span class="ctl-label">期間</span>
-        <div class="seg small" id="range">
-          <button data-r="40" aria-pressed="false">40d</button>
-          <button data-r="80" aria-pressed="false">80d</button>
-          <button data-r="120" aria-pressed="true">120d</button>
-          <button data-r="180" aria-pressed="false">180d</button>
-          <button data-r="240" aria-pressed="false">240d</button>
-          <button data-r="360" aria-pressed="false">360d</button>
-          <button data-r="ytd" aria-pressed="false">年初来</button>
-        </div></div>
-      <div class="ctlrow"><span class="ctl-label">平滑</span>
-        <div class="seg small" id="smooth">
-          <button data-w="1" aria-pressed="false">1日</button>
-          <button data-w="5" aria-pressed="true">5日</button>
-          <button data-w="10" aria-pressed="false">10日</button>
-        </div></div>
-      <div class="legend" id="legend"></div>
-      <div class="chartbox"><svg id="chart" viewBox="0 0 720 380" preserveAspectRatio="xMidYMid meet"></svg><div class="tip" id="tip"></div></div>
+        <div class="seg" id="range"><button data-r="40" aria-pressed="false">40日</button><button data-r="80" aria-pressed="false">80日</button><button data-r="120" aria-pressed="true">120日</button><button data-r="240" aria-pressed="false">240日</button><button data-r="360" aria-pressed="false">360日</button><button data-r="ytd" aria-pressed="false">年初来</button></div>
+        <span class="ctl-label" style="margin-left:8px">平滑</span>
+        <div class="seg" id="smooth"><button data-w="1" aria-pressed="false">1日</button><button data-w="5" aria-pressed="true">5日</button><button data-w="10" aria-pressed="false">10日</button></div></div>
+      <div class="chartbox"><svg id="chart" viewBox="0 0 760 360" preserveAspectRatio="xMidYMid meet"></svg><div class="tip" id="tip"></div></div>
+      <div class="chips" id="legend" style="margin-top:10px"></div>
+      <div class="phint" style="margin-top:6px">テーマ名を押すと強調表示を切り替え。✕で外す。右のランキングから最大8本まで追加。</div>
     </div>
 
     <div class="panel">
-      <div class="phead"><div class="ptitle">資金の初動 ランキング</div><div class="phint">行クリックで表示</div></div>
+      <div class="phead"><h3>資金の初動ランキング</h3><span class="meta">押すとチャートに追加</span></div>
       <div class="pdesc" id="rank-desc"></div>
-      <div class="ctlrow" style="margin-bottom:6px">
-        <div class="seg small" id="sortby">
-          <button data-s="surge" aria-pressed="true">売買代金 急増</button>
-          <button data-s="share_chg" aria-pressed="false">シェア変化</button>
-        </div></div>
+      <div class="ctlrow"><div class="seg" id="sortby"><button data-s="surge" aria-pressed="true">売買代金の急増</button><button data-s="share_chg" aria-pressed="false">シェアの変化</button></div></div>
       <div class="rank"><table class="rk" id="rk">
-        <thead><tr><th class="l">テーマ</th><th id="th-metric">急増率</th><th>流出入</th><th>株価20d</th></tr></thead>
+        <thead><tr><th class="l">テーマ</th><th id="th-metric">急増率</th><th></th><th>株価20日</th></tr></thead>
         <tbody id="rk-body"></tbody></table></div>
+      <div id="rk-lock"></div>
     </div>
   </div>
 
-  <div class="panel">
-    <div class="phead"><div class="ptitle">資金ローテーション・マップ</div><div class="phint">行クリックで右に構成銘柄</div></div>
-    <div class="pdesc">
-      各テーマの週次/日次シェアを「自テーマの平常時と比べた乖離（z-score）」で色分け。
-      <b style="color:var(--pos)">青＝資金流入（平常以上）</b>／<b style="color:var(--neg)">赤＝資金流出（平常以下）</b>。左→右で時間。
-    </div>
+  <div class="panel mt">
+    <div class="phead"><h3>資金ローテーションマップ <span class="sub">行を押すと右に構成銘柄</span></h3>
+      <div class="legend" style="margin:0"><span class="down">流出</span><div class="hscale" id="hscale"></div><span style="color:var(--brand)">流入</span></div></div>
+    <div class="pdesc">各テーマの売買代金シェアを、そのテーマの平常時と比べた偏り（z値）で色分け。左から右へ時間が進みます。</div>
     <div class="ctlrow"><span class="ctl-label">粒度</span>
-      <div class="seg small" id="gran">
-        <button data-g="day" aria-pressed="false">日単位(50日)</button>
-        <button data-g="week" aria-pressed="true">週単位(50週)</button>
-      </div></div>
-    <div class="ctlrow"><span class="ctl-label">並べ替え</span>
-      <div class="seg small" id="hsort">
-        <button data-h="flow" aria-pressed="true">直近流入順</button>
-        <button data-h="cat" aria-pressed="false">カテゴリ順</button>
-        <button data-h="name" aria-pressed="false">五十音</button>
-      </div>
-      <span class="search" style="margin-left:6px"><span style="color:var(--muted);font-size:12px">🔍</span><input id="hsearch" type="text" placeholder="テーマを検索" autocomplete="off"><span class="x" id="hsearch-x" hidden>✕</span></span>
+      <div class="seg" id="gran"><button data-g="day" aria-pressed="false">日（50日）</button><button data-g="week" aria-pressed="true">週（50週）</button></div>
+      <span class="ctl-label" style="margin-left:8px">並べ替え</span>
+      <div class="seg" id="hsort"><button data-h="flow" aria-pressed="true">直近の流入順</button><button data-h="cat" aria-pressed="false">カテゴリ順</button><button data-h="name" aria-pressed="false">五十音</button></div>
+      <span class="search"><input id="hsearch" type="text" placeholder="テーマを検索" autocomplete="off"><span class="x" id="hsearch-x" hidden>✕</span></span>
       <span class="phint" id="hsearch-hint"></span></div>
-
-    <div class="map-grid">
-      <div>
-        <div class="hm-scroll"><svg id="heat" preserveAspectRatio="xMinYMin meet"></svg></div>
-        <div class="hlegend">
-          <span class="neg">資金流出</span>
-          <div class="hscale" id="hscale"></div>
-          <span class="pos">資金流入</span>
-          <span style="margin-left:auto;color:var(--muted)">濃さ＝平常からの乖離(z)</span>
-        </div>
-      </div>
+    <div class="grid g-map">
+      <div style="min-width:0"><div class="hm-scroll"><svg id="heat" preserveAspectRatio="xMinYMin meet"></svg></div><div id="hm-lock"></div></div>
       <div class="stockpanel" id="stockpanel"></div>
     </div>
   </div>
 
-  <div class="panel">
-    <div class="phead"><div class="ptitle">売買代金・出来高 ランキング Top100</div><div class="phint">行クリックで順位推移</div></div>
-    <div class="pdesc">
-      最新1日の<b>売買代金</b>／<b>出来高</b>でのTop100（追跡ユニバース内）。<b>代金/時価</b>＝1日の売買代金÷時価総額×100(%)＝資金回転率。
-      行をクリックすると、その銘柄がTop100内でどう順位を動かしてきたか（直近120営業日）を下のバンプチャートに表示します。
-    </div>
-    <div class="ctlrow"><span class="ctl-label">基準</span>
-      <div class="seg small" id="rkmetric">
-        <button data-m="to" aria-pressed="true">売買代金</button>
-        <button data-m="vol" aria-pressed="false">出来高</button>
-      </div>
-      <span class="search" style="margin-left:6px"><span style="color:var(--muted);font-size:12px">🔍</span><input id="rksearch" type="text" placeholder="銘柄名・コード" autocomplete="off"><span class="x" id="rksearch-x" hidden>✕</span></span>
-      <span class="phint" id="rksearch-hint"></span></div>
+  <div class="panel mt">
+    <div class="phead"><h3 id="rk-title">売買代金ランキング <span class="sub" id="rk-sub">全市場・上位100</span></h3>
+      <div class="ctlrow" style="margin:0"><div class="seg" id="rkmetric"><button data-m="to" aria-pressed="true">売買代金</button><button data-m="vol" aria-pressed="false">出来高</button></div>
+        <span class="search"><input id="rksearch" type="text" placeholder="銘柄名・コード" autocomplete="off"><span class="x" id="rksearch-x" hidden>✕</span></span><span class="phint" id="rksearch-hint"></span></div></div>
+    <div class="pdesc"><b>代金÷時価</b>＝1日の売買代金÷時価総額（資金の回転率）。10%以上は赤で表示。行を押すと、順位の推移とローソク足を下に表示します。</div>
     <div class="rank" style="max-height:520px"><table class="rk" id="rktbl">
       <thead><tr>
-        <th class="l srt" data-k="rank" style="width:46px">順位<span class="ar" data-a="rank"></span></th><th class="l">銘柄</th>
-        <th class="srt" data-k="to">売買代金<br>(億)<span class="ar" data-a="to"></span></th>
-        <th class="srt" data-k="mcap">時価総額<br>(億)<span class="ar" data-a="mcap"></span></th>
-        <th class="srt" data-k="ratio">代金/時価<br>(%)<span class="ar" data-a="ratio"></span></th>
-        <th>前日</th><th style="text-align:center">順位推移</th>
+        <th class="l srt" data-k="rank" style="width:52px">順位<span class="ar" data-a="rank"></span></th><th class="l">銘柄</th>
+        <th class="srt" data-k="to">売買代金<span class="ar" data-a="to"></span></th>
+        <th class="srt" data-k="mcap">時価総額<span class="ar" data-a="mcap"></span></th>
+        <th class="srt" data-k="ratio">代金÷時価<span class="ar" data-a="ratio"></span></th>
+        <th>前日比</th><th style="text-align:center">順位の推移</th>
       </tr></thead><tbody id="rktbody"></tbody></table></div>
-    <div class="ctlrow" style="margin-top:12px"><span class="ctl-label">本数</span>
-      <div class="seg small" id="rkrows">
-        <button data-n="10" aria-pressed="false">10</button>
-        <button data-n="20" aria-pressed="true">20</button>
-        <button data-n="30" aria-pressed="false">30</button>
+    <div id="rkl-lock"></div>
+    <div class="phead" style="margin-top:20px"><h3>順位の推移 <span class="sub">直近120日・上＝1位・101位以下は圏外</span><span id="rkselname" style="color:var(--brand)"></span></h3>
+      <div class="ctlrow" style="margin:0"><span class="ctl-label">本数</span><div class="seg" id="rkrows"><button data-n="10" aria-pressed="false">10</button><button data-n="20" aria-pressed="true">20</button><button data-n="30" aria-pressed="false">30</button></div></div></div>
+    <div class="chartbox"><svg id="rkbump" viewBox="0 0 760 300" preserveAspectRatio="xMidYMid meet"></svg></div>
+    <div class="sp-h" id="rkc-h" style="font-size:14px;margin-top:16px"></div>
+    <div id="rkc-ctl"></div>
+    <div class="chartbox"><div id="rkcandle"></div></div>
+  </div>
+
+  <div class="foot" id="th-foot"></div>
+</section>
+
+<!-- ================= 銘柄を探す ================= -->
+<section class="sec" id="stocks">
+  <div class="sec-head">
+    <div><div class="eyebrow">Stock search</div><h2>銘柄を探す</h2></div>
+    <div class="meta num" id="st-meta"></div>
+  </div>
+  <div class="panel">
+    <label class="bigsearch"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" style="color:var(--faint)"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="sq" placeholder="銘柄名・コード" autocomplete="off"></label>
+    <div class="results" id="sres" hidden></div>
+    <div class="chips" style="margin-top:12px" id="spop"></div>
+    <div class="scard" id="scard"></div>
+  </div>
+</section>
+
+<!-- ================= スクリーニング ================= -->
+<section class="sec" id="screening">
+  <div class="sec-head">
+    <div><div class="eyebrow">Screening</div><h2>スクリーニング</h2></div>
+    <div class="meta num" id="sc-meta"></div>
+  </div>
+  <div class="panel">
+    <div class="method">
+      <div>
+        <h3>VCP ・ トレンドテンプレート <span class="tag" id="vcp-sched"></span></h3>
+        <p style="margin:6px 0 0;color:var(--muted);max-width:66ch;font-size:13px" id="vcp-lead"></p>
       </div>
-      <span class="phint">線をホバー/クリックで銘柄がわかります</span>
+      <div class="stats"><div><small>該当</small><b id="vs-n">–</b></div><div><small>新規</small><b id="vs-new" class="down">–</b></div><div><small>消失</small><b id="vs-gone" style="color:var(--faint)">–</b></div></div>
     </div>
-    <div style="margin-top:14px">
-      <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:2px">
-        <div class="ptitle" style="font-size:14px">順位の推移（直近120日）<span id="rkselname" style="color:var(--accent)"></span></div>
-        <div class="phint">縦軸=順位（上=1位）・101位以下は圏外</div>
-      </div>
-      <div class="chartbox"><svg id="rkbump" viewBox="0 0 720 300" preserveAspectRatio="xMidYMid meet"></svg></div>
-      <div class="sp-h" id="rkc-h" style="font-size:14px;margin-top:14px"></div>
-      <div id="rkc-ctl"></div>
-      <div class="chartbox"><div id="rkcandle"></div></div>
+    <div class="pdesc" style="margin-top:12px"><b class="down">赤字＝新規</b>／<span class="muted">グレー＝消失（前回あり→今回なし）</span>／<span style="background:var(--warn-bg);color:var(--warn-ink);padding:0 5px;border-radius:4px">黄＝新しく優先度がついた</span>／継続＝連続掲載日数。◁ ▷ とスライダーで過去約半年を1日ずつさかのぼれます。行を押すとTradingViewのチャートを開きます。</div>
+    <div class="ctlrow" style="gap:12px;margin:8px 0 12px">
+      <button class="daybtn" id="vcp-prev" type="button" aria-label="前の日">◁</button>
+      <input id="vcp-day" type="range" min="0" max="0" value="0" step="1" style="flex:1;min-width:160px">
+      <button class="daybtn" id="vcp-next" type="button" aria-label="次の日">▷</button>
+      <span id="vcp-daylabel" class="num" style="font-weight:600;min-width:92px;text-align:right">–</span>
+      <span class="search"><input id="vcpsearch" type="text" placeholder="銘柄名・コード" autocomplete="off"><span class="x" id="vcpsearch-x" hidden>✕</span></span>
     </div>
-  </div>
-
-  <div class="foot">
-    <b>データ</b>：<span id="foot-src">株探テーマ（テーマ→銘柄）</span>× yfinance（日次 終値・出来高）。対象<span id="f-univ"></span>。売買代金＝終値×出来高で近似。<br>
-    <b>指標</b>：<b>売買代金 指数</b>＝各テーマの売買代金を表示期間初日＝100で指数化／<b>実額 億円</b>＝売買代金そのもの／<b>シェア%</b>＝対象銘柄の総売買代金に占める割合（テーマ重複ありで合計は100%超・変化を見る）／<b>株価(騰落)</b>＝構成銘柄の等加重リターン指数（初日=100）。<br>
-    <b>ランキング</b>：<b>急増率</b>＝直近5日平均売買代金 ÷ その前20営業日平均 −1。<b>シェア変化</b>＝直近5日平均シェア − 20営業日前の5日平均シェア。<br>
-    <b>注意</b>：売買代金は資金流入の近似で売り・買いの方向は区別しない。本サイトは情報提供のみで投資助言ではありません。投資判断は自己責任で。
-  </div>
-  </div>
-
-  <div id="tab-world" hidden>
-    <div class="pdesc" style="margin:0 0 14px"><b style="color:var(--ink)">データ期間</b> <span id="w-period" class="mono"></span> <span style="color:var(--muted)">（欧米市場が17:00 JST時点で未確定のため、世界タブは前営業日までで表示）</span></div>
-    <div class="panel">
-      <div class="phead"><div class="ptitle" id="mc-title">クロスアセット・パフォーマンス</div><div class="phint" id="mc-hint"></div></div>
-      <div class="pdesc" id="mc-desc">Finviz futures準拠の全資産クラスを横断。各資産のnative通貨建てで、選択期間の初日＝100に指数化した推移。「すべて」は7カテゴリの平均、カテゴリ選択で構成銘柄を表示。金利カテゴリのみ利回り(%)そのもの。</div>
-      <div class="ctlrow"><span class="ctl-label">分類</span>
-        <div class="seg small" id="mccat">
-          <button data-c="all" aria-pressed="true">すべて</button>
-          <button data-c="Indices" aria-pressed="false">株価指数</button>
-          <button data-c="Rates" aria-pressed="false">金利</button>
-          <button data-c="Energy" aria-pressed="false">エネルギー</button>
-          <button data-c="Metals" aria-pressed="false">貴金属・鉱物</button>
-          <button data-c="Grains" aria-pressed="false">穀物</button>
-          <button data-c="Softs" aria-pressed="false">ソフト・畜産</button>
-          <button data-c="FX" aria-pressed="false">通貨</button>
-        </div></div>
-      <div class="ctlrow"><span class="ctl-label">期間</span>
-        <div class="seg small" id="mcper">
-          <button data-p="21" aria-pressed="false">1M</button>
-          <button data-p="63" aria-pressed="false">3M</button>
-          <button data-p="126" aria-pressed="true">6M</button>
-          <button data-p="252" aria-pressed="false">12M</button>
-          <button data-p="520" aria-pressed="false">24M</button>
-        </div></div>
-      <div class="ctlrow" id="ratesub-row" hidden><span class="ctl-label">国</span>
-        <div class="seg small" id="ratesub">
-          <button data-r="jp" aria-pressed="true">日本</button>
-          <button data-r="us" aria-pressed="false">米国</button>
-          <button data-r="world" aria-pressed="false">先進国(10Y)</button>
-        </div></div>
-      <div class="legend" id="mclegend"></div>
-      <div class="chartbox"><svg id="mcchart" viewBox="0 0 720 380" preserveAspectRatio="xMidYMid meet"></svg><div class="tip" id="mctip"></div></div>
-    </div>
-
-    <div class="panel">
-      <div class="phead"><div class="ptitle">資金移動の比率</div><div class="phint">選択期間の初日＝100</div></div>
-      <div class="pdesc">2つの資産の比＝資金の「移動」が最も鮮明に出る指標。上の期間トグルと連動。</div>
-      <div class="legend" id="rtlegend"></div>
-      <div class="chartbox"><svg id="rtchart" viewBox="0 0 720 340" preserveAspectRatio="xMidYMid meet"></svg><div class="tip" id="rttip"></div></div>
-      <div id="rtdesc" style="margin-top:10px;font-size:12px;color:var(--ink-2);line-height:1.7"></div>
-    </div>
-
+    <div class="rank" style="max-height:640px"><table class="rk" id="vcptbl"><thead><tr id="vcp-head"></tr></thead><tbody id="vcp-body"></tbody></table></div>
+    <div id="vcp-lock"></div>
     <div class="foot">
-      <b>データ</b>：yfinance（先物・指数・ETF・為替の日次終値）。Finviz futuresの構成に準拠（鉄鉱石・鋼材・石炭等の一部は代替/省略）。<br>
-      <b>指標</b>：native通貨建て・選択期間初日=100の指数（金利は利回り%）。「すべて」は各カテゴリの構成銘柄を等加重平均。金利のカテゴリ平均は米国債価格（ZT/ZF/ZN/ZB）を使用。<br>
-      <b>注意</b>：EOD（引け後）更新でリアルタイムではない。先物は連続限月。情報提供のみで投資助言ではありません。
+      <b>データ</b>：ミネルヴィニ式トレンドテンプレート（ステージ2）＋VCP判定。米国は業績成長（EDGAR）、日本は増収15%以上・増益15%以上（EDINET）で絞り込み。<br>
+      <b>優先度</b>＝買い点の近くでVCPが有効な銘柄を、VCP・買い点への近さ・RS・該当ソース数で採点（監視は空欄）。<b>Buy</b>＝買い点の上抜け。<b>VCP</b>＝収縮のタイトさ等（0〜100）。<b>ピボット</b>＝買い点までの距離。
     </div>
   </div>
+</section>
+</main>
 
-  <div id="tab-vcp" hidden>
-    <div class="pdesc" style="margin:0 0 12px">
-      毎営業日のミネルヴィニ式トレンドテンプレート＋<b>VCP</b>判定の該当銘柄。<b>優先度</b>＝スコア（数値・買い場近辺ほど高い／監視は空欄）、<b>Buy</b>＝ブレイク発火。
-      <b style="color:var(--neg)">赤字＝新規</b>／<b style="color:var(--muted)">グレー＝消失（前回あり→今回消えた）</b>／<b style="background:#FAEEDA;color:#633806;padding:0 4px;border-radius:4px">黄＝新しく優先度がついた</b>／継続＝掲載連続日数。◁▷またはスライダーで過去（約半年）を1日ずつ遡れます。
-    </div>
-    <div class="panel">
-      <div class="ctlrow" style="margin-bottom:10px">
-        <div class="seg small" id="vcpmkt">
-          <button data-m="us" aria-pressed="true">米国株</button>
-          <button data-m="jp" aria-pressed="false">日本株</button>
-        </div>
-        <span class="search" style="margin-left:auto"><span style="color:var(--muted);font-size:12px">🔍</span><input id="vcpsearch" type="text" placeholder="銘柄名・コード" autocomplete="off"><span class="x" id="vcpsearch-x" hidden>✕</span></span>
-      </div>
-      <div class="ctlrow" style="gap:12px;margin-bottom:12px">
-        <button class="daybtn" id="vcp-prev" type="button" aria-label="前日">◁</button>
-        <input id="vcp-day" type="range" min="0" max="0" value="0" step="1" style="flex:1;min-width:180px">
-        <button class="daybtn" id="vcp-next" type="button" aria-label="翌日">▷</button>
-        <span id="vcp-daylabel" class="mono" style="font-weight:600;min-width:96px;text-align:right">–</span>
-        <span id="vcp-count" class="phint"></span>
-      </div>
-      <div class="rank" style="max-height:640px"><table class="rk" id="vcptbl">
-        <thead><tr id="vcp-head"></tr></thead><tbody id="vcp-body"></tbody></table></div>
-      <div class="foot">
-        <b>データ</b>：ミネルヴィニ式トレンドテンプレート（Stage2）＋VCP有効判定（真のVCPカウンター）× yfinance。米国は業績成長（EDGAR）フィルタ、日本は増収増益（EDINET）フィルタ。<br>
-        <b>優先度</b>＝ゲート＋スコア（VCP有効かつ買い点近辺=ピボット距離≤8%を 0.45×VCP＋0.25×近接＋0.20×RS＋0.10×ソース数 で採点。監視は空欄）。<b>Buy</b>＝ピボット上抜け発火。<b>VCP</b>＝収縮のタイトさ等のスコア0-100。<b>ピボット</b>＝買い点までの距離%。<br>
-        <b>注意</b>：情報提供のみで投資助言ではありません。投資判断は自己責任で。
-      </div>
-    </div>
+<footer>
+  <div class="wrap">
+    <div><b style="font-family:var(--f-display);color:var(--ink);font-size:14px">テーマ別 資金フロー</b><br>運営：投資家ハシビロコウ ・ 当サイトの情報は投資助言ではありません。投資判断はご自身の責任でお願いします。</div>
+    <nav><a href="learn.html">学ぶ</a><a href="join.html">会員案内・ログイン</a><a href="about.html">運営者情報・免責</a></nav>
   </div>
-</div>
+</footer>
 
 <script>
 const JP_DATA=__DATA__;
 const US_DATA=__US_DATA__;
-const BUILT="__BUILT__";
-const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
-const cssv=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
-const SERIES=()=>[1,2,3,4,5,6,7,8].map(i=>cssv('--s'+i));
-const fmt=(x,d=1)=>x==null?'–':x.toLocaleString('ja-JP',{minimumFractionDigits:d,maximumFractionDigits:d});
-const sign=x=>x==null?'–':(x>=0?'+':'')+fmt(x,1);
-const US_ON=!!(US_DATA&&US_DATA.themes&&US_DATA.themes.length);
-
-/* 日本株パネルを日本株/米国株でデータ差し替え共有する */
-let market='jp', DATA=JP_DATA, themes, dates, N, STK, byName, latestYear, RK,
-    OHLC_DIR='ohlc/', U={turn:'億',turnLong:'億円',mcap:'億'};
-let state={metric:'index',range:120,smooth:5,sort:'surge',selected:[],
-  gran:'week',hsort:'flow',hquery:'',mapTheme:null,spSort:'to'};
-function bindMarket(mk){
-  market=(mk==='us'&&US_ON)?'us':'jp'; DATA=market==='us'?US_DATA:JP_DATA;
-  themes=DATA.themes; dates=DATA.dates; N=dates.length; STK=DATA.stocks;
-  byName=Object.fromEntries(themes.map(t=>[t.name,t]));
-  latestYear=dates[N-1].slice(0,4); RK=DATA.rankings;
-  const u=DATA.units||{}; OHLC_DIR=u.ohlcDir||'ohlc/';
-  U={turn:u.turn||'億',turnLong:u.turnLong||'億円',mcap:u.mcap||'億'};
-}
-function marketReset(){
-  state.selected=[...themes].filter(t=>t.surge!=null).sort((a,b)=>b.surge-a.surge).slice(0,8).map(t=>t.name);
-  state.mapTheme=state.selected[0]||(themes[0]&&themes[0].name)||null;
-  state.rkSel=null; state.spStock=null; state.hquery=''; state.rkQuery='';
-  ['#hsearch','#rksearch'].forEach(s=>{const el=$(s);if(el)el.value='';});
-  ['#hsearch-x','#rksearch-x'].forEach(s=>{const el=$(s);if(el)el.hidden=true;});
-}
-bindMarket('jp');
-state.selected=[...themes].filter(t=>t.surge!=null).sort((a,b)=>b.surge-a.surge).slice(0,8).map(t=>t.name);
-
-/* ---------- line chart ---------- */
-const METRIC={
-  index:{src:'turnover_oku',rebased:true,unit:'',title:'売買代金の推移（指数）',desc:'各テーマの売買代金を「表示期間の初日＝100」で指数化。規模の違うテーマ同士を"伸び"で比較できる。'},
-  oku:{src:'turnover_oku',rebased:false,unit:'億円',title:'売買代金の推移（実額）',desc:'テーマ構成銘柄の売買代金合計（億円）。実際に動いている資金の規模。'},
-  share:{src:'share',rebased:false,unit:'%',title:'売買代金シェアの推移',desc:'対象全銘柄の総売買代金に占める割合。資金配分の移り変わり＝ローテーション。'},
-  ret:{src:'ret_index',rebased:true,unit:'',title:'株価（等加重）の推移',desc:'構成銘柄の等加重リターン指数（初日=100）。売買代金＝出来高とは別に「株価が上がったか」。'},
-};
-function movAvg(a,w){if(w<=1)return a.slice();const o=[];let s=0;for(let i=0;i<a.length;i++){s+=a[i];if(i>=w)s-=a[i-w];o[i]=s/Math.min(i+1,w);}return o;}
-function rangeIdx(){if(state.range==='ytd'){let s=dates.findIndex(d=>d>=latestYear+'-01-01');if(s<0)s=0;return[s,N];}const r=Math.min(+state.range,N);return[N-r,N];}
-function seriesData(t){const m=METRIC[state.metric];let a=movAvg(t[m.src],state.smooth);const[s,e]=rangeIdx();a=a.slice(s,e);if(m.rebased){const b=a[0]||1;a=a.map(v=>v/b*100);}return a;}
-const CW=720,CH=380,ML=48,MR=14,MT=14,MB=28;
-function drawChart(){
-  const m=METRIC[state.metric];
-  $('#chart-title').textContent=m.title;$('#chart-desc').textContent=m.desc;
-  $('#chart-hint').textContent=(state.range==='ytd'?'年初来':state.range+'日')+' ・ '+state.smooth+'日平滑';
-  const[s,e]=rangeIdx(),xs=dates.slice(s,e),cols=SERIES();
-  const series=state.selected.map(n=>byName[n]).filter(Boolean).map((t,i)=>({name:t.name,color:cols[i%8],vals:seriesData(t)}));
-  let lo=Infinity,hi=-Infinity;series.forEach(sr=>sr.vals.forEach(v=>{if(v<lo)lo=v;if(v>hi)hi=v;}));
-  if(!isFinite(lo)){lo=0;hi=1;}if(m.rebased){lo=Math.min(lo,100);hi=Math.max(hi,100);}
-  const pad=(hi-lo)*0.08||1;lo-=pad;hi+=pad;if(metUnit()==='%')lo=Math.max(0,lo);
-  const n=xs.length,X=i=>ML+(CW-ML-MR)*(n<=1?0:i/(n-1)),Y=v=>MT+(CH-MT-MB)*(1-(v-lo)/(hi-lo));
-  let g='';
-  for(let k=0;k<=5;k++){const v=lo+(hi-lo)*k/5,y=Y(v);
-    g+=`<line class="gl" x1="${ML}" y1="${y.toFixed(1)}" x2="${CW-MR}" y2="${y.toFixed(1)}"/>`;
-    g+=`<text class="axl" x="${ML-6}" y="${(y+3.5).toFixed(1)}" text-anchor="end">${m.rebased?Math.round(v):fmt(v,metUnit()==='%'?1:0)}</text>`;}
-  if(m.rebased){const y=Y(100);g+=`<line x1="${ML}" y1="${y.toFixed(1)}" x2="${CW-MR}" y2="${y.toFixed(1)}" stroke="var(--axis)"/>`;}
-  let lm='';xs.forEach((d,i)=>{const mo=d.slice(0,7);if(mo!==lm){lm=mo;g+=`<text class="axl" x="${X(i).toFixed(1)}" y="${CH-8}" text-anchor="middle">${d.slice(2,7).replace('-','/')}</text>`;}});
-  series.forEach(sr=>{let p='';sr.vals.forEach((v,i)=>{p+=(i?'L':'M')+X(i).toFixed(1)+' '+Y(v).toFixed(1)+' ';});
-    g+=`<path class="ln" d="${p}" stroke="${sr.color}"/>`;const li=sr.vals.length-1;
-    g+=`<circle cx="${X(li).toFixed(1)}" cy="${Y(sr.vals[li]).toFixed(1)}" r="3.2" fill="${sr.color}"/>`;});
-  g+=`<g id="cg" style="opacity:0"><line class="cross" id="cx" y1="${MT}" y2="${CH-MB}"/></g>`;
-  $('#chart').innerHTML=g;$('#chart').__ctx={series,xs,X,n};drawLegend();
-}
-function drawLegend(){const cols=SERIES();
-  $('#legend').innerHTML=state.selected.map((nm,i)=>`<span class="chip" data-nm="${nm}"><span class="sw" style="background:${cols[i%8]}"></span><b>${nm}</b></span>`).join('')||'<span class="phint">ランキングからテーマを選択</span>';
-  $$('#legend .chip').forEach(ch=>ch.onclick=()=>toggle(ch.dataset.nm));}
-function bindTip(){const svg=$('#chart'),tip=$('#tip');const cg=()=>svg.querySelector('#cg'),cx=()=>svg.querySelector('#cx');
-  svg.addEventListener('mousemove',ev=>{const ctx=svg.__ctx;if(!ctx)return;const r=svg.getBoundingClientRect(),px=(ev.clientX-r.left)/r.width*CW;
-    if(px<ML||px>CW-MR){hide();return;}let i=Math.round((px-ML)/(CW-ML-MR)*(ctx.n-1));i=Math.max(0,Math.min(ctx.n-1,i));
-    const xp=ctx.X(i);cg().style.opacity=1;cx().setAttribute('x1',xp);cx().setAttribute('x2',xp);const m=METRIC[state.metric];
-    const rows=ctx.series.map(sr=>({name:sr.name,color:sr.color,v:sr.vals[i]})).sort((a,b)=>b.v-a.v);
-    tip.innerHTML=`<div class="td">${ctx.xs[i]}</div>`+rows.map(rw=>`<div class="row"><span class="l"><span class="sw" style="background:${rw.color}"></span><span class="nm2">${rw.name}</span></span><span class="val">${m.rebased?fmt(rw.v,1):fmt(rw.v,metUnit()==='%'?2:0)}${metUnit()}</span></div>`).join('');
-    tip.style.opacity=1;const tw=tip.offsetWidth,xpx=xp/CW*r.width;tip.style.left=Math.min(r.width-tw-4,Math.max(4,xpx+12))+'px';tip.style.top='8px';});
-  svg.addEventListener('mouseleave',hide);function hide(){tip.style.opacity=0;const c=cg();if(c)c.style.opacity=0;}}
-
-/* ---------- ranking ---------- */
-function drawRank(){const key=state.sort;
-  $('#th-metric').textContent=key==='surge'?'急増率':'シェア変化';
-  $('#rank-desc').textContent=key==='surge'?'売買代金の「直近5日平均 ÷ その前20日平均 −1」。資金が今まさに集中し始めたテーマが上位。':'資金配分シェアが20営業日前より何pt増減したか。プラス＝流入、マイナス＝流出。';
-  const rows=[...themes].filter(t=>t[key]!=null).sort((a,b)=>b[key]-a[key]);
-  const maxAbs=Math.max(...rows.map(t=>Math.abs(t[key])),1),cols=SERIES();
-  $('#rk-body').innerHTML=rows.map(t=>{const on=state.selected.includes(t.name),ci=state.selected.indexOf(t.name);
-    const sw=on?`background:${cols[ci%8]}`:'',val=t[key],w=Math.abs(val)/maxAbs*30;
-    const bar=val>=0?`<i style="left:50%;width:${w}px;background:var(--pos)"></i>`:`<i style="right:50%;width:${w}px;background:var(--neg)"></i>`;
-    return `<tr class="${on?'on':''}" data-nm="${t.name}">
-      <td><div class="nm"><span class="sw ${on?'':'off'}" style="${sw}"></span><span class="t" title="${t.name}（${t.cat}・${t.n}銘柄）">${t.name}</span></div></td>
-      <td class="num ${val>=0?'pos':'neg'}">${sign(val)}${key==='surge'?'%':'pt'}</td>
-      <td><div class="sbar"><div class="mid"></div>${bar}</div></td>
-      <td class="num ${t.ret_20d>=0?'pos':'neg'}">${sign(t.ret_20d)}%</td></tr>`;}).join('');
-  $$('#rk-body tr').forEach(tr=>tr.onclick=()=>toggle(tr.dataset.nm));
-}
-function toggle(nm){const i=state.selected.indexOf(nm);if(i>=0)state.selected.splice(i,1);else{if(state.selected.length>=8)state.selected.shift();state.selected.push(nm);}drawChart();drawRank();}
-
-/* ---------- heatmap ---------- */
-function zscore(a){const n=a.length;if(!n)return[];const mu=a.reduce((x,y)=>x+y,0)/n;let v=0;for(const x of a)v+=(x-mu)*(x-mu);const sd=Math.sqrt(v/n);return sd<1e-9?a.map(()=>0):a.map(x=>(x-mu)/sd);}
-function bucket5(a){const o=[];for(let i=0;i<a.length;i+=5){const s=a.slice(i,i+5);o.push(s.reduce((x,y)=>x+y,0)/s.length);}return o;}
-function mapSeries(t){
-  if(state.gran==='day'){const z=zscore(t.share);return{z:z.slice(-50),labels:dates.slice(-50)};}
-  const wk=bucket5(t.share),z=zscore(wk);
-  const wl=[];for(let i=0;i<dates.length;i+=5)wl.push(dates[i]);
-  return{z:z.slice(-50),labels:wl.slice(-50)};
-}
-function drawHeat(){
-  const pr=cssv('--posrgb'),nr=cssv('--negrgb');
-  const col=z=>{const a=Math.min(1,Math.abs(z)/2)*0.92+0.05;return z>=0?`rgba(${pr},${a.toFixed(2)})`:`rgba(${nr},${a.toFixed(2)})`;};
-  let rows=themes.map(t=>({t,ms:mapSeries(t)}));
-  rows.forEach(r=>r.lastZ=r.ms.z.length?r.ms.z[r.ms.z.length-1]:0);
-  if(state.hsort==='flow')rows.sort((a,b)=>b.lastZ-a.lastZ);
-  else if(state.hsort==='name')rows.sort((a,b)=>a.t.name.localeCompare(b.t.name,'ja'));
-  else{const ord=DATA.categories;rows.sort((a,b)=>{const d=ord.indexOf(a.t.cat)-ord.indexOf(b.t.cat);return d||(b.t.surge??-999)-(a.t.surge??-999);});}
-  const total=rows.length;
-  if(state.hquery){const q=state.hquery.toLowerCase();
-    rows=rows.filter(r=>r.t.name.toLowerCase().includes(q)||(r.t.cat||'').toLowerCase().includes(q));}
-  const hint=$('#hsearch-hint');
-  if(hint)hint.textContent=state.hquery?`${rows.length} / ${total} テーマ`:`全 ${total} テーマ`;
-  if(!rows.length){$('#heat').innerHTML='';$('#heat').setAttribute('viewBox','0 0 200 40');
-    $('#heat').innerHTML='<text x="8" y="24" font-size="12" fill="var(--muted)" font-family="Noto Sans JP">該当するテーマがありません</text>';return;}
-  const nc=Math.max(...rows.map(r=>r.ms.z.length),1);
-  const cell=11,rh=16,lblW=124,topH=20,W=lblW+nc*cell+8,H=topH+rows.length*rh+6;
-  const labels=rows[0]?rows[0].ms.labels:[];
-  let g='';
-  labels.forEach((d,j)=>{if(j%(state.gran==='day'?10:6)===0){const x=lblW+j*cell+cell/2;
-    g+=`<text class="axl" x="${x}" y="${topH-6}" text-anchor="middle" font-size="8.5">${d.slice(2,7).replace('-','/')}</text>`;}});
-  rows.forEach((r,ri)=>{const y=topH+ri*rh,sel=r.t.name===state.mapTheme;
-    g+=`<text x="${lblW-6}" y="${y+rh/2+3}" text-anchor="end" font-size="10" fill="${sel?'var(--accent)':'var(--ink-2)'}" font-weight="${sel?700:400}" font-family="Noto Sans JP">${r.t.name}</text>`;
-    r.ms.z.forEach((z,j)=>{const x=lblW+j*cell;g+=`<rect class="hcell" data-nm="${r.t.name}" x="${x}" y="${y}" width="${cell-1.5}" height="${rh-1.5}" rx="1.5" fill="${col(z)}"><title>${r.t.name} ${r.ms.labels[j]}: z=${z.toFixed(2)}</title></rect>`;});
-    g+=`<rect class="rowhit" data-nm="${r.t.name}" x="0" y="${y}" width="${W}" height="${rh-1}"></rect>`;});
-  const svg=$('#heat');svg.setAttribute('viewBox',`0 0 ${W} ${H}`);svg.setAttribute('width',W);svg.setAttribute('height',H);svg.innerHTML=g;
-  $$('#heat .rowhit,#heat .hcell').forEach(el=>el.addEventListener('click',()=>{state.mapTheme=el.dataset.nm;drawHeat();drawStock();}));
-  const steps=[-2,-1.2,-.5,0,.5,1.2,2];$('#hscale').innerHTML=steps.map(z=>`<i style="background:${col(z)}"></i>`).join('');
-  syncPanelHeight();
-}
-
-/* ---------- candlestick (lazy OHLC) ---------- */
-state.spStock=null; state.spPer=126; state.spFreq='day';
-state.rkcPer=126; state.rkcFreq='day';
-const OHLC_CACHE={};
-function loadOHLC(code){const key=OHLC_DIR+code;if(!(key in OHLC_CACHE))OHLC_CACHE[key]=fetch(OHLC_DIR+encodeURIComponent(code)+'.json').then(r=>r.ok?r.json():null).catch(()=>null);return OHLC_CACHE[key];}
-function _sma(a,w){const o=[];let s=0;for(let i=0;i<a.length;i++){s+=a[i];if(i>=w)s-=a[i-w];o.push(i>=w-1?s/w:null);}return o;}
-function _aggW(oh){const R={d:[],o:[],h:[],l:[],c:[]};for(let i=0;i<oh.d.length;i+=5){const e=Math.min(i+5,oh.d.length);let hh=-1e18,ll=1e18;for(let j=i;j<e;j++){if(oh.h[j]>hh)hh=oh.h[j];if(oh.l[j]<ll)ll=oh.l[j];}R.d.push(oh.d[i]);R.o.push(oh.o[i]);R.h.push(hh);R.l.push(ll);R.c.push(oh.c[e-1]);}return R;}
-function candleSVG(oh,per,freq,H){
-  if(!oh)return '<div class="phint" style="padding:16px 0">この銘柄のOHLCは未収録です（テーマ上位20＋ランキングTop100が対象）。</div>';
-  const data=freq==='week'?_aggW(oh):oh;
-  let bars=freq==='week'?Math.ceil(per/5):per;bars=Math.min(bars,data.c.length);
-  const s=data.c.length-bars;
-  const D=data.d.slice(s),O=data.o.slice(s),Hi=data.h.slice(s),Lo=data.l.slice(s),C=data.c.slice(s);
-  const m5=_sma(data.c,5).slice(s),m20=_sma(data.c,20).slice(s),m50=_sma(data.c,50).slice(s);
-  const CW=700,CH=H||280,ML=48,MR=8,MT=8,MB=20;
-  let lo=Infinity,hi=-Infinity;Hi.forEach(v=>{if(v>hi)hi=v});Lo.forEach(v=>{if(v<lo)lo=v});
-  [m5,m20,m50].forEach(a=>a.forEach(v=>{if(v!=null){if(v>hi)hi=v;if(v<lo)lo=v;}}));
-  if(!isFinite(lo)){lo=0;hi=1;}const pad=(hi-lo)*0.06||1;lo-=pad;hi+=pad;
-  const n=C.length,bw=(CW-ML-MR)/Math.max(n,1),X=i=>ML+bw*(i+0.5),Y=v=>MT+(CH-MT-MB)*(1-(v-lo)/(hi-lo));
-  const cUp='#16a34a',cDn='#dc2626';let g='';
-  for(let k=0;k<=4;k++){const v=lo+(hi-lo)*k/4,y=Y(v);g+=`<line class="gl" x1="${ML}" y1="${y.toFixed(1)}" x2="${CW-MR}" y2="${y.toFixed(1)}"/><text class="axl" x="${ML-5}" y="${(y+3).toFixed(1)}" text-anchor="end">${Math.round(v).toLocaleString()}</text>`;}
-  let lm='';D.forEach((d,i)=>{const mo=d.slice(0,7);if(mo!==lm){lm=mo;g+=`<text class="axl" x="${X(i).toFixed(1)}" y="${CH-6}" text-anchor="middle">${d.slice(2,7).replace('-','/')}</text>`;}});
-  const wq=Math.max(0.6,bw*0.3);
-  for(let i=0;i<n;i++){const c=C[i]>=O[i]?cUp:cDn,x=X(i);
-    g+=`<line x1="${x.toFixed(1)}" y1="${Y(Hi[i]).toFixed(1)}" x2="${x.toFixed(1)}" y2="${Y(Lo[i]).toFixed(1)}" stroke="${c}" stroke-width="1"/>`;
-    const ya=Y(Math.max(O[i],C[i])),yb=Y(Math.min(O[i],C[i]));
-    g+=`<rect x="${(x-wq).toFixed(1)}" y="${ya.toFixed(1)}" width="${(wq*2).toFixed(1)}" height="${Math.max(0.8,yb-ya).toFixed(1)}" fill="${c}"/>`;}
-  const ln=(a,col)=>{let p='',st=false;a.forEach((v,i)=>{if(v==null)return;p+=(st?'L':'M')+X(i).toFixed(1)+' '+Y(v).toFixed(1)+' ';st=true;});return p?`<path d="${p}" fill="none" stroke="${col}" stroke-width="1.3"/>`:'';};
-  g+=ln(m5,'#eb6834')+ln(m20,'#2a78d6')+ln(m50,'#8a5cd6');
-  return `<svg viewBox="0 0 ${CW} ${CH}" width="100%" style="overflow:visible">${g}</svg>`;
-}
-function candleCtl(idp,per,freq){
-  const P=[['21','1M'],['63','3M'],['126','6M'],['252','12M'],['520','24M']];
-  return `<div class="ctlrow" style="margin:6px 0 2px">
-    <div class="seg small" id="${idp}per">${P.map(p=>`<button data-p="${p[0]}" aria-pressed="${+p[0]===per}">${p[1]}</button>`).join('')}</div>
-    <div class="seg small" id="${idp}freq"><button data-f="day" aria-pressed="${freq==='day'}">日足</button><button data-f="week" aria-pressed="${freq==='week'}">週足</button></div></div>
-  <div class="legend" style="margin:2px 0 4px;font-size:11px">
-    <span class="chip"><span class="sw" style="background:#eb6834"></span>5MA</span>
-    <span class="chip"><span class="sw" style="background:#2a78d6"></span>20MA</span>
-    <span class="chip"><span class="sw" style="background:#8a5cd6"></span>50MA</span></div>`;
-}
-function wireSeg(id,fn){const el=document.getElementById(id);if(el)el.onclick=e=>{const b=e.target.closest('button');if(!b)return;$$('#'+id+' button').forEach(x=>x.setAttribute('aria-pressed',x===b));fn(b);};}
-function stockLinks(code){return `<a href="https://finance.yahoo.co.jp/quote/${code}.T" target="_blank" rel="noopener" style="font-size:11px;margin-left:10px;color:var(--accent)">Yahoo↗</a><a href="https://kabutan.jp/stock/?code=${code}" target="_blank" rel="noopener" style="font-size:11px;margin-left:8px;color:var(--accent)">株探↗</a>`;}
-
-/* ---------- stock panel ---------- */
-function spark(arr){
-  if(!arr||!arr.length)return'';
-  const w=64,h=16,lo=Math.min(...arr),hi=Math.max(...arr),rng=hi-lo||1;
-  const X=i=>arr.length<=1?0:i/(arr.length-1)*w,Y=v=>h-((v-lo)/rng)*h;
-  let p='';arr.forEach((v,i)=>p+=(i?'L':'M')+X(i).toFixed(1)+' '+Y(v).toFixed(1)+' ');
-  const up=arr[arr.length-1]>=arr[0],c=up?'var(--pos)':'var(--neg)';
-  return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" style="display:block"><path d="${p}" fill="none" stroke="${c}" stroke-width="1.4"/></svg>`;
-}
-function drawStock(){
-  const el=$('#stockpanel');
-  const th=state.mapTheme?byName[state.mapTheme]:null;
-  if(!th){el.innerHTML='<div class="sp-sub">左のマップでテーマをクリックすると、構成銘柄がここに表示されます。</div>';return;}
-  let rows=(th.members||[]).map(c=>({code:c,...STK[c]})).filter(x=>x.name);
-  if(state.spStock && !rows.some(r=>r.code===state.spStock)) state.spStock=null;
-  const k=state.spSort;
-  rows.sort((a,b)=>((b[k]??-1e9)-(a[k]??-1e9)));
-  const th2=(id,lbl,cls)=>`<th class="${cls||''}" data-k="${id}" style="${state.spSort===id?'color:var(--ink)':''}">${lbl}</th>`;
-  el.innerHTML=`
-    <div class="sp-h">${th.name}<span class="c">${th.cat}・${th.n}銘柄</span></div>
-    <div class="sp-sub">売買代金上位（列見出しで並べ替え・行クリックでチャート）</div>
-    <div class="sp-list"><table class="sp"><thead><tr>
-      <th class="l">銘柄</th>${th2('to','代金')}${th2('surge','急増')}${th2('ret20','20d')}<th>推移</th>
-    </tr></thead><tbody>${rows.map(s=>`<tr data-code="${s.code}" class="${s.code===state.spStock?'on':''}">
-      <td><div class="snm" title="${s.name}">${s.name}</div><span class="sc">${s.code}</span></td>
-      <td class="num">${fmt(s.to,1)}</td>
-      <td class="num ${(s.surge??0)>=0?'pos':'neg'}">${sign(s.surge)}%</td>
-      <td class="num ${(s.ret20??0)>=0?'pos':'neg'}">${sign(s.ret20)}%</td>
-      <td>${spark(s.spark)}</td></tr>`).join('')}</tbody></table></div>
-    <div class="sp-h" style="font-size:13px;margin-top:10px">${state.spStock?('ローソク足: '+(STK[state.spStock]?.name||state.spStock)+stockLinks(state.spStock)):'銘柄をクリックでローソク足'}</div>
-    ${state.spStock?candleCtl('sp',state.spPer,state.spFreq):''}
-    <div id="spcandle"></div>`;
-  $$('#stockpanel th[data-k]').forEach(h=>h.onclick=()=>{state.spSort=h.dataset.k;drawStock();});
-  $$('#stockpanel tbody tr').forEach(tr=>tr.onclick=()=>{state.spStock=tr.dataset.code;drawStock();});
-  if(state.spStock){wireSeg('spper',b=>{state.spPer=+b.dataset.p;renderSpCandle();});
-    wireSeg('spfreq',b=>{state.spFreq=b.dataset.f;renderSpCandle();});renderSpCandle();}
-  syncPanelHeight();
-}
-function renderSpCandle(){const box=$('#spcandle');if(!box)return;const cur=state.spStock;if(!cur){box.innerHTML='';return;}
-  box.innerHTML='<div class="phint">読み込み中…</div>';
-  loadOHLC(cur).then(oh=>{if(state.spStock!==cur)return;box.innerHTML=candleSVG(oh,state.spPer,state.spFreq,300);});}
-function syncPanelHeight(){const hm=document.querySelector('.hm-scroll'),sp=$('#stockpanel');
-  if(!hm||!sp||window.innerWidth<=860)return;const h=hm.getBoundingClientRect().height;if(h>200)sp.style.height=h+'px';}
-
-/* ---------- rankings (leaderboard + bump) ---------- */
-state.rkMetric='to'; state.rkSel=null; state.rkSort={k:'rank',dir:'asc'}; state.rkRows=20; state.rkQuery='';
-function rkTop(){return state.rkMetric==='to'?RK.top_to:RK.top_vol;}
-function rkSeries(code){const s=RK.stocks[code];return state.rkMetric==='to'?s.rt:s.rv;}
-function rkDelta(code){const s=RK.stocks[code];return state.rkMetric==='to'?s.d_to:s.d_vol;}
-function rankMini(arr){const w=64,h=16,cl=v=>Math.min(105,v);
-  let p='';arr.forEach((r,i)=>{const x=arr.length<2?0:i/(arr.length-1)*w,y=(cl(r)-1)/104*(h-3)+1.5;p+=(i?'L':'M')+x.toFixed(1)+' '+y.toFixed(1)+' ';});
-  return`<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" style="display:block;margin:0 auto"><path d="${p}" fill="none" stroke="var(--accent)" stroke-width="1.3" opacity="0.8"/></svg>`;}
-function rkChip(d){if(d==null)return'<span style="color:var(--muted)">NEW</span>';if(d>0)return`<span class="pos">▲${d}</span>`;if(d<0)return`<span class="neg">▼${-d}</span>`;return'<span style="color:var(--muted)">—</span>';}
-function drawRkList(){
-  const top=rkTop(), mrank=new Map(top.map((c,i)=>[c,i+1]));
-  const {k,dir}=state.rkSort, sgn=dir==='asc'?1:-1;
-  const gv=c=>{const s=RK.stocks[c];if(k==='to')return s.to;if(k==='mcap')return s.mcap==null?-1:s.mcap;if(k==='ratio')return s.ratio==null?-1:s.ratio;return mrank.get(c);};
-  let rows=[...top].sort((a,b)=>(gv(a)-gv(b))*sgn);
-  if(state.rkQuery){const q=state.rkQuery.toLowerCase();
-    rows=rows.filter(c=>{const s=RK.stocks[c];return (s.name||'').toLowerCase().includes(q)||c.toLowerCase().includes(q);});}
-  const rhint=$('#rksearch-hint');
-  if(rhint)rhint.textContent=state.rkQuery?`${rows.length} / ${top.length} 銘柄`:'';
-  $$('#rktbl .ar').forEach(a=>a.textContent=a.dataset.a===k?(dir==='asc'?'▲':'▼'):'');
-  if(!rows.length){$('#rktbody').innerHTML='<tr><td colspan="7" style="padding:12px;color:var(--muted)">Top100内に該当銘柄がありません（このランキングは追跡ユニバース内のTop100が対象です）。</td></tr>';return;}
-  $('#rktbody').innerHTML=rows.map(code=>{const s=RK.stocks[code],on=code===state.rkSel;
-    return `<tr class="${on?'on':''}" data-code="${code}">
-      <td class="num" style="text-align:left;font-weight:500;${on?'color:var(--accent)':''}">${mrank.get(code)}</td>
-      <td><span class="nm"><span class="t" title="${s.name}">${s.name}</span></span><span class="nm cat">${code}</span></td>
-      <td class="num">${fmt(s.to,1)}</td>
-      <td class="num">${s.mcap!=null?s.mcap.toLocaleString():'–'}</td>
-      <td class="num">${s.ratio!=null?s.ratio.toFixed(2):'–'}</td>
-      <td class="num">${rkChip(rkDelta(code))}</td>
-      <td>${rankMini(rkSeries(code))}</td></tr>`;}).join('');
-  $$('#rktbody tr').forEach(tr=>tr.onclick=()=>selectRk(tr.dataset.code));
-}
-function drawRkBump(){
-  const days=RK.days,n=days.length,top=rkTop();
-  const W=720,H=300,L=32,R=118,T=14,B=22,MAXR=105;
-  const X=i=>L+(n<=1?0:i/(n-1))*(W-L-R),Y=r=>T+(Math.min(MAXR,r)-1)/(MAXR-1)*(H-T-B);
-  const mutedC=cssv('--muted'), inkC=cssv('--ink-2');
-  let g='';
-  [1,20,40,60,80,100].forEach(r=>{g+=`<line class="gl" x1="${L}" y1="${Y(r).toFixed(1)}" x2="${W-R}" y2="${Y(r).toFixed(1)}"/>`;
-    g+=`<text class="axl" x="${L-6}" y="${(Y(r)+3).toFixed(1)}" text-anchor="end">${r}</text>`;});
-  let lm='';days.forEach((d,i)=>{const mo=d.slice(0,7);if(mo!==lm){lm=mo;g+=`<text class="axl" x="${X(i).toFixed(1)}" y="${H-7}" text-anchor="middle">${d.slice(2,7).replace('-','/')}</text>`;}});
-  const path=code=>{const a=rkSeries(code);let p='';a.forEach((r,i)=>p+=(i?'L':'M')+X(i).toFixed(1)+' '+Y(r).toFixed(1)+' ');return p;};
-  const shown=top.slice(0,state.rkRows);
-  shown.forEach(code=>{if(code===state.rkSel)return;const p=path(code),s=RK.stocks[code],lr=rkSeries(code)[n-1];
-    g+=`<path class="rkbg" data-code="${code}" d="${p}" fill="none" stroke="${mutedC}" stroke-width="1.1" opacity="0.22"/>`;
-    g+=`<path class="rkhit" data-code="${code}" d="${p}" fill="none" stroke="transparent" stroke-width="7"><title>${s.name} (${code}) ${lr>100?'圏外':lr+'位'}</title></path>`;});
-  const sel=state.rkSel||top[0],s=RK.stocks[sel],lr=rkSeries(sel)[n-1];
-  g+=`<path d="${path(sel)}" fill="none" stroke="#2a78d6" stroke-width="2.4" stroke-linejoin="round"/>`;
-  g+=`<circle cx="${X(n-1).toFixed(1)}" cy="${Y(lr).toFixed(1)}" r="3.2" fill="#2a78d6" stroke="var(--surface)" stroke-width="1.5"/>`;
-  g+=`<text x="${(X(n-1)+8).toFixed(1)}" y="${(Y(lr)+4).toFixed(1)}" font-size="11" font-weight="500" fill="#2a78d6" font-family="Noto Sans JP">${s.name} ${lr>100?'圏外':lr+'位'}</text>`;
-  $('#rkbump').innerHTML=g;
-  $$('#rkbump .rkhit').forEach(el=>{const c=el.dataset.code,v=()=>document.querySelector(`#rkbump .rkbg[data-code="${c}"]`);
-    el.addEventListener('mouseenter',()=>{const x=v();if(x){x.setAttribute('stroke',inkC);x.setAttribute('opacity','0.9');x.setAttribute('stroke-width','1.9');}});
-    el.addEventListener('mouseleave',()=>{const x=v();if(x){x.setAttribute('stroke',mutedC);x.setAttribute('opacity','0.22');x.setAttribute('stroke-width','1.1');}});
-    el.addEventListener('click',()=>selectRk(c));});
-  $('#rkselname').textContent=' — '+s.name;
-}
-function drawRkCandle(){const code=state.rkSel,h=$('#rkc-h'),ctl=$('#rkc-ctl');if(!h)return;
-  if(!code){h.textContent='';ctl.innerHTML='';$('#rkcandle').innerHTML='';return;}
-  h.innerHTML='ローソク足: '+(RK.stocks[code]?.name||code)+'（'+code+'）'+stockLinks(code);
-  ctl.innerHTML=candleCtl('rkc',state.rkcPer,state.rkcFreq);
-  wireSeg('rkcper',b=>{state.rkcPer=+b.dataset.p;renderRkCandle();});
-  wireSeg('rkcfreq',b=>{state.rkcFreq=b.dataset.f;renderRkCandle();});
-  renderRkCandle();}
-function renderRkCandle(){const box=$('#rkcandle');if(!box)return;const cur=state.rkSel;
-  box.innerHTML='<div class="phint">読み込み中…</div>';
-  loadOHLC(cur).then(oh=>{if(state.rkSel!==cur)return;box.innerHTML=candleSVG(oh,state.rkcPer,state.rkcFreq,260);});}
-function selectRk(code){state.rkSel=code;drawRkList();drawRkBump();drawRkCandle();}
-function drawRk(){if(!state.rkSel)state.rkSel=rkTop()[0];drawRkList();drawRkBump();drawRkCandle();}
-
-/* ---------- world: cross-asset ---------- */
 const MACRO=__MACRO__;
-const MI=MACRO.inst, MDATES=MACRO.dates, MN=MDATES.length;
-const CATLABEL=Object.fromEntries(MACRO.cats.map(c=>[c.key,c.label]));
-state.mcCat='all'; state.mcPer=126; state.worldDrawn=false; state.rateSub='jp';
-const RGROUPS=MACRO.rateGroups||{us:[],jp:[],world:[]};
-const RSUBLABEL={us:'米国金利',jp:'日本金利',world:'主要先進国 10年金利'};
-function mslice(){const p=Math.min(state.mcPer,MN);return [MN-p,MN];}
-function rebase(a){const b=a.find(v=>v!=null)||1;return a.map(v=>v==null?null:v/b*100);}
-function avgSeries(ts,s,e){const L=e-s,out=new Array(L).fill(0),cnt=new Array(L).fill(0);
-  ts.forEach(t=>{const c=MI[t];if(!c)return;const rb=rebase(c.close.slice(s,e));rb.forEach((v,i)=>{if(v!=null){out[i]+=v;cnt[i]++;}});});
-  return out.map((v,i)=>cnt[i]?v/cnt[i]:null);}
-function lineChart(svgId,tipId,series,xs,opt){
-  const CW=720,CH=opt.h||380,ML=opt.ml||46,MR=14,MT=14,MB=28;
-  let lo=Infinity,hi=-Infinity;series.forEach(sr=>sr.vals.forEach(v=>{if(v==null)return;if(v<lo)lo=v;if(v>hi)hi=v;}));
-  if(!isFinite(lo)){lo=0;hi=1;}if(opt.base100){lo=Math.min(lo,100);hi=Math.max(hi,100);}
-  const pad=(hi-lo)*0.08||1;lo-=pad;hi+=pad;
-  const n=xs.length,X=i=>ML+(CW-ML-MR)*(n<=1?0:i/(n-1)),Y=v=>MT+(CH-MT-MB)*(1-(v-lo)/(hi-lo));
-  let g='';
-  for(let k=0;k<=5;k++){const v=lo+(hi-lo)*k/5,y=Y(v);
-    g+=`<line class="gl" x1="${ML}" y1="${y.toFixed(1)}" x2="${CW-MR}" y2="${y.toFixed(1)}"/>`;
-    g+=`<text class="axl" x="${ML-6}" y="${(y+3.5).toFixed(1)}" text-anchor="end">${opt.dec?v.toFixed(opt.dec):Math.round(v)}</text>`;}
-  if(opt.base100){const y=Y(100);g+=`<line x1="${ML}" y1="${y.toFixed(1)}" x2="${CW-MR}" y2="${y.toFixed(1)}" stroke="var(--axis)"/>`;}
-  let lm='';xs.forEach((d,i)=>{const mo=d.slice(0,7);if(mo!==lm){lm=mo;g+=`<text class="axl" x="${X(i).toFixed(1)}" y="${CH-8}" text-anchor="middle">${d.slice(2,7).replace('-','/')}</text>`;}});
-  series.forEach(sr=>{let p='',st=false;sr.vals.forEach((v,i)=>{if(v==null)return;p+=(st?'L':'M')+X(i).toFixed(1)+' '+Y(v).toFixed(1)+' ';st=true;});
-    g+=`<path class="ln" d="${p}" stroke="${sr.color}"/>`;
-    for(let i=sr.vals.length-1;i>=0;i--){if(sr.vals[i]!=null){g+=`<circle cx="${X(i).toFixed(1)}" cy="${Y(sr.vals[i]).toFixed(1)}" r="3" fill="${sr.color}"/>`;break;}}});
-  g+=`<g class="cg" style="opacity:0"><line class="cross cx" y1="${MT}" y2="${CH-MB}"/></g>`;
-  const svg=document.getElementById(svgId);svg.innerHTML=g;
-  svg.__ctx={series,xs,X,n,CW,ML,MR,unit:opt.unit||'',dec:opt.tipdec!=null?opt.tipdec:1};
-  svg.onmousemove=ev=>{const ctx=svg.__ctx;if(!ctx)return;const r=svg.getBoundingClientRect(),px=(ev.clientX-r.left)/r.width*ctx.CW;const tip=document.getElementById(tipId);
-    const cg=svg.querySelector('.cg'),cx=svg.querySelector('.cx');
-    if(px<ctx.ML||px>ctx.CW-ctx.MR){tip.style.opacity=0;if(cg)cg.style.opacity=0;return;}
-    let i=Math.round((px-ctx.ML)/(ctx.CW-ctx.ML-ctx.MR)*(ctx.n-1));i=Math.max(0,Math.min(ctx.n-1,i));
-    cg.style.opacity=1;cx.setAttribute('x1',ctx.X(i));cx.setAttribute('x2',ctx.X(i));
-    const rows=ctx.series.map(sr=>({name:sr.name,color:sr.color,v:sr.vals[i]})).filter(x=>x.v!=null).sort((a,b)=>b.v-a.v);
-    tip.innerHTML=`<div class="td">${ctx.xs[i]}</div>`+rows.map(rw=>`<div class="row"><span class="l"><span class="sw" style="background:${rw.color}"></span><span class="nm2">${rw.name}</span></span><span class="val">${rw.v.toFixed(ctx.dec)}${ctx.unit}</span></div>`).join('');
-    tip.style.opacity=1;const tw=tip.offsetWidth,xpx=ctx.X(i)/ctx.CW*r.width;tip.style.left=Math.min(r.width-tw-4,Math.max(4,xpx+12))+'px';tip.style.top='8px';};
-  svg.onmouseleave=()=>{const tip=document.getElementById(tipId),cg=svg.querySelector('.cg');tip.style.opacity=0;if(cg)cg.style.opacity=0;};
-}
-function legendHTML(id,series){document.getElementById(id).innerHTML=series.map(s=>`<span class="chip"><span class="sw" style="background:${s.color}"></span><b>${s.name}</b></span>`).join('');}
-function drawMacro(){
-  if(!MACRO.cats.length){$('#mclegend').innerHTML='<span class="phint">クロスアセットのデータ取得に失敗したため、今回は休止中です（次回更新で復帰します）。</span>';$('#mcchart').innerHTML='';return;}
-  const cols=SERIES(),[s,e]=mslice(),xs=MDATES.slice(s,e),cat=state.mcCat;
-  const perLbl=['1M','3M','6M','12M','24M'][[21,63,126,252,520].indexOf(state.mcPer)]||'';
-  let series=[],opt={base100:true,unit:'',tipdec:1};
-  const rrow=$('#ratesub-row');if(rrow)rrow.hidden=(cat!=='Rates');
-  $('#mc-title').textContent=cat==='all'?'クロスアセット・パフォーマンス（カテゴリ平均）':(cat==='Rates'?'金利：'+RSUBLABEL[state.rateSub]:'クロスアセット：'+CATLABEL[cat]);
-  $('#mc-hint').textContent=perLbl+' ・ native通貨・初日=100';
-  if(cat==='all'){
-    MACRO.cats.forEach((c,i)=>{const mem=c.key==='Rates'?MACRO.ratesPx:c.members;
-      series.push({name:c.key==='Rates'?'金利(債券)':c.label,color:cols[i%8],vals:avgSeries(mem,s,e)});});
-  }else if(cat==='Rates'){
-    opt={base100:false,unit:'%',tipdec:2,dec:2};$('#mc-hint').textContent=perLbl+' ・利回り(%)';
-    const mem=(RGROUPS[state.rateSub]||[]).filter(t=>MI[t]);
-    if(!mem.length){$('#mclegend').innerHTML='<span class="phint">'+(state.rateSub==='world'?'主要先進国データは取得できていません（次回更新で復帰）。':'データがありません。')+'</span>';$('#mcchart').innerHTML='';return;}
-    mem.forEach((t,i)=>series.push({name:MI[t].name,color:cols[i%8],vals:MI[t].close.slice(s,e)}));
-  }else{
-    MACRO.cats.find(c=>c.key===cat).members.forEach((t,i)=>series.push({name:MI[t].name,color:cols[i%8],vals:rebase(MI[t].close.slice(s,e))}));
-  }
-  legendHTML('mclegend',series);lineChart('mcchart','mctip',series,xs,opt);
-}
-function drawRatios(){
-  if(!MACRO.ratios.length){$('#rtlegend').innerHTML='';$('#rtchart').innerHTML='';$('#rtdesc').innerHTML='';return;}
-  const cols=SERIES(),[s,e]=mslice(),xs=MDATES.slice(s,e);
-  const series=MACRO.ratios.map((r,i)=>({name:r.label,color:cols[i%8],vals:rebase(r.series.slice(s,e))}));
-  legendHTML('rtlegend',series);lineChart('rtchart','rttip',series,xs,{base100:true,unit:'',tipdec:1,h:340});
-  $('#rtdesc').innerHTML=MACRO.ratios.map((r,i)=>`<div style="margin:3px 0"><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:${cols[i%8]};margin-right:6px"></span><b style="color:var(--ink)">${r.label}</b>：${r.desc}</div>`).join('');
-}
-function metUnit(){return state.metric==='share'?'%':(state.metric==='oku'?U.turnLong:'');}
-function applyMarketLabels(){
-  const H={to:`売買代金<br>(${U.turn})`,mcap:`時価総額<br>(${U.mcap})`,ratio:'代金/時価<br>(%)'};
-  $$('#rktbl thead th.srt').forEach(th=>{const k=th.dataset.k;if(H[k])th.innerHTML=H[k]+`<span class="ar" data-a="${k}"></span>`;});
-  const okb=document.querySelector('#metric button[data-m="oku"]');if(okb)okb.textContent='実額 '+U.turnLong;
-  const fs=$('#foot-src');if(fs)fs.textContent=market==='us'?'テーマ別ETF（SSGA/ARK等の構成銘柄）':'株探テーマ（テーマ→銘柄）';
-}
-function renderMarket(){applyMarketLabels();drawTiles();drawChart();drawRank();drawHeat();drawStock();drawRk();}
-function switchTab(t){
-  if(t==='us'&&!US_ON)t='jp';
-  const isMk=(t==='jp'||t==='us');
-  $('#tab-jp').hidden=!isMk;$('#tab-world').hidden=(t!=='world');$('#tab-vcp').hidden=(t!=='vcp');
-  $$('#tabbar button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.t===t));
-  if(isMk){
-    if(t!==market){bindMarket(t);marketReset();renderMarket();}
-    $('#u-date').textContent=DATA.updated;
-    $('#u-univ').textContent=`${market==='us'?'米国株':'日本株'} ${DATA.n_themes}テーマ / ${DATA.n_stocks.toLocaleString()}銘柄`;
-    $('#u-sched').textContent=SCHED[market];
-  }else if(t==='world'){$('#u-date').textContent=MACRO.updated||'–';$('#u-univ').textContent='世界クロスアセット';$('#u-sched').textContent=SCHED.world;
-    if(!state.worldDrawn){state.worldDrawn=true;drawMacro();drawRatios();}}
-  else{$('#u-univ').textContent='VCPスクリーナー';$('#u-sched').textContent=SCHED[state.vcpMkt];
-    loadVcp(state.vcpMkt).then(()=>{drawVcp();const D=VCP_DATA[state.vcpMkt];$('#u-date').textContent=(D&&D.updated)||'–';});}
-}
-const SCHED={jp:'毎日 3:00 JST 更新',us:'毎日 7:00 JST 更新',world:'毎日 7:00 JST 更新'};
-
-/* ---------- VCP screener tab (案②: 最新日+検索/ソート+日付スライダー+◁▷) ---------- */
-const VCP_DATA={us:null,jp:null};
-state.vcpMkt='us'; state.vcpIdx=null; state.vcpQuery=''; state.vcpSort={k:'prio',dir:'desc'};
-function vcpCols(){return state.vcpMkt==='us'
-  ? [['prio','優先度','r'],['name','銘柄','l'],['buy','Buy','c'],['vcp','VCP','r'],['dist','ピボット','r'],['rs','RS','r'],['mcap','時価総額','r'],['listing','上場','r'],['streak','継続','r'],['tl','最近の掲載','c']]
-  : [['prio','優先度','r'],['name','銘柄','l'],['buy','Buy','c'],['vcp','VCP','r'],['dist','ピボット','r'],['rs','RS','r'],['streak','継続','r'],['tl','最近の掲載','c']];}
-function loadVcp(mkt){
-  if(VCP_DATA[mkt]!==null)return Promise.resolve(VCP_DATA[mkt]);
-  return fetch('vcp_'+mkt+'.json?cb='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.json():{sessions:[]}).catch(()=>({sessions:[]})).then(j=>{VCP_DATA[mkt]=j;return j;});
-}
-function vcpTL(sess,idx,code){const s=Math.max(0,idx-19);let g='<span class="vtl">';
-  for(let i=s;i<=idx;i++){const on=sess[i].rows.some(r=>r.code===code);g+=`<i style="background:${on?'var(--accent)':'var(--surface-2)'}"></i>`;}
-  return g+'</span>';}
-function drawVcp(){
-  const D=VCP_DATA[state.vcpMkt],head=$('#vcp-head'),body=$('#vcp-body'),slider=$('#vcp-day');
-  const sess=(D&&D.sessions)?D.sessions:[];
-  if(!sess.length){head.innerHTML='';body.innerHTML='<tr><td style="padding:16px;color:var(--muted)">データ準備中です（初回スクリーニング後に表示されます）。</td></tr>';
-    $('#vcp-daylabel').textContent='–';$('#vcp-count').textContent='';slider.max=0;$('#vcp-prev').disabled=true;$('#vcp-next').disabled=true;return;}
-  if(state.vcpIdx==null||state.vcpIdx>sess.length-1)state.vcpIdx=sess.length-1;
-  slider.max=sess.length-1;slider.value=state.vcpIdx;
-  const idx=state.vcpIdx,cur=sess[idx],prev=idx>0?sess[idx-1]:null;
-  const prevCodes=new Set(prev?prev.rows.map(r=>r.code):[]),curCodes=new Set(cur.rows.map(r=>r.code));
-  const prevMap=new Map(prev?prev.rows.map(r=>[r.code,r]):[]);
-  $('#vcp-daylabel').textContent=cur.date;$('#vcp-prev').disabled=idx<=0;$('#vcp-next').disabled=idx>=sess.length-1;
-  let rows=cur.rows.map(r=>{const pr=prevMap.get(r.code);
-    return Object.assign({},r,{_new:!!prev&&!prevCodes.has(r.code),_gone:false,
-      _newprio:!!prev&&r.prio!=null&&!(pr&&pr.prio!=null)});});
-  if(prev)prev.rows.filter(r=>!curCodes.has(r.code)).forEach(r=>rows.push(Object.assign({},r,{_gone:true,vcp:null,dist:null,prio:null,buy:false})));
-  const q=state.vcpQuery.toLowerCase();
-  if(q)rows=rows.filter(r=>(r.name||'').toLowerCase().includes(q)||(r.code||'').toLowerCase().includes(q));
-  const nnew=prev?cur.rows.filter(r=>!prevCodes.has(r.code)).length:0,ngone=prev?prev.rows.filter(r=>!curCodes.has(r.code)).length:0;
-  $('#vcp-count').textContent=`該当 ${cur.rows.length}銘柄`+(prev?` ・ 新規${nnew} / 消失${ngone}`:'');
-  const{k,dir}=state.vcpSort,sgn=dir==='asc'?1:-1;
-  const gv=r=>{if(k==='name')return r.code;const v=r[k];return v==null?-1e9:v;};
-  rows.sort((a,b)=>{if(a._gone!==b._gone)return a._gone?1:-1;const x=gv(a),y=gv(b);return (x<y?-1:x>y?1:0)*sgn;});
-  const cols=vcpCols();
-  head.innerHTML=cols.map(c=>{const cl=c[2]==='l'?'l':(c[2]==='c'?'':'');
-    return c[0]==='tl'?`<th style="text-align:center">${c[1]}</th>`
-      :`<th class="${cl} srt" data-k="${c[0]}">${c[1]}<span class="ar" data-a="${c[0]}"></span></th>`;}).join('');
-  $$('#vcp-head .ar').forEach(a=>a.textContent=a.dataset.a===k?(dir==='asc'?'▲':'▼'):'');
-  body.innerHTML=rows.map(r=>{
-    const nm=`<span class="t" title="${r.name}" style="${r._new?'color:var(--neg)':''}">${r.name}</span><span class="cat" style="margin-left:6px">${r.code}</span>`
-      +(r._new?'<span class="vtag" style="color:var(--neg)">●新規</span>':'')+(r._gone?'<span class="vtag" style="color:var(--muted)">消失</span>':'');
-    const cell=c=>{
-      if(c==='prio'){if(r._gone||r.prio==null)return '<span style="color:var(--muted)">–</span>';
-        return `<span style="font-weight:600;${r._newprio?'background:#FAEEDA;color:#633806;padding:1px 7px;border-radius:5px':''}">${r.prio}</span>`;}
-      if(c==='buy')return (r.buy&&!r._gone)?'<span style="color:var(--pos);font-weight:600;font-size:11px">BUY</span>':'';
-      if(c==='name')return nm;
-      if(c==='vcp')return r.vcp!=null?`<b>${r.vcp}</b>`:'<span style="color:var(--muted)">–</span>';
-      if(c==='dist')return r.dist!=null?`<span class="${r.dist>=0&&r.dist<=2?'pos':''}">${r.dist>=0?'+':''}${r.dist.toFixed(1)}%</span>`:'<span style="color:var(--muted)">–</span>';
-      if(c==='rs')return r.rs!=null?r.rs:'';
-      if(c==='mcap')return r.mcap?('$'+r.mcap+'B'):'<span style="color:var(--muted)">–</span>';
-      if(c==='listing')return r.listing?(String(r.listing).match(/[A-Za-z]/)?r.listing:r.listing+'年'):'';
-      if(c==='streak')return r._gone?'':r.streak;
-      if(c==='tl')return vcpTL(sess,idx,r.code);
-      return '';};
-    return `<tr class="${r._gone?'gone':''}" data-url="${r.url||''}">`+cols.map(c=>{
-      const al=c[0]==='tl'?'style="text-align:center"':(c[2]==='l'?'style="text-align:left"':'class="num"');
-      return `<td ${al}>${cell(c[0])}</td>`;}).join('')+'</tr>';
-  }).join('');
-  $$('#vcp-body tr').forEach(tr=>tr.onclick=()=>{const u=tr.dataset.url;if(u)window.open(u,'_blank','noopener');});
-}
-
-/* ---------- tiles ---------- */
-function drawTiles(){
-  const top=[...themes].filter(t=>t.surge!=null).sort((a,b)=>b.surge-a.surge)[0];
-  const out=[...themes].filter(t=>t.share_chg!=null).sort((a,b)=>a.share_chg-b.share_chg)[0];
-  $('#tiles').innerHTML=`
-   <div class="tile"><div class="k">追跡テーマ</div><div class="v">${DATA.n_themes}</div><div class="d">対象 ${DATA.n_stocks.toLocaleString()} 銘柄</div></div>
-   <div class="tile"><div class="k">資金 最流入テーマ</div><div class="v big">${top.name}</div><div class="d pos">急増率 ${sign(top.surge)}%</div></div>
-   <div class="tile"><div class="k">資金 最流出テーマ</div><div class="v big">${out.name}</div><div class="d neg">${sign(out.share_chg)}pt</div></div>
-   <div class="tile"><div class="k">データ期間</div><div class="v" style="font-size:16px">${DATA.updated}</div><div class="d">${DATA.start}〜</div></div>`;
-  $('#u-date').textContent=DATA.updated;$('#u-univ').textContent=`${market==='us'?'米国株':'日本株'} ${DATA.n_themes}テーマ / ${DATA.n_stocks.toLocaleString()}銘柄`;
-  $('#f-univ').textContent=`${DATA.n_themes}テーマ・${DATA.n_stocks.toLocaleString()}銘柄`;
-  const mp=$('#w-period');if(mp)mp.textContent=(MACRO.start&&MACRO.updated)?`${MACRO.start} 〜 ${MACRO.updated}`:'—';
-}
-
-/* ---------- wire ---------- */
-function seg(id,fn){$('#'+id).onclick=e=>{const b=e.target.closest('button');if(!b)return;$$('#'+id+' button').forEach(x=>x.setAttribute('aria-pressed',x===b));fn(b);};}
-seg('metric',b=>{state.metric=b.dataset.m;drawChart();});
-seg('range',b=>{state.range=b.dataset.r==='ytd'?'ytd':+b.dataset.r;drawChart();});
-seg('smooth',b=>{state.smooth=+b.dataset.w;drawChart();});
-seg('sortby',b=>{state.sort=b.dataset.s;drawRank();});
-seg('gran',b=>{state.gran=b.dataset.g;drawHeat();});
-seg('hsort',b=>{state.hsort=b.dataset.h;drawHeat();});
-seg('rkmetric',b=>{state.rkMetric=b.dataset.m;state.rkSel=null;drawRk();});
-seg('rkrows',b=>{state.rkRows=+b.dataset.n;drawRkBump();});
-$('#tabbar').onclick=e=>{const b=e.target.closest('button');if(b)switchTab(b.dataset.t);};
-seg('mccat',b=>{state.mcCat=b.dataset.c;drawMacro();});
-seg('mcper',b=>{state.mcPer=+b.dataset.p;drawMacro();drawRatios();});
-seg('ratesub',b=>{state.rateSub=b.dataset.r;drawMacro();});
-document.getElementById('rktbl').querySelectorAll('th.srt').forEach(th=>th.onclick=()=>{
-  const k=th.dataset.k;
-  if(state.rkSort.k===k)state.rkSort.dir=state.rkSort.dir==='asc'?'desc':'asc';
-  else state.rkSort={k,dir:k==='rank'?'asc':'desc'};
-  drawRkList();});
-
-/* 検索窓（テーマ／Top100） */
-function wireSearch(inputId,clearId,fn){const el=$('#'+inputId),x=$('#'+clearId);if(!el)return;
-  el.addEventListener('input',()=>{const v=el.value.trim();if(x)x.hidden=!v;fn(v);});
-  if(x)x.addEventListener('click',()=>{el.value='';x.hidden=true;fn('');el.focus();});}
-wireSearch('hsearch','hsearch-x',v=>{state.hquery=v;drawHeat();});
-wireSearch('rksearch','rksearch-x',v=>{state.rkQuery=v;drawRkList();});
-wireSearch('vcpsearch','vcpsearch-x',v=>{state.vcpQuery=v;drawVcp();});
-seg('vcpmkt',b=>{state.vcpMkt=b.dataset.m;state.vcpIdx=null;state.vcpQuery='';const s=$('#vcpsearch');if(s)s.value='';const x=$('#vcpsearch-x');if(x)x.hidden=true;
-  $('#u-sched').textContent=SCHED[state.vcpMkt];
-  loadVcp(state.vcpMkt).then(()=>{drawVcp();const D=VCP_DATA[state.vcpMkt];$('#u-date').textContent=(D&&D.updated)||'–';});});
-$('#vcp-prev').onclick=()=>{if(state.vcpIdx>0){state.vcpIdx--;drawVcp();}};
-$('#vcp-next').onclick=()=>{const D=VCP_DATA[state.vcpMkt];if(D&&D.sessions&&state.vcpIdx<D.sessions.length-1){state.vcpIdx++;drawVcp();}};
-$('#vcp-day').addEventListener('input',e=>{state.vcpIdx=+e.target.value;drawVcp();});
-$('#vcptbl').addEventListener('click',e=>{const th=e.target.closest('th.srt');if(!th)return;const k=th.dataset.k;
-  if(state.vcpSort.k===k)state.vcpSort.dir=state.vcpSort.dir==='asc'?'desc':'asc';else state.vcpSort={k,dir:k==='name'?'asc':'desc'};drawVcp();});
-
-const mq=window.matchMedia('(prefers-color-scheme:dark)');
-function redrawAll(){drawChart();drawRank();drawHeat();drawStock();drawRkBump();if(state.worldDrawn){drawMacro();drawRatios();}if(!$('#tab-vcp').hidden)drawVcp();}
-mq.addEventListener?.('change',redrawAll);
-new MutationObserver(redrawAll).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
-
-state.mapTheme=state.selected[0]||themes[0]?.name||null;
-window.addEventListener('resize',()=>syncPanelHeight());
-if(!US_ON){const ub=document.querySelector('#tabbar button[data-t="us"]');if(ub)ub.hidden=true;}
-applyMarketLabels();$('#u-sched').textContent=SCHED.jp;
-drawTiles();drawChart();bindTip();drawRank();drawHeat();drawStock();drawRk();
-
-/* ---------- 手動更新ボタン & 新デプロイ自動検知 ---------- */
-$('#upd-btn').addEventListener('click',()=>{const h=$('#upd-hint');h.hidden=false;
-  h.textContent='GitHubのページで「Run workflow」を押してください。完了(約5〜8分後)を自動検知し、下に再読込ボタンを出します。';});
-$('#upd-reload').addEventListener('click',()=>location.reload());
-async function checkUpdate(){
-  try{const r=await fetch('version.json?cb='+Date.now(),{cache:'no-store'});if(!r.ok)return;
-    const v=await r.json();
-    if(v.built && BUILT && v.built!==BUILT){$('#upd-banner').hidden=false;}
-  }catch(e){}
-}
-setInterval(checkUpdate,60000);
-document.addEventListener('visibilitychange',()=>{if(!document.hidden)checkUpdate();});
+const MKT={jp:__MKT_JP__,us:__MKT_US__};
+const UNIV={jp:__UNIV_JP__,us:__UNIV_US__};
+const GATE=__GATE__;
+const BUILT="__BUILT__";
+/*__SCRIPT__*/
 </script>

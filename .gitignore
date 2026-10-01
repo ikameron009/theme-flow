@@ -20,3 +20,6 @@ venv/
 # OS
 .DS_Store
 Thumbs.db
+market_jp.json
+market_us.json
+fetch_local_*.log

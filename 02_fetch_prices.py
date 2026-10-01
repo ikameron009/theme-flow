@@ -83,6 +83,12 @@ def main():
     volume = pd.DataFrame(vols).sort_index()
     # JP_CUTOFF未満に限定(引け後なら当日含む/場中なら前日まで)
     close = close[close.index.date < JP_CUTOFF]
+    # 末尾の日に一部の銘柄しか値が無い(Yahooの集計待ち)場合はその日を捨てる=前日までで公開
+    cnt = close.notna().sum(axis=1)
+    while len(cnt) > 20 and cnt.iloc[-1] < cnt.iloc[-21:-1].median() * 0.8:
+        print(f"[skip] {close.index[-1].date()} は {int(cnt.iloc[-1])} 銘柄しか値がないため除外(平常 {int(cnt.iloc[-21:-1].median())})")
+        close = close.iloc[:-1]
+        cnt = cnt.iloc[:-1]
     volume = volume.reindex(close.index)
     turnover = close * volume  # 売買代金(円)
 
