@@ -141,7 +141,7 @@ def main():
     tt = ((last > m50) & (m50 > m150) & (m150 > m200) & (m200 > m200_1m)
           & (last >= lo52 * 1.25) & (last >= hi52 * 0.75) & (rs >= 70))
     stage = pd.Series("flat", index=universe)
-    stage[(last > m200) & (m50 > m200)] = "up"
+    stage[(last > m50) & (m50 > m150) & (m150 > m200)] = "up"      # 上昇＝下落の逆(株価＞50日線＞150日線＞200日線)
     stage[tt] = "tt"
     stage[(last < m50) & (m50 < m150) & (m150 < m200)] = "down"
     vcp_codes = set()

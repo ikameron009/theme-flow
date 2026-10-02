@@ -129,11 +129,11 @@ table.rx tr.sel td{background:var(--surface-2)}
   </div>
 
   <div class="resbar">
-    <button class="btn sm ghost" id="copy">ティッカーをコピー</button><button class="btn sm ghost" id="csv">CSV出力</button>
     <span class="cnt" id="cnt">–</span>
     <div class="seg" id="view"><button data-v="table" aria-pressed="true">テーブル</button><button data-v="heat" aria-pressed="false">ヒートマップ</button><button data-v="tree" aria-pressed="false">ツリーマップ</button></div>
     <select id="colorBy" title="色の基準"></select><select id="sizeBy" title="面積の基準" hidden><option value="to20">面積＝売買代金</option><option value="mcap">面積＝時価総額</option></select>
-    <span class="phint" id="copied"></span>
+    <span style="flex:1"></span><span class="phint" id="copied"></span>
+    <button class="btn sm ghost" id="copy">ティッカーをコピー</button><button class="btn sm ghost" id="csv">CSV出力</button>
   </div>
 
   <div class="summary3">
@@ -302,10 +302,10 @@ function link(code){return mk==='us'?`https://finance.yahoo.com/quote/${code}`:`
 function openCard(code){const r=S.find(x=>g(x,'code')===code);if(!r)return;st.sel=code;
   $$('#tbody tr').forEach(tr=>{const b=tr.querySelector('.nmb');tr.classList.toggle('sel',!!b&&b.dataset.c===code);});
   const cl=v=>(v??0)>=0?'up':'down',T=g(r,'themes').map(i=>D.themes[i]),tk=stageKey(r);
-  StockCard.open('rcard',{market:mk,code,name:g(r,'name'),sub:g(r,'sector'),
+  StockCard.open('rcard',{market:mk,code,name:g(r,'name'),sub:'業種：'+g(r,'sector'),
     kv:[{l:'株価',v:fmt(g(r,'price'),g(r,'price')>=1000?0:2)},{l:'前日比',v:pct(g(r,'chg1')),cls:cl(g(r,'chg1'))},{l:'今月（'+esc(D.months[0])+'）',v:pct(g(r,'m0')),cls:cl(g(r,'m0'))},{l:'年初来',v:pct(g(r,'ytd')),cls:cl(g(r,'ytd'))},
       {l:'52週高値から',v:pct(g(r,'hi52')),cls:cl(g(r,'hi52'))},{l:'RS',v:g(r,'rs')??'–'},{l:'トレンド',v:esc(stageName(tk)),cls:tk==='down'?'down':tk==='flat'?'muted':'up'},{l:'売買代金（20日平均・'+esc(D.units.to)+'）',v:fmt(g(r,'to20'),g(r,'to20')>=100?0:1)}],
-    foot:T.length?'所属テーマ：'+T.map(esc).join('、'):'',onClose:()=>{st.sel=null;$$('#tbody tr.sel').forEach(tr=>tr.classList.remove('sel'));}});}
+    foot:T.length?'テーマ：'+T.map(esc).join('、')+'（一覧の「'+esc(T[0])+(T.length>1?' +'+(T.length-1):'')+'」の中身）':'テーマ：なし',onClose:()=>{st.sel=null;$$('#tbody tr.sel').forEach(tr=>tr.classList.remove('sel'));}});}
 /* コピー・CSVの対象 = チェックした銘柄(なければ表示中の全銘柄) */
 function targets(){const R=window.__R||[];if(!st.chk.size)return R;return S.filter(r=>st.chk.has(g(r,'code')));}
 function drawCopyBtns(){const n=st.chk.size;$('#copy').textContent=n?`ティッカーをコピー（選択${n}）`:'ティッカーをコピー';$('#csv').textContent=n?`CSV出力（選択${n}）`:'CSV出力';}
@@ -385,7 +385,7 @@ function boot(){
   S=D.stocks;ci=Object.fromEntries(D.cols.map((c,i)=>[c,i]));
   $('#meta').textContent=`${mk==='us'?'米国株':'日本株'} ・ ${D.updated}まで ・ ${S.length.toLocaleString()}銘柄`;
   $('#upd').textContent=mk==='us'?'毎日 7:00 JST 更新':'毎日 17:00 JST 更新';
-  $('#foot').innerHTML=`<b>トレンド</b>：<span class="dot st-up"></span> 上昇＝株価と50日線がどちらも200日線より上／<span class="dot st-down"></span> 下落＝株価＜50日線＜150日線＜200日線（きれいな下向きの並び）／<span class="dot st-flat"></span> 中立＝どちらでもない。<b>コピー・CSV出力</b>＝左のチェックを付けた銘柄（付けていなければ表示中の全銘柄）。
+  $('#foot').innerHTML=`<b>トレンド</b>：<span class="dot st-up"></span> 上昇＝株価＞50日線＞150日線＞200日線（きれいな上向きの並び）／<span class="dot st-down"></span> 下落＝株価＜50日線＜150日線＜200日線（きれいな下向きの並び）／<span class="dot st-flat"></span> 中立＝どちらでもない。<b>コピー・CSV出力</b>＝左のチェックを付けた銘柄（付けていなければ表示中の全銘柄）。
     <b>RS</b>＝3か月（40%）・6か月・9か月・12か月（各20%）の騰落を全銘柄の中で順位づけ（1〜99）。<b>出来高倍率</b>＝当日÷50日平均。<b>ADR%</b>＝20日間の（高値÷安値−1）の平均。${mk==='us'?'株価2ドル未満・売買代金1日200万ドル未満の銘柄は除いています。':''}<b>業種・テーマ</b>：同じ段の中で複数選ぶと「どれかに当てはまる」、業種とテーマを両方選ぶと「両方に当てはまる」銘柄。大分類だけ選ぶとその中すべて、同じ大分類の小分類も選ぶとその小分類だけに絞ります（業種の大分類＝${mk==='us'?'セクター、小分類＝業種':'東証17業種、小分類＝東証33業種'}）。条件は「すべて満たす」で絞り込みます。`;
   drawFilters();render();
 }
