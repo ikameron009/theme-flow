@@ -14,6 +14,7 @@ import numpy as np
 import pandas as pd
 from market_calendar import expected_session
 from tool_common import r, metrics, rs_rank, month_starts, equal_weight_index, surge
+from us_etf_list import US_ETF_ALL, NO_DEDUPE, MIN_TURNOVER, MAX_CORR
 
 BASE = os.path.dirname(os.path.abspath(__file__))
 P = lambda f: os.path.join(BASE, f)
@@ -122,6 +123,34 @@ def fetch(tickers):
     return out
 
 
+def select_us(lst, px):
+    """① 売買代金の足切り ② 同じ分類で値動きがほぼ同じETFは売買代金の多いほうだけ残す"""
+    to20 = {t: float(px[t][1].iloc[-20:].mean()) for t, _, _ in lst if t in px}
+    keep, cut_low, merged = [], [], []
+    by_group = {}
+    for t, nm, g in lst:
+        if t not in px:
+            continue
+        if g not in NO_DEDUPE and to20[t] < MIN_TURNOVER:
+            cut_low.append(t); continue
+        by_group.setdefault(g, []).append((t, nm, g))
+    for g, items in by_group.items():
+        if g in NO_DEDUPE:
+            keep += items; continue
+        kept = []
+        for t, nm, gg in sorted(items, key=lambda x: -to20[x[0]]):
+            rt = px[t][0].pct_change().iloc[-252:]
+            twin = next((k for k, _, _ in kept if rt.corr(px[k][0].pct_change().iloc[-252:]) >= MAX_CORR), None)
+            if twin:
+                merged.append(f"{t}→{twin}"); continue
+            kept.append((t, nm, gg))
+        keep += kept
+    order = {t: i for i, (t, _, _) in enumerate(lst)}
+    keep.sort(key=lambda x: order[x[0]])
+    print(f"  候補{len(lst)} → 掲載{len(keep)}  売買代金不足{len(cut_low)}:{cut_low}  値動きが重複{len(merged)}:{merged}")
+    return keep
+
+
 def sector_indices(cut):
     """東証33業種の等加重指数(2年)。各業種の構成銘柄の日次騰落の平均を積み上げる。"""
     close = pd.read_pickle(P("close.pkl")).sort_index()
@@ -142,8 +171,10 @@ def main():
     mk = ap.parse_args().market
     cut = expected_session(mk)
     rows = []
-    lst = JP_ETF if mk == "jp" else US_ETF
+    lst = JP_ETF if mk == "jp" else US_ETF_ALL
     px = fetch([t for t, _, _ in lst])
+    if mk == "us":
+        lst = select_us(lst, px)
     series = []
     for t, nm, g in lst:
         if t in px:
