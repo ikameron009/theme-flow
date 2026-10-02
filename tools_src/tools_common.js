@@ -1,0 +1,92 @@
+<script>
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const cssv=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const fmt=(x,d=2)=>x==null||!isFinite(x)?'–':Number(x).toLocaleString('ja-JP',{minimumFractionDigits:d,maximumFractionDigits:d});
+const sign=(x,d=2)=>x==null||!isFinite(x)?'–':(x>=0?'+':'−')+fmt(Math.abs(x),d)+'%';
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const DATA={jp:null,us:null};
+let mk='jp',D=null;
+const st={grp:'all',view:'list',q:'',sort:'m0',dir:-1,pick:null};
+try{mk=new URLSearchParams(location.search).get('m')||localStorage.getItem('tf_market')||'jp';}catch(e){}
+/* 期間の列(「Nか月前」=N か月前から今日までの騰落) */
+function pcols(){const M=D.months||[];return [['chg1','前日比'],['w1','週間%'],['m0','今月（'+(M[0]||'')+'）'],['r1m','1か月前'],['r2m','2か月前'],['r3m','3か月前'],['r6m','6か月前'],['r12m','1年前'],['hi52','52週高値']];}
+const SCALE={chg1:3,w1:6,m0:10,r1m:10,r2m:15,r3m:20,r6m:30,r12m:50,hi52:25,surge:60};
+const NUMK=new Set(['chg1','w1','m0','r1m','r2m','r3m','r6m','r12m','hi52','surge','rs','last']);
+function val(x,k){return k==='m0'?x.months[0]:x[k];}
+function heatBg(v,k){if(v==null||!SCALE[k])return'';const a=Math.min(1,Math.abs(v)/SCALE[k])*0.55;return `background:rgba(${v>=0?cssv('--brandrgb'):cssv('--downrgb')},${a.toFixed(2)})`;}
+function spark(a){if(!a||a.length<2)return'';const w=70,h=18,lo=Math.min(...a),hi=Math.max(...a),rg=hi-lo||1;let p='';
+  a.forEach((v,i)=>p+=(i?'L':'M')+(i/(a.length-1)*w).toFixed(1)+' '+(h-1-(v-lo)/rg*(h-2)).toFixed(1)+' ');
+  return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" style="display:inline-block;vertical-align:middle"><path d="${p}" fill="none" stroke="${a[a.length-1]>=a[0]?'var(--up)':'var(--down)'}" stroke-width="1.4"/></svg>`;}
+const TREND={up:['▲','上昇','up'],flat:['―','中立','muted'],down:['▼','下落','down']};
+function label(k){const c=pcols().find(p=>p[0]===k);return c?c[1]:({rs:'RS',surge:'資金急増率',last:'現在値'}[k]||'今月');}
+function keyNum(){return NUMK.has(st.sort)&&st.sort!=='last'?st.sort:'m0';}
+
+function rows(){let R=D.rows.filter(x=>st.grp==='all'||x.group===st.grp);
+  if(st.pick)R=D.rows.filter(x=>x.name===st.pick);
+  if(st.q){const q=st.q.normalize('NFKC').toLowerCase();R=R.filter(x=>(x.name+' '+(x.key||'')+' '+x.group).normalize('NFKC').toLowerCase().includes(q)||memberHit(x,q));}
+  const k=st.sort,dir=st.dir;
+  return R.slice().sort((a,b)=>{const x=(k==='name'||k==='key')?a[k]:val(a,k),y=(k==='name'||k==='key')?b[k]:val(b,k);if(x==null)return 1;if(y==null)return -1;return (x<y?-1:x>y?1:0)*dir;});}
+function memberHit(x,q){if(!x.members||!D.stocks)return false;return x.members.some(c=>(c+' '+((D.stocks[c]||[''])[0])).normalize('NFKC').toLowerCase().includes(q));}
+
+function drawCtl(){
+  const G=['all',...D.groups.filter(g=>D.rows.some(x=>x.group===g))];
+  $('#grp').innerHTML=G.map(g=>`<button data-g="${esc(g)}" aria-pressed="${g===st.grp}">${g==='all'?'すべて':esc(g)}</button>`).join('');
+  $('#grp').onclick=e=>{const b=e.target.closest('button');if(!b)return;st.grp=b.dataset.g;st.pick=null;draw();};
+  /* B: 大分類を選ぶと、その中のテーマ(行)の一覧ボタン */
+  const sub=$('#sub');
+  if(st.grp==='all'){sub.hidden=true;sub.innerHTML='';}
+  else{const L=D.rows.filter(x=>x.group===st.grp).sort((a,b)=>(val(b,keyNum())??-1e9)-(val(a,keyNum())??-1e9));
+    sub.hidden=false;sub.innerHTML=`<span class="ctl-label">${esc(st.grp)}の中</span><div class="seg" style="flex:1">${L.map(x=>`<button data-n="${esc(x.name)}" aria-pressed="${x.name===st.pick}">${esc(x.name)}${x.n?`<span class="muted" style="font-size:10px;margin-left:3px">${x.n}</span>`:''}</button>`).join('')}</div>`;
+    sub.querySelectorAll('button').forEach(b=>b.onclick=()=>pick(b.dataset.n===st.pick?null:b.dataset.n));}
+  /* A: テーマを選ぶ欄(入力すると候補) */
+  $('#tlist').innerHTML=D.rows.map(x=>`<option value="${esc(x.name)}">${esc(x.group)}</option>`).join('');
+  $('#pickchip').innerHTML=st.pick?`<span class="fchip">表示中：${esc(st.pick)}<button aria-label="解除" id="unpick">✕</button></span>`:'';
+  const u=$('#unpick');if(u)u.onclick=()=>pick(null);
+}
+function pick(n){st.pick=n;$('#tpick').value='';if(n){const x=D.rows.find(r=>r.name===n);if(x)st.grp=x.group;if(typeof OPEN!=='undefined')OPEN.add(n);}draw();}
+function draw(){
+  drawCtl();const R=rows(),k=keyNum();
+  const up=D.rows.filter(x=>(x.chg1||0)>0).length,dn=D.rows.filter(x=>(x.chg1||0)<0).length;
+  $('#meta').innerHTML=`${mk==='us'?'米国株':'日本株'} ・ ${D.updated}まで ・ <span class="up">▲${up}</span> <span class="muted">＝${D.rows.length-up-dn}</span> <span class="down">▼${dn}</span>（前日比）`;
+  $('#upd').textContent=mk==='us'?'毎日 7:00 JST 更新':'毎日 17:00 JST 更新';
+  $('#cnt').textContent=`${R.length}件 ・ 表の見出しを押すと並び替え（上位3つも連動）`;
+  const ranked=R.filter(x=>val(x,k)!=null&&(!MINN||(x.n||0)>=MINN)).sort((a,b)=>val(b,k)-val(a,k)).slice(0,3);
+  const vtxt=v=>k==='rs'?v:sign(v);
+  $('#top3').innerHTML=ranked.map((x,i)=>{const v=val(x,k);return `<div class="panel t3"><span class="no">${i+1}</span><div class="tn"><b>${esc(x.name)}</b><small>${x.etf?esc(x.key)+' ・ ':''}${esc(x.group)}${x.n?' ・ '+x.n+'銘柄':''} ・ ${esc(label(k))}</small></div><span class="v ${k==='rs'||v>=0?'up':'down'}">${vtxt(v)}</span></div>`;}).join('');
+  if(st.view==='list'){$('#list').hidden=false;$('#heat').hidden=true;drawTable(R);}else{$('#list').hidden=true;$('#heat').hidden=false;drawHeat(R);}
+  $('#foot').innerHTML=FOOT();
+}
+function cells(x){const t=TREND[x.trend]||TREND.flat;
+  return `<td style="font-weight:600;${x.rs>=80?'color:var(--up)':x.rs<=20?'color:var(--down)':''}">${x.rs}</td>
+    <td>${x.last==null?'<span class="muted">指数</span>':fmt(x.last,x.last>=1000?0:(x.etf?2:1))}</td>
+    ${pcols().map(([k])=>{const v=val(x,k);return `<td class="heat ${v>=0?'up':'down'}" style="${heatBg(v,k)}">${sign(v)}</td>`;}).join('')}
+    <td class="${(x.surge??0)>=0?'up':'down'}">${x.surge==null?'–':sign(x.surge,1)}</td>
+    <td><span class="trend ${t[2]}" title="${t[1]}">${t[0]} ${t[1]}</span></td><td>${spark(x.spark)}</td>`;}
+function head(first){const cols=[...first,['rs','RS',''],['last','現在値',''],...pcols().map(([k,l])=>[k,l,'']),['surge','資金急増率%',''],['trend','トレンド',''],['spark','直近60日','']];
+  $('#thead').innerHTML=cols.map(([k,l,c])=>`<th class="${c} ${k===st.sort?'sel':''}" data-k="${k}">${esc(l)}${k===st.sort?(st.dir>0?' ▲':' ▼'):''}</th>`).join('');
+  $$('#thead th').forEach(th=>th.onclick=()=>{const k=th.dataset.k;if(k==='spark'||k==='trend')return;
+    if(st.sort===k)st.dir=-st.dir;else{st.sort=k;st.dir=(k==='name'||k==='key')?1:-1;}draw();});}
+function drawHeat(R){const k=keyNum();
+  const groups=st.grp==='all'?D.groups:[st.grp];
+  $('#heat').innerHTML=`<div class="phint" style="margin-bottom:6px">色＝${esc(label(k))}（リスト表示で見出しを押すと切り替わります）</div>`+groups.map(g=>{const G=R.filter(x=>x.group===g).sort((a,b)=>(val(b,k)??-1e9)-(val(a,k)??-1e9));if(!G.length)return'';
+    return `<div class="ghead">${esc(g)}</div><div class="tiles">${G.map(x=>{const v=val(x,k),sc=SCALE[k]||50,a=v==null?0:Math.min(1,Math.abs(k==='rs'?v-50:v)/(k==='rs'?49:sc));
+      const pos=k==='rs'?v>=50:v>=0,bg=v==null?'var(--surface-2)':`rgba(${pos?cssv('--brandrgb'):cssv('--downrgb')},${(0.12+a*0.78).toFixed(2)})`,fg=a>0.55?'#fff':'var(--ink)';
+      return `<div class="tile" style="background:${bg};color:${fg}" title="${esc(x.name)}"><b>${esc(x.name)}</b><small>${x.etf?esc(x.key):(x.n?x.n+'銘柄':'')}</small><span>${k==='rs'?v:sign(v)}</span></div>`;}).join('')}</div>`;}).join('');}
+const COMMON_FOOT='<b>今月</b>＝月初来。<b>1か月前〜1年前</b>＝その時点から今日までの騰落（1か月＝21営業日、2か月＝42、3か月＝63、6か月＝126、1年＝252）。<b>52週高値</b>＝過去1年の最高値からの距離。<b>資金急増率</b>＝売買代金（終値×出来高）の直近5日平均 ÷ その前20営業日の平均 −1。<b>RS</b>＝3か月（40%）・6か月・9か月・12か月（各20%）の騰落を一覧の中で順位づけ（1〜99）。<b>トレンド</b>＝株価・50日線・200日線の並び（上昇＝株価＞50日線＞200日線）。';
+
+function load(m){mk=m==='us'?'us':'jp';$$('#mseg button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.m===mk));try{localStorage.setItem('tf_market',mk);}catch(e){}
+  if(DATA[mk]){D=DATA[mk];st.grp='all';st.pick=null;draw();return;}
+  $('#tbody').innerHTML='<tr><td class="l muted" style="padding:14px">読み込み中…</td></tr>';
+  fetch('../pro/'+FILE+'_'+mk+'.json?cb='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.json():null).then(j=>{
+    if(!j){$('#tbody').innerHTML='<tr><td class="l muted" style="padding:14px">データを準備中です。</td></tr>';return;}
+    DATA[mk]=j;D=j;st.grp='all';draw();}).catch(()=>{$('#tbody').innerHTML='<tr><td class="l muted" style="padding:14px">データを読み込めませんでした。</td></tr>';});}
+$('#mseg').onclick=e=>{const b=e.target.closest('button');if(b)load(b.dataset.m);};
+$('#view').onclick=e=>{const b=e.target.closest('button');if(!b)return;st.view=b.dataset.v;$$('#view button').forEach(x=>x.setAttribute('aria-pressed',x===b));draw();};
+$('#q').addEventListener('input',e=>{st.q=e.target.value.trim();$('#qx').hidden=!st.q;draw();});
+$('#qx').onclick=()=>{$('#q').value='';st.q='';$('#qx').hidden=true;draw();$('#q').focus();};
+$('#tpick').addEventListener('change',e=>{const v=e.target.value.trim();if(D&&D.rows.some(x=>x.name===v))pick(v);});
+$('#tpick').addEventListener('keydown',e=>{if(e.key==='Enter'){const v=e.target.value.trim();const hit=D&&(D.rows.find(x=>x.name===v)||D.rows.find(x=>x.name.includes(v)));if(hit)pick(hit.name);}});
+matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change',()=>D&&draw());
+/*__PAGE__*/
+load(mk);
+</script>
