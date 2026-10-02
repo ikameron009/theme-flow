@@ -9,7 +9,7 @@
   52週高値から・50日線/200日線/21日EMAからの乖離・RS(全銘柄内1-99)・出来高倍率(当日/50日平均)・ADR%(20日)・ステージ色
 ステージ色: tt=トレンドテンプレート合格 / vcp=VCPスクリーナー該当 / up=上昇途中 / flat=中立 / down=下落(ステージ4)
 """
-import os, json, argparse, unicodedata, importlib.util, warnings
+import os, re, json, argparse, unicodedata, importlib.util, warnings
 warnings.filterwarnings("ignore")
 import numpy as np
 import pandas as pd
@@ -29,6 +29,39 @@ TOPIX17 = [("食品", ["水産・農林業", "食料品"]), ("エネルギー資
 US_SECTOR = {"Technology": "情報技術", "Communication Services": "通信サービス", "Consumer Cyclical": "一般消費財",
              "Consumer Defensive": "生活必需品", "Healthcare": "ヘルスケア", "Financial Services": "金融", "Industrials": "資本財",
              "Energy": "エネルギー", "Basic Materials": "素材", "Real Estate": "不動産", "Utilities": "公益事業"}
+# ひらがなで業種・テーマを探すための読み(pykakasi)。熟語の後ろの1字は音読みの誤りが多いので別の読みも足す
+YOMI_ALT = {"器": "き", "他": "た", "素": "そ", "体": "たい", "車": "しゃ", "山": "ざん", "光": "こう", "高": "こう", "炭": "たん",
+            "品": "ひん", "材": "ざい", "機": "き", "株": "かぶ", "水": "すい", "金": "きん", "銀": "ぎん", "業": "ぎょう"}
+YOMI_FIX = {"白金": "はっきん", "水関": "すいかん", "空飛": "そらと"}
+
+
+def yomi_map(names):
+    try:
+        import pykakasi
+    except ImportError:
+        return {}
+    k = pykakasi.kakasi()
+    out = {}
+    for n in names:
+        if not n:
+            continue
+        segs = k.convert(n)
+        # 語の区切り(スペース)を残す=画面は「語の頭」から一致を見る(「つ」→つうしん)
+        a = " ".join(YOMI_FIX.get(x["orig"], x["hira"]) for x in segs)
+        b = " ".join(YOMI_FIX.get(x["orig"], YOMI_ALT.get(x["orig"], x["hira"]) if len(x["orig"]) == 1 else x["hira"]) for x in segs)
+        # 4字以上の漢字の熟語(情報通信など)は2字ずつにも分けて読む(「つ」→通信)
+        parts = []
+        for x in segs:
+            o = x["orig"]
+            if len(o) >= 4 and re.fullmatch(r"[一-龥]+", o):
+                parts += ["".join(y["hira"] for y in k.convert(o[i:i + 2])) for i in range(0, len(o), 2)]
+            else:
+                parts.append(YOMI_FIX.get(o, x["hira"]))
+        c = " ".join(parts)
+        out[n] = "|".join(dict.fromkeys([a, b, c]))
+    return out
+
+
 COLS = ["code", "name", "sector", "themes", "price", "mcap", "to20", "chg1", "w1", "m0", "m1", "m2", "m3",
         "r1m", "r3m", "r6m", "ytd", "hi52", "ma50", "ma200", "ema21", "rs", "volx", "adr", "stage"]
 
@@ -159,6 +192,7 @@ def main():
         order = list(US_SECTOR.values())
     out["sec_big"] = {s: big_of.get(s, "その他") for s in sorted(smalls)}
     out["sec_bigs"] = [x for x in order + ["その他"] if x in set(out["sec_big"].values())]
+    out["yomi"] = yomi_map(set(themes) | set(out["theme_cat"]) | set(out["sec_big"]) | set(out["sec_bigs"]))
     with open(P(f"pro_research_{mk}.json"), "w", encoding="utf-8") as f:
         json.dump(out, f, ensure_ascii=False, separators=(",", ":"))
     cnt = pd.Series([r[-1] for r in rows]).value_counts().to_dict()
