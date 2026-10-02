@@ -128,6 +128,10 @@ jobs:
         if: steps.mkt.outputs.market == 'jp' || steps.mkt.outputs.market == 'both'
         run: python 11_tool_sectors.py --market jp || echo "JPセクター状況スキップ; 前回分を維持"
 
+      - name: 12 日本株 ツール:業種状況
+        if: steps.mkt.outputs.market == 'jp' || steps.mkt.outputs.market == 'both'
+        run: python 12_tool_themes.py --market jp || echo "JP業種状況スキップ; 前回分を維持"
+
       - name: 07 日本株OHLC(site/ohlc)
         if: steps.mkt.outputs.market == 'jp' || steps.mkt.outputs.market == 'both'
         run: python 07_write_ohlc.py || echo "JP OHLC生成スキップ"
@@ -143,6 +147,10 @@ jobs:
       - name: US 11 米国株 ツール:セクター状況
         if: steps.mkt.outputs.market == 'us' || steps.mkt.outputs.market == 'both'
         run: python 11_tool_sectors.py --market us || echo "USセクター状況スキップ; 前回分を維持"
+
+      - name: US 12 米国株 ツール:業種状況
+        if: steps.mkt.outputs.market == 'us' || steps.mkt.outputs.market == 'both'
+        run: python 12_tool_themes.py --market us || echo "US業種状況スキップ; 前回分を維持"
 
       - name: US 07 米国OHLC(site/us_ohlc)
         if: steps.mkt.outputs.market == 'us' || steps.mkt.outputs.market == 'both'

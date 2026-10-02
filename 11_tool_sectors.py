@@ -13,6 +13,7 @@ warnings.filterwarnings("ignore")
 import numpy as np
 import pandas as pd
 from market_calendar import expected_session
+from tool_common import r, metrics, rs_rank, month_starts, equal_weight_index
 
 BASE = os.path.dirname(os.path.abspath(__file__))
 P = lambda f: os.path.join(BASE, f)
@@ -75,10 +76,6 @@ GROUP_ORDER = {
 }
 
 
-def r(x, d=2):
-    return None if x is None or not np.isfinite(x) else round(float(x), d)
-
-
 def fetch(tickers):
     import yfinance as yf
     out = {}
@@ -106,49 +103,12 @@ def sector_indices(cut):
     close = pd.read_pickle(P("close.pkl")).sort_index()
     close = close[close.index.date <= cut]
     u = pd.read_csv(P("ranking_universe.csv"), dtype=str)
-    ret = close.pct_change(fill_method=None).clip(-0.3, 0.3)
     out = {}
     for sec, codes in u.groupby("sector")["code"]:
-        cs = [c for c in codes if c in ret.columns]
-        if len(cs) < 3:
-            continue
-        m = ret[cs].mean(axis=1, skipna=True).fillna(0)
-        out[sec] = (1 + m).cumprod() * 100
+        cs = [c for c in codes if c in close.columns]
+        if len(cs) >= 3:
+            out[sec] = equal_weight_index(close, cs)
     return out
-
-
-def metrics(s, months):
-    """s: 日次終値(日付昇順)。months: 直近から並べた月初日(今月, 先月, …)"""
-    s = s.dropna()
-    last = float(s.iloc[-1])
-    def ago(n):
-        return float(s.iloc[-1 - n]) if len(s) > n else np.nan
-    def month_end(ts):          # その月の前月末の終値(=その月の起点)
-        x = s[s.index < ts]
-        return float(x.iloc[-1]) if len(x) else np.nan
-    starts = [month_end(m) for m in months]             # 今月の起点, 先月の起点, …
-    mret = []
-    for i in range(len(months)):
-        end = last if i == 0 else starts[i - 1]
-        mret.append((end / starts[i] - 1) * 100 if np.isfinite(starts[i]) and starts[i] else np.nan)
-    y0 = s[s.index.year < s.index[-1].year]
-    ytd = (last / float(y0.iloc[-1]) - 1) * 100 if len(y0) else np.nan
-    hi = float(s.iloc[-250:].max())
-    ma50, ma200 = s.rolling(50).mean().iloc[-1], s.rolling(200).mean().iloc[-1]
-    if np.isfinite(ma200) and last > ma50 > ma200:
-        trend = "up"
-    elif np.isfinite(ma200) and last < ma50 < ma200:
-        trend = "down"
-    else:
-        trend = "flat"
-    rs_raw = sum(w * (last / ago(n) - 1) for w, n in ((0.4, 63), (0.2, 126), (0.2, 189), (0.2, 252)) if np.isfinite(ago(n)))
-    sp = s.iloc[-60:]
-    return {
-        "last": r(last, 2), "chg1": r((last / ago(1) - 1) * 100), "w1": r((last / ago(5) - 1) * 100),
-        "months": [r(x) for x in mret], "r6m": r((last / ago(126) - 1) * 100), "ytd": r(ytd),
-        "hi52": r((last / hi - 1) * 100), "trend": trend, "_rs": rs_raw,
-        "spark": [r(v / float(sp.iloc[0]) * 100, 1) for v in sp],
-    }
 
 
 def main():
@@ -170,8 +130,7 @@ def main():
         raise SystemExit("データなし")
     # 月の区切りは全体で最新の日付を基準にそろえる
     latest = max(s.index[-1] for _, _, _, s, _ in series)
-    m0 = latest.to_period("M").to_timestamp()
-    months = [m0 - pd.DateOffset(months=i) for i in range(4)]       # 今月, 先月, 2か月前, 3か月前
+    months = month_starts(latest)                                     # 今月, 先月, 2か月前, 3か月前
     for key, nm, g, s, is_etf in series:
         if len(s) < 60:
             continue
@@ -180,12 +139,7 @@ def main():
         if not is_etf:
             m["last"] = None            # 自前の業種指数は価格を出さない
         rows.append(m)
-    # RS = 一覧内の順位(1-99)
-    vals = pd.Series([x["_rs"] for x in rows])
-    pct = vals.rank(pct=True)
-    for x, p in zip(rows, pct):
-        x["rs"] = int(max(1, min(99, round(p * 99))))
-        del x["_rs"]
+    rs_rank(rows)                       # RS = 一覧内の順位(1-99)
     out = {
         "market": mk, "updated": latest.strftime("%Y-%m-%d"),
         "months": [f"{m.month}月" for m in months], "groups": GROUP_ORDER[mk], "rows": rows,
