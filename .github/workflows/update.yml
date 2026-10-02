@@ -75,6 +75,7 @@ jobs:
             ./macro.json
             ./market_jp.json
             ./market_us.json
+            ./pro_*.json
             ./site/ohlc
             ./site/us_ohlc
           key: data-${{ github.run_id }}
@@ -123,6 +124,10 @@ jobs:
         if: steps.mkt.outputs.market == 'jp' || steps.mkt.outputs.market == 'both'
         run: python 10_market.py --market jp || echo "JP市場概況スキップ; 前回分を維持"
 
+      - name: 11 日本株 ツール:セクター状況
+        if: steps.mkt.outputs.market == 'jp' || steps.mkt.outputs.market == 'both'
+        run: python 11_tool_sectors.py --market jp || echo "JPセクター状況スキップ; 前回分を維持"
+
       - name: 07 日本株OHLC(site/ohlc)
         if: steps.mkt.outputs.market == 'jp' || steps.mkt.outputs.market == 'both'
         run: python 07_write_ohlc.py || echo "JP OHLC生成スキップ"
@@ -134,6 +139,10 @@ jobs:
       - name: US 10 米国株 市場概況(地合い・業種・指数)
         if: steps.mkt.outputs.market == 'us' || steps.mkt.outputs.market == 'both'
         run: python 10_market.py --market us || echo "US市場概況スキップ; 前回分を維持"
+
+      - name: US 11 米国株 ツール:セクター状況
+        if: steps.mkt.outputs.market == 'us' || steps.mkt.outputs.market == 'both'
+        run: python 11_tool_sectors.py --market us || echo "USセクター状況スキップ; 前回分を維持"
 
       - name: US 07 米国OHLC(site/us_ohlc)
         if: steps.mkt.outputs.market == 'us' || steps.mkt.outputs.market == 'both'

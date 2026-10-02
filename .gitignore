@@ -26,3 +26,4 @@ fetch_local_*.log
 fetch_status_*.json
 site_worker/.wrangler/
 cron_worker/.wrangler/
+pro_*.json

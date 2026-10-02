@@ -66,18 +66,34 @@ for fn in ("vcp_us.json", "vcp_jp.json"):
     if os.path.exists(P(fn)):
         shutil.copyfile(P(fn), os.path.join(SITE, fn))
 
-# 別ページ(会員案内・運営者情報・学ぶ・note紹介銘柄検証)
+# 別ページ(会員案内・運営者情報・学ぶ・note紹介銘柄検証・ツール)。pages/ の下をそのまま site/ へ
 pages = P("pages")
 if os.path.isdir(pages):
-    for fn in os.listdir(pages):
-        if fn.endswith(".html"):
-            shutil.copyfile(os.path.join(pages, fn), os.path.join(SITE, fn))
+    for root, _dirs, files in os.walk(pages):
+        rel = os.path.relpath(root, pages)
+        dst_dir = SITE if rel == "." else os.path.join(SITE, rel)
+        os.makedirs(dst_dir, exist_ok=True)
+        for fn in files:
+            if fn.endswith((".html", ".js", ".css")):
+                shutil.copyfile(os.path.join(root, fn), os.path.join(dst_dir, fn))
+
+# 共通デザイン: template.html の<style>を assets/site.css として書き出す(ツールのページが読み込む)
+os.makedirs(os.path.join(SITE, "assets"), exist_ok=True)
+_css = tpl.split("<style>", 1)[1].split("</style>", 1)[0] if "<style>" in tpl else ""
+with open(os.path.join(SITE, "assets", "site.css"), "w", encoding="utf-8") as f:
+    f.write(_css)
+
+# 有料ツールのデータ(会員限定にする時は /pro/* に鍵をかける)
+os.makedirs(os.path.join(SITE, "pro"), exist_ok=True)
+for fn in os.listdir(BASE):
+    if fn.startswith("pro_") and fn.endswith(".json"):
+        shutil.copyfile(P(fn), os.path.join(SITE, "pro", fn[len("pro_"):]))
 
 
 # キャッシュ設定(Cloudflareの静的配信が読む _headers)
 HEADERS = [
     ("/", "no-cache"), ("/index.html", "no-cache"), ("/version.json", "no-store"),
-    ("/vcp_*.json", "no-cache"), ("/ohlc/*", "public, max-age=3600"), ("/us_ohlc/*", "public, max-age=3600"),
+    ("/vcp_*.json", "no-cache"), ("/pro/*", "no-cache"), ("/ohlc/*", "public, max-age=3600"), ("/us_ohlc/*", "public, max-age=3600"),
 ]
 with open(os.path.join(SITE, "_headers"), "w", encoding="utf-8") as f:
     for path, cc in HEADERS:
