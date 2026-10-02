@@ -74,6 +74,16 @@ if os.path.isdir(pages):
             shutil.copyfile(os.path.join(pages, fn), os.path.join(SITE, fn))
 
 
+# キャッシュ設定(Cloudflareの静的配信が読む _headers)
+HEADERS = [
+    ("/", "no-cache"), ("/index.html", "no-cache"), ("/version.json", "no-store"),
+    ("/vcp_*.json", "no-cache"), ("/ohlc/*", "public, max-age=3600"), ("/us_ohlc/*", "public, max-age=3600"),
+]
+with open(os.path.join(SITE, "_headers"), "w", encoding="utf-8") as f:
+    for path, cc in HEADERS:
+        f.write(path + "\n  Cache-Control: " + cc + "\n")
+
+
 # 軽量な版数ファイル(新しい公開の自動検知用)
 def _upd(path):
     try:

@@ -24,3 +24,5 @@ market_jp.json
 market_us.json
 fetch_local_*.log
 fetch_status_*.json
+site_worker/.wrangler/
+cron_worker/.wrangler/

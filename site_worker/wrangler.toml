@@ -1,0 +1,17 @@
+# 公開サイト(テーマ別資金フロー)= Cloudflare Workers の静的ファイル配信
+# site/ を配信する。会員限定(/pro/*)の門番は src/index.js に後で追加する(③C)。
+name = "theme-flow"
+main = "src/index.js"
+compatibility_date = "2026-09-01"
+workers_dev = true
+preview_urls = false
+
+[assets]
+directory = "../site"
+binding = "ASSETS"
+# いまは全部そのまま配信。会員限定を入れる時に /pro/* だけ Worker を先に通す
+run_worker_first = false
+
+# 定時実行は持たない(定時起動は cron_worker/ の theme-flow-cron が担当)
+[triggers]
+crons = []
