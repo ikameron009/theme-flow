@@ -27,3 +27,4 @@ fetch_status_*.json
 site_worker/.wrangler/
 cron_worker/.wrangler/
 pro_*.json
+us_info_cache.json

@@ -14,7 +14,7 @@ us_themes_map.csv(theme, category, ticker, name, weight)を作りコミットす
 日本版 themes_map.csv と同じ「コミット済みベースライン」方式。CIはこの csv を読むだけ
 (ETF提供元へのアクセスはCIで行わない=確実性優先)。テーマ表の更新はローカルで本script。
 
-出力: us_themes_map.csv
+出力: us_themes_etf.csv(ETF由来の基本テーマ。us_01c_build_themes.py が業種・独自テーマと合わせて us_themes_map.csv を作る)
 """
 import os, io, re, sys
 import pandas as pd
@@ -232,7 +232,7 @@ def main():
     df = pd.DataFrame(rows)
     # 同一(theme,ticker)重複除去。name はETF表記のまま(後段でユニバース名に寄せる)
     df = df.drop_duplicates(["theme", "ticker"]).sort_values(["theme", "ticker"])
-    df.to_csv(BASE + "us_themes_map.csv", index=False, encoding="utf-8-sig")
+    df.to_csv(BASE + "us_themes_etf.csv", index=False, encoding="utf-8-sig")
     nt = df["theme"].nunique(); ns = df["ticker"].nunique()
     print(f"\nsaved us_themes_map.csv  {nt} テーマ / {len(df)} 行 / ユニーク {ns} 銘柄")
 
