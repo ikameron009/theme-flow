@@ -2,7 +2,8 @@
 <html lang="ja"><head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>業種銘柄リサーチ｜テーマ別資金フロー</title>
+<link rel="icon" href="../assets/icon-64.png">
+<title>業界銘柄リサーチ｜テーマ別資金フロー</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@600;800&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 <link rel="stylesheet" href="../assets/site.css">
@@ -55,27 +56,32 @@ table.rx td .nm3{display:block;font-size:11px;color:var(--muted);max-width:170px
 .tile b{display:block;font:600 12px var(--f-num)}
 #tmap{width:100%;height:auto;display:block}
 #tmap text{pointer-events:none}
+nav.jump .sep{color:var(--line-strong);font-size:16px}
 </style>
 </head><body>
 
 <header class="top">
   <div class="wrap hbar">
     <a class="logo" href="../index.html" aria-label="テーマ別資金フロー トップ">
-      <svg viewBox="0 0 32 32" width="30" height="30" aria-hidden="true"><circle cx="16" cy="16" r="15" fill="var(--brand)"/><path d="M9 20c3-7 9-10 15-9-3 1-5 3-6 6l-9 3z" fill="var(--brand-ink)"/><circle cx="19" cy="13" r="1.4" fill="var(--brand)"/></svg>
+      <img src="../assets/icon-64.png" width="32" height="32" alt="" style="border-radius:50%;flex:none">
       <b>テーマ別 資金フロー</b>
     </a>
     <div class="mseg" role="group" aria-label="市場" id="mseg"><button data-m="jp" aria-pressed="true">日本株</button><button data-m="us" aria-pressed="false">米国株</button></div>
     <span style="flex:1"></span>
-    <a class="hlink" href="../index.html">トップ</a>
-    <a class="hlink" href="../note.html">note紹介銘柄検証</a>
     <a class="btn" href="../join.html">ログイン</a>
   </div>
 </header>
-<nav class="tools" aria-label="ツール">
+<nav class="jump" aria-label="メニュー">
   <div class="wrap">
-    <a href="sectors.html">セクター状況</a>
-    <a href="themes.html">業種状況</a>
-    <a href="research.html" class="on">業種銘柄リサーチ</a>
+    <a href="../index.html#market">市場概況</a>
+    <a href="../index.html#themes">テーマ別資金フロー</a>
+    <a href="../index.html#stocks">銘柄を探す</a>
+    <a href="../index.html#screening">スクリーニング</a>
+    <span class="sep" aria-hidden="true">|</span>
+    <a href="../tools/sectors.html" data-page="1">セクター状況</a>
+    <a href="../tools/themes.html" data-page="1">業界状況</a>
+    <a href="../tools/research.html" data-page="1" class="on">業界銘柄リサーチ</a>
+    <a href="../note.html" data-page="1">note紹介記事検証</a>
     <span class="upd" id="upd"></span>
   </div>
 </nav>
@@ -83,7 +89,7 @@ table.rx td .nm3{display:block;font-size:11px;color:var(--muted);max-width:170px
 <main class="wrap">
 <section class="sec">
   <div class="sec-head">
-    <div><div class="eyebrow">Tools · Stock research</div><h2>業種銘柄リサーチ<span class="member">会員ツール</span></h2></div>
+    <div><div class="eyebrow">Tools · Stock research</div><h2>業界銘柄リサーチ<span class="member">会員ツール</span></h2></div>
     <div class="meta num" id="meta"></div>
   </div>
 

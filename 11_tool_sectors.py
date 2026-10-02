@@ -13,7 +13,7 @@ warnings.filterwarnings("ignore")
 import numpy as np
 import pandas as pd
 from market_calendar import expected_session
-from tool_common import r, metrics, rs_rank, month_starts, equal_weight_index
+from tool_common import r, metrics, rs_rank, month_starts, equal_weight_index, surge
 
 BASE = os.path.dirname(os.path.abspath(__file__))
 P = lambda f: os.path.join(BASE, f)
@@ -59,20 +59,43 @@ US_ETF = [
     ("MDY", "中型株", "指数・債券"), ("RSP", "S&P500（等加重）", "指数・債券"), ("TLT", "米長期国債", "指数・債券"),
     ("HYG", "ハイイールド債", "指数・債券"),
 ]
+# 日本: 米国と同じく「テーマ(分類)」でまとめる。東証33業種(自前の等加重指数)もこの分類に振り分ける
 JP_ETF = [
-    ("1306.T", "TOPIX", "指数"), ("1321.T", "日経225", "指数"), ("2516.T", "グロース250", "指数"), ("1343.T", "東証REIT", "指数"),
-    ("1489.T", "日経高配当50", "指数"), ("200A.T", "日経半導体株", "テーマ"), ("2644.T", "半導体（日本株）", "テーマ"),
-    ("1617.T", "食品", "TOPIX-17業種"), ("1618.T", "エネルギー資源", "TOPIX-17業種"), ("1619.T", "建設・資材", "TOPIX-17業種"),
-    ("1620.T", "素材・化学", "TOPIX-17業種"), ("1621.T", "医薬品", "TOPIX-17業種"), ("1622.T", "自動車・輸送機", "TOPIX-17業種"),
-    ("1623.T", "鉄鋼・非鉄", "TOPIX-17業種"), ("1624.T", "機械", "TOPIX-17業種"), ("1625.T", "電機・精密", "TOPIX-17業種"),
-    ("1626.T", "情報通信・サービス", "TOPIX-17業種"), ("1627.T", "電力・ガス", "TOPIX-17業種"), ("1628.T", "運輸・物流", "TOPIX-17業種"),
-    ("1629.T", "商社・卸売", "TOPIX-17業種"), ("1630.T", "小売", "TOPIX-17業種"), ("1631.T", "銀行", "TOPIX-17業種"),
-    ("1632.T", "金融（除く銀行）", "TOPIX-17業種"), ("1633.T", "不動産", "TOPIX-17業種"),
+    ("1306.T", "TOPIX", "指数"), ("1321.T", "日経225", "指数"), ("2516.T", "グロース250", "指数"), ("1343.T", "東証REIT", "金融・不動産"),
+    ("1489.T", "日経高配当50", "指数"), ("1478.T", "MSCI日本高配当", "指数"), ("2636.T", "ガバナンス・クオリティ", "指数"),
+    ("2641.T", "グローバルリーダーズ", "指数"), ("2854.T", "テック・トップ20", "AI・ソフト・データ"),
+    ("200A.T", "日経半導体株", "半導体・電子"), ("2644.T", "半導体（日本株）", "半導体・電子"),
+    ("2626.T", "デジタル・イノベーション", "AI・ソフト・データ"), ("2627.T", "Eコマース", "消費・小売・インバウンド"),
+    ("2637.T", "クリーンテック", "エネルギー"), ("2848.T", "気候変動", "エネルギー"), ("2638.T", "ロボティクス・AI", "ロボット・FA・機械"),
+    ("2639.T", "バイオ・メドテック", "ヘルスケア・バイオ"), ("2640.T", "ゲーム・アニメ", "消費・小売・インバウンド"),
+    ("2645.T", "レジャー・エンタメ", "消費・小売・インバウンド"), ("2646.T", "メタルビジネス", "素材・資源"),
+    ("2847.T", "新成長インフラ", "産業・インフラ"), ("2855.T", "グリーンJ-REIT", "金融・不動産"), ("2864.T", "物流REIT", "金融・不動産"),
+    ("1617.T", "食品（TOPIX-17）", "消費・小売・インバウンド"), ("1618.T", "エネルギー資源（TOPIX-17）", "エネルギー"),
+    ("1619.T", "建設・資材（TOPIX-17）", "産業・インフラ"), ("1620.T", "素材・化学（TOPIX-17）", "素材・資源"),
+    ("1621.T", "医薬品（TOPIX-17）", "ヘルスケア・バイオ"), ("1622.T", "自動車・輸送機（TOPIX-17）", "モビリティ"),
+    ("1623.T", "鉄鋼・非鉄（TOPIX-17）", "素材・資源"), ("1624.T", "機械（TOPIX-17）", "ロボット・FA・機械"),
+    ("1625.T", "電機・精密（TOPIX-17）", "半導体・電子"), ("1626.T", "情報通信・サービス（TOPIX-17）", "AI・ソフト・データ"),
+    ("1627.T", "電力・ガス（TOPIX-17）", "エネルギー"), ("1628.T", "運輸・物流（TOPIX-17）", "モビリティ"),
+    ("1629.T", "商社・卸売（TOPIX-17）", "産業・インフラ"), ("1630.T", "小売（TOPIX-17）", "消費・小売・インバウンド"),
+    ("1631.T", "銀行（TOPIX-17）", "金融・不動産"), ("1632.T", "金融（除く銀行）（TOPIX-17）", "金融・不動産"),
+    ("1633.T", "不動産（TOPIX-17）", "金融・不動産"),
 ]
+SECTOR33_CAT = {
+    "水産・農林業": "消費・小売・インバウンド", "鉱業": "エネルギー", "建設業": "産業・インフラ", "食料品": "消費・小売・インバウンド",
+    "繊維製品": "素材・資源", "パルプ・紙": "素材・資源", "化学": "素材・資源", "医薬品": "ヘルスケア・バイオ",
+    "石油・石炭製品": "エネルギー", "ゴム製品": "素材・資源", "ガラス・土石製品": "素材・資源", "鉄鋼": "素材・資源",
+    "非鉄金属": "素材・資源", "金属製品": "産業・インフラ", "機械": "ロボット・FA・機械", "電気機器": "半導体・電子",
+    "輸送用機器": "モビリティ", "精密機器": "半導体・電子", "その他製品": "消費・小売・インバウンド", "電気・ガス業": "エネルギー",
+    "陸運業": "モビリティ", "海運業": "モビリティ", "空運業": "モビリティ", "倉庫・運輸関連業": "モビリティ",
+    "情報・通信業": "AI・ソフト・データ", "卸売業": "産業・インフラ", "小売業": "消費・小売・インバウンド", "銀行業": "金融・不動産",
+    "証券、商品先物取引業": "金融・不動産", "保険業": "金融・不動産", "その他金融業": "金融・不動産", "不動産業": "金融・不動産",
+    "サービス業": "消費・小売・インバウンド",
+}
 GROUP_ORDER = {
     "us": ["業種", "テック・AI", "フィンテック・暗号資産", "ヘルスケア", "エネルギー・資源", "宇宙・防衛・移動",
            "消費・金融・不動産", "コモディティ", "国・地域", "指数・債券"],
-    "jp": ["東証33業種", "TOPIX-17業種", "テーマ", "指数"],
+    "jp": ["半導体・電子", "AI・ソフト・データ", "ロボット・FA・機械", "モビリティ", "エネルギー", "素材・資源",
+           "ヘルスケア・バイオ", "金融・不動産", "消費・小売・インバウンド", "産業・インフラ", "指数"],
 }
 
 
@@ -84,10 +107,11 @@ def fetch(tickers):
             df = yf.download(tickers, period="2y", auto_adjust=False, progress=False, group_by="ticker", threads=True)
             for t in tickers:
                 try:
-                    c = df[t]["Close"].dropna()
-                    c.index = pd.to_datetime(c.index).tz_localize(None).normalize()
-                    if len(c) > 30:
-                        out[t] = c[~c.index.duplicated(keep="last")]
+                    sub = df[t].dropna(subset=["Close"])
+                    sub.index = pd.to_datetime(sub.index).tz_localize(None).normalize()
+                    sub = sub[~sub.index.duplicated(keep="last")]
+                    if len(sub) > 30:
+                        out[t] = (sub["Close"], sub["Close"] * sub["Volume"].fillna(0))
                 except Exception:
                     pass
             break
@@ -102,12 +126,13 @@ def sector_indices(cut):
     """東証33業種の等加重指数(2年)。各業種の構成銘柄の日次騰落の平均を積み上げる。"""
     close = pd.read_pickle(P("close.pkl")).sort_index()
     close = close[close.index.date <= cut]
+    turn = pd.read_pickle(P("turnover.pkl")).sort_index().reindex(close.index)
     u = pd.read_csv(P("ranking_universe.csv"), dtype=str)
     out = {}
     for sec, codes in u.groupby("sector")["code"]:
         cs = [c for c in codes if c in close.columns]
         if len(cs) >= 3:
-            out[sec] = equal_weight_index(close, cs)
+            out[sec] = (equal_weight_index(close, cs), turn[cs].sum(axis=1, min_count=1))
     return out
 
 
@@ -122,20 +147,22 @@ def main():
     series = []
     for t, nm, g in lst:
         if t in px:
-            series.append((t.replace(".T", ""), nm, g, px[t][px[t].index.date <= cut], True))
+            c, to = px[t]
+            series.append((t.replace(".T", ""), nm, g, c[c.index.date <= cut], to[to.index.date <= cut], True))
     if mk == "jp" and os.path.exists(P("close.pkl")):
-        for sec, s in sector_indices(cut).items():
-            series.append((sec, sec, "東証33業種", s, False))
+        for sec, (s, to) in sector_indices(cut).items():
+            series.append((sec, sec + "（33業種）", SECTOR33_CAT.get(sec, "指数"), s, to, False))
     if not series:
         raise SystemExit("データなし")
     # 月の区切りは全体で最新の日付を基準にそろえる
-    latest = max(s.index[-1] for _, _, _, s, _ in series)
+    latest = max(s.index[-1] for _, _, _, s, _, _ in series)
     months = month_starts(latest)                                     # 今月, 先月, 2か月前, 3か月前
-    for key, nm, g, s, is_etf in series:
+    for key, nm, g, s, to, is_etf in series:
         if len(s) < 60:
             continue
         m = metrics(s, months)
-        m.update({"key": key, "name": nm, "group": g, "etf": is_etf, "date": s.index[-1].strftime("%Y-%m-%d")})
+        m.update({"key": key, "name": nm, "group": g, "etf": is_etf, "date": s.index[-1].strftime("%Y-%m-%d"),
+                  "surge": surge(to)})
         if not is_etf:
             m["last"] = None            # 自前の業種指数は価格を出さない
         rows.append(m)

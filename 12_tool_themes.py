@@ -53,7 +53,7 @@ def main():
             continue
         idx = equal_weight_index(close, cols)
         mt = metrics(idx, months)
-        mt.pop("last", None)
+        mt["last"] = round(float(idx.iloc[-1]), 1)          # テーマ指数(2年前=100)
         f = flow.get(theme, {})
         mt.update({"name": theme, "group": cat, "n": len(cols),
                    "surge": r(f.get("surge"), 1), "share_chg": r(f.get("share_chg"), 3),

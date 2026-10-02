@@ -2,7 +2,8 @@
 <html lang="ja"><head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>業種状況｜テーマ別資金フロー</title>
+<link rel="icon" href="../assets/icon-64.png">
+<title>業界状況｜テーマ別資金フロー</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@600;800&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 <link rel="stylesheet" href="../assets/site.css">
@@ -54,27 +55,32 @@ table.mt th{font-size:10.5px;color:var(--faint);font-weight:500;text-align:right
 table.mt th.l,table.mt td.l{text-align:left}
 table.mt td{padding:4px 8px;border-bottom:1px solid var(--line);text-align:right;font-family:var(--f-num)}
 .ghead{font-size:12px;color:var(--muted);font-weight:700;margin:14px 0 6px}
+nav.jump .sep{color:var(--line-strong);font-size:16px}
 </style>
 </head><body>
 
 <header class="top">
   <div class="wrap hbar">
     <a class="logo" href="../index.html" aria-label="テーマ別資金フロー トップ">
-      <svg viewBox="0 0 32 32" width="30" height="30" aria-hidden="true"><circle cx="16" cy="16" r="15" fill="var(--brand)"/><path d="M9 20c3-7 9-10 15-9-3 1-5 3-6 6l-9 3z" fill="var(--brand-ink)"/><circle cx="19" cy="13" r="1.4" fill="var(--brand)"/></svg>
+      <img src="../assets/icon-64.png" width="32" height="32" alt="" style="border-radius:50%;flex:none">
       <b>テーマ別 資金フロー</b>
     </a>
     <div class="mseg" role="group" aria-label="市場" id="mseg"><button data-m="jp" aria-pressed="true">日本株</button><button data-m="us" aria-pressed="false">米国株</button></div>
     <span style="flex:1"></span>
-    <a class="hlink" href="../index.html">トップ</a>
-    <a class="hlink" href="../note.html">note紹介銘柄検証</a>
     <a class="btn" href="../join.html">ログイン</a>
   </div>
 </header>
-<nav class="tools" aria-label="ツール">
+<nav class="jump" aria-label="メニュー">
   <div class="wrap">
-    <a href="sectors.html">セクター状況</a>
-    <a href="themes.html" class="on">業種状況</a>
-    <a href="research.html">業種銘柄リサーチ</a>
+    <a href="../index.html#market">市場概況</a>
+    <a href="../index.html#themes">テーマ別資金フロー</a>
+    <a href="../index.html#stocks">銘柄を探す</a>
+    <a href="../index.html#screening">スクリーニング</a>
+    <span class="sep" aria-hidden="true">|</span>
+    <a href="../tools/sectors.html" data-page="1">セクター状況</a>
+    <a href="../tools/themes.html" data-page="1" class="on">業界状況</a>
+    <a href="../tools/research.html" data-page="1">業界銘柄リサーチ</a>
+    <a href="../note.html" data-page="1">note紹介記事検証</a>
     <span class="upd" id="upd"></span>
   </div>
 </nav>
@@ -82,16 +88,15 @@ table.mt td{padding:4px 8px;border-bottom:1px solid var(--line);text-align:right
 <main class="wrap">
 <section class="sec">
   <div class="sec-head">
-    <div><div class="eyebrow">Tools · Theme performance</div><h2>業種状況<span class="member">会員ツール</span></h2></div>
+    <div><div class="eyebrow">Tools · Theme performance</div><h2>業界状況<span class="member">会員ツール</span></h2></div>
     <div class="meta num" id="meta"></div>
   </div>
 
   <div class="panel">
-    <div class="ctlrow"><span class="ctl-label">期間</span><div class="seg" id="per"></div></div>
-    <div class="ctlrow"><span class="ctl-label">分類</span><div class="seg" id="grp"></div></div>
+    <div class="ctlrow"><span class="ctl-label">テーマ</span><div class="seg" id="grp"></div></div>
     <div class="ctlrow"><span class="ctl-label">表示</span>
       <div class="seg" id="view"><button data-v="list" aria-pressed="true">リスト</button><button data-v="heat" aria-pressed="false">ヒートマップ</button></div>
-      <span class="search" style="margin-left:6px"><input id="q" type="text" placeholder="テーマ名・銘柄" autocomplete="off"></span>
+      <span class="search" style="margin-left:6px"><input id="q" type="text" placeholder="テーマ名・銘柄" autocomplete="off"><span class="x" id="qx" hidden title="消す">✕</span></span>
       <span class="phint" id="cnt"></span></div>
   </div>
 
@@ -120,42 +125,76 @@ const sign=(x,d=2)=>x==null||!isFinite(x)?'–':(x>=0?'+':'−')+fmt(Math.abs(x)
 const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const DATA={jp:null,us:null};
 let mk='jp',D=null;
-const st={per:'m0',grp:'all',view:'list',q:'',sort:null,dir:-1};
+const st={grp:'all',view:'list',q:'',sort:'m0',dir:-1};
 try{mk=new URLSearchParams(location.search).get('m')||localStorage.getItem('tf_market')||'jp';}catch(e){}
-
-function pers(){const M=D.months||[];return [['chg1','1日'],['w1','1週'],['m0','今月（'+(M[0]||'')+'）'],['m1',M[1]],['m2',M[2]],['m3',M[3]],['r6m','6か月'],['ytd','年初来'],['hi52','52週高値から']];}
-function val(x,k){if(/^m[0-9]$/.test(k))return x.months[+k[1]];return x[k];}
-function heatBg(v,scale){if(v==null)return'';const a=Math.min(1,Math.abs(v)/scale)*0.55;return `background:rgba(${v>=0?cssv('--brandrgb'):cssv('--downrgb')},${a.toFixed(2)})`;}
+/* 期間の列(「Nか月前」=N か月前から今日までの騰落) */
+function pcols(){const M=D.months||[];return [['chg1','前日比'],['w1','週間%'],['m0','今月（'+(M[0]||'')+'）'],['r1m','1か月前'],['r2m','2か月前'],['r3m','3か月前'],['r6m','6か月前'],['r12m','1年前'],['hi52','52週高値']];}
+const SCALE={chg1:3,w1:6,m0:10,r1m:10,r2m:15,r3m:20,r6m:30,r12m:50,hi52:25,surge:60};
+const NUMK=new Set(['chg1','w1','m0','r1m','r2m','r3m','r6m','r12m','hi52','surge','rs','last']);
+function val(x,k){return k==='m0'?x.months[0]:x[k];}
+function heatBg(v,k){if(v==null||!SCALE[k])return'';const a=Math.min(1,Math.abs(v)/SCALE[k])*0.55;return `background:rgba(${v>=0?cssv('--brandrgb'):cssv('--downrgb')},${a.toFixed(2)})`;}
 function spark(a){if(!a||a.length<2)return'';const w=70,h=18,lo=Math.min(...a),hi=Math.max(...a),rg=hi-lo||1;let p='';
   a.forEach((v,i)=>p+=(i?'L':'M')+(i/(a.length-1)*w).toFixed(1)+' '+(h-1-(v-lo)/rg*(h-2)).toFixed(1)+' ');
   return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" style="display:inline-block;vertical-align:middle"><path d="${p}" fill="none" stroke="${a[a.length-1]>=a[0]?'var(--up)':'var(--down)'}" stroke-width="1.4"/></svg>`;}
 const TREND={up:['▲','上昇','up'],flat:['―','中立','muted'],down:['▼','下落','down']};
+function label(k){const c=pcols().find(p=>p[0]===k);return c?c[1]:({rs:'RS',surge:'資金急増率',last:'現在値'}[k]||'今月');}
+function keyNum(){return NUMK.has(st.sort)&&st.sort!=='last'?st.sort:'m0';}
 
 function rows(){let R=D.rows.filter(x=>st.grp==='all'||x.group===st.grp);
-  if(st.q){const q=st.q.normalize('NFKC').toLowerCase();R=R.filter(x=>(x.name+' '+x.group).normalize('NFKC').toLowerCase().includes(q)
-    ||x.members.some(c=>(c+' '+((D.stocks[c]||[''])[0])).normalize('NFKC').toLowerCase().includes(q)));}
-  const k=st.sort||st.per,dir=st.sort?st.dir:-1;
-  return R.slice().sort((a,b)=>{const x=k==='name'?a.name:val(a,k),y=k==='name'?b.name:val(b,k);if(x==null)return 1;if(y==null)return -1;return (x<y?-1:x>y?1:0)*dir;});}
+  if(st.q){const q=st.q.normalize('NFKC').toLowerCase();R=R.filter(x=>(x.name+' '+(x.key||'')+' '+x.group).normalize('NFKC').toLowerCase().includes(q)||memberHit(x,q));}
+  const k=st.sort,dir=st.dir;
+  return R.slice().sort((a,b)=>{const x=(k==='name'||k==='key')?a[k]:val(a,k),y=(k==='name'||k==='key')?b[k]:val(b,k);if(x==null)return 1;if(y==null)return -1;return (x<y?-1:x>y?1:0)*dir;});}
+function memberHit(x,q){if(!x.members||!D.stocks)return false;return x.members.some(c=>(c+' '+((D.stocks[c]||[''])[0])).normalize('NFKC').toLowerCase().includes(q));}
 
 function drawCtl(){
-  $('#per').innerHTML=pers().map(([k,l])=>`<button data-k="${k}" aria-pressed="${k===st.per}">${esc(l)}</button>`).join('');
-  $('#per').onclick=e=>{const b=e.target.closest('button');if(!b)return;st.per=b.dataset.k;st.sort=null;draw();};
   const G=['all',...D.groups.filter(g=>D.rows.some(x=>x.group===g))];
   $('#grp').innerHTML=G.map(g=>`<button data-g="${esc(g)}" aria-pressed="${g===st.grp}">${g==='all'?'すべて':esc(g)}</button>`).join('');
   $('#grp').onclick=e=>{const b=e.target.closest('button');if(!b)return;st.grp=b.dataset.g;draw();};
 }
 function draw(){
-  drawCtl();const R=rows(),k=st.per,label=pers().find(p=>p[0]===k)[1];
+  drawCtl();const R=rows(),k=keyNum();
   const up=D.rows.filter(x=>(x.chg1||0)>0).length,dn=D.rows.filter(x=>(x.chg1||0)<0).length;
   $('#meta').innerHTML=`${mk==='us'?'米国株':'日本株'} ・ ${D.updated}まで ・ <span class="up">▲${up}</span> <span class="muted">＝${D.rows.length-up-dn}</span> <span class="down">▼${dn}</span>（前日比）`;
   $('#upd').textContent=mk==='us'?'毎日 7:00 JST 更新':'毎日 17:00 JST 更新';
-  $('#cnt').textContent=`${R.length}件`;
-  const ranked=R.filter(x=>val(x,k)!=null&&x.n>=5).sort((a,b)=>k==='hi52'?val(b,k)-val(a,k):val(b,k)-val(a,k)).slice(0,3);
-  $('#top3').innerHTML=ranked.map((x,i)=>{const v=val(x,k);return `<div class="panel t3"><span class="no">${i+1}</span><div class="tn"><b>${esc(x.name)}</b><small>${esc(x.group)} ・ ${x.n}銘柄 ・ ${esc(label)}</small></div><span class="v ${v>=0?'up':'down'}">${sign(v)}</span></div>`;}).join('');
+  $('#cnt').textContent=`${R.length}件 ・ 表の見出しを押すと並び替え（上位3つも連動）`;
+  const ranked=R.filter(x=>val(x,k)!=null&&(!MINN||(x.n||0)>=MINN)).sort((a,b)=>val(b,k)-val(a,k)).slice(0,3);
+  const vtxt=v=>k==='rs'?v:sign(v);
+  $('#top3').innerHTML=ranked.map((x,i)=>{const v=val(x,k);return `<div class="panel t3"><span class="no">${i+1}</span><div class="tn"><b>${esc(x.name)}</b><small>${x.etf?esc(x.key)+' ・ ':''}${esc(x.group)}${x.n?' ・ '+x.n+'銘柄':''} ・ ${esc(label(k))}</small></div><span class="v ${k==='rs'||v>=0?'up':'down'}">${vtxt(v)}</span></div>`;}).join('');
   if(st.view==='list'){$('#list').hidden=false;$('#heat').hidden=true;drawTable(R);}else{$('#list').hidden=true;$('#heat').hidden=false;drawHeat(R);}
-  $('#foot').innerHTML=`<b>データ</b>：${mk==='us'?'テーマ別ETF（SSGA・ARK）の構成銘柄':'株探のテーマ'}ごとに、構成銘柄の日次騰落を等しい重みで平均して自前で算出（Yahoo Finance の終値）。<b>月の列</b>はその月の騰落（今月は月初来）。<b>RS</b>＝3か月（40%）・6か月・9か月・12か月（各20%）の騰落を全テーマの中で順位づけ（1〜99）。<b>資金（急増率）</b>＝売買代金の直近5日平均÷その前20日平均−1。<b>トレンド</b>＝テーマ指数・50日線・200日線の並び。行を押すと構成銘柄（RSは全銘柄の中での順位）。`;
+  $('#foot').innerHTML=FOOT();
 }
+function cells(x){const t=TREND[x.trend]||TREND.flat;
+  return `<td style="font-weight:600;${x.rs>=80?'color:var(--up)':x.rs<=20?'color:var(--down)':''}">${x.rs}</td>
+    <td>${x.last==null?'<span class="muted">指数</span>':fmt(x.last,x.last>=1000?0:(x.etf?2:1))}</td>
+    ${pcols().map(([k])=>{const v=val(x,k);return `<td class="heat ${v>=0?'up':'down'}" style="${heatBg(v,k)}">${sign(v)}</td>`;}).join('')}
+    <td class="${(x.surge??0)>=0?'up':'down'}">${x.surge==null?'–':sign(x.surge,1)}</td>
+    <td><span class="trend ${t[2]}" title="${t[1]}">${t[0]} ${t[1]}</span></td><td>${spark(x.spark)}</td>`;}
+function head(first){const cols=[...first,['rs','RS',''],['last','現在値',''],...pcols().map(([k,l])=>[k,l,'']),['surge','資金急増率%',''],['trend','トレンド',''],['spark','直近60日','']];
+  $('#thead').innerHTML=cols.map(([k,l,c])=>`<th class="${c} ${k===st.sort?'sel':''}" data-k="${k}">${esc(l)}${k===st.sort?(st.dir>0?' ▲':' ▼'):''}</th>`).join('');
+  $$('#thead th').forEach(th=>th.onclick=()=>{const k=th.dataset.k;if(k==='spark'||k==='trend')return;
+    if(st.sort===k)st.dir=-st.dir;else{st.sort=k;st.dir=(k==='name'||k==='key')?1:-1;}draw();});}
+function drawHeat(R){const k=keyNum();
+  const groups=st.grp==='all'?D.groups:[st.grp];
+  $('#heat').innerHTML=`<div class="phint" style="margin-bottom:6px">色＝${esc(label(k))}（リスト表示で見出しを押すと切り替わります）</div>`+groups.map(g=>{const G=R.filter(x=>x.group===g).sort((a,b)=>(val(b,k)??-1e9)-(val(a,k)??-1e9));if(!G.length)return'';
+    return `<div class="ghead">${esc(g)}</div><div class="tiles">${G.map(x=>{const v=val(x,k),sc=SCALE[k]||50,a=v==null?0:Math.min(1,Math.abs(k==='rs'?v-50:v)/(k==='rs'?49:sc));
+      const pos=k==='rs'?v>=50:v>=0,bg=v==null?'var(--surface-2)':`rgba(${pos?cssv('--brandrgb'):cssv('--downrgb')},${(0.12+a*0.78).toFixed(2)})`,fg=a>0.55?'#fff':'var(--ink)';
+      return `<div class="tile" style="background:${bg};color:${fg}" title="${esc(x.name)}"><b>${esc(x.name)}</b><small>${x.etf?esc(x.key):(x.n?x.n+'銘柄':'')}</small><span>${k==='rs'?v:sign(v)}</span></div>`;}).join('')}</div>`;}).join('');}
+const COMMON_FOOT='<b>今月</b>＝月初来。<b>1か月前〜1年前</b>＝その時点から今日までの騰落（1か月＝21営業日、2か月＝42、3か月＝63、6か月＝126、1年＝252）。<b>52週高値</b>＝過去1年の最高値からの距離。<b>資金急増率</b>＝売買代金（終値×出来高）の直近5日平均 ÷ その前20営業日の平均 −1。<b>RS</b>＝3か月（40%）・6か月・9か月・12か月（各20%）の騰落を一覧の中で順位づけ（1〜99）。<b>トレンド</b>＝株価・50日線・200日線の並び（上昇＝株価＞50日線＞200日線）。';
+
+function load(m){mk=m==='us'?'us':'jp';$$('#mseg button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.m===mk));try{localStorage.setItem('tf_market',mk);}catch(e){}
+  if(DATA[mk]){D=DATA[mk];st.grp='all';draw();return;}
+  $('#tbody').innerHTML='<tr><td class="l muted" style="padding:14px">読み込み中…</td></tr>';
+  fetch('../pro/'+FILE+'_'+mk+'.json?cb='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.json():null).then(j=>{
+    if(!j){$('#tbody').innerHTML='<tr><td class="l muted" style="padding:14px">データを準備中です。</td></tr>';return;}
+    DATA[mk]=j;D=j;st.grp='all';draw();}).catch(()=>{$('#tbody').innerHTML='<tr><td class="l muted" style="padding:14px">データを読み込めませんでした。</td></tr>';});}
+$('#mseg').onclick=e=>{const b=e.target.closest('button');if(b)load(b.dataset.m);};
+$('#view').onclick=e=>{const b=e.target.closest('button');if(!b)return;st.view=b.dataset.v;$$('#view button').forEach(x=>x.setAttribute('aria-pressed',x===b));draw();};
+$('#q').addEventListener('input',e=>{st.q=e.target.value.trim();$('#qx').hidden=!st.q;draw();});
+$('#qx').onclick=()=>{$('#q').value='';st.q='';$('#qx').hidden=true;draw();$('#q').focus();};
+matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change',()=>D&&draw());
+const FILE='themes',MINN=5;
 const OPEN=new Set();
+function FOOT(){return `<b>データ</b>：${mk==='us'?'テーマ別ETF（SSGA・ARK）の構成銘柄、Yahooの業種、事業説明文のキーワードで分類した米国株':'株探のテーマ（テーマ→構成銘柄）'}ごとに、構成銘柄の日次騰落を等しい重みで平均して自前で算出（Yahoo Finance の終値）。<b>現在値</b>＝その指数（2年前＝100）。上位3つは構成5銘柄以上のテーマから選びます。`+COMMON_FOOT+'行を押すと構成銘柄（RSは全銘柄の中での順位）。';}
 function stockRow(code){const s=D.stocks[code];if(!s)return '';const [n,c1,w1,m0,ytd,hi,rs,tr]=s,t=TREND[tr===1?'up':tr===-1?'down':'flat'];
   const link=mk==='us'?`https://finance.yahoo.com/quote/${code}`:`https://kabutan.jp/stock/?code=${code}`;
   return `<tr><td class="l"><a href="${link}" target="_blank" rel="noopener" style="color:var(--brand);font-weight:600">${esc(code)}</a> ${esc(n)}</td>
@@ -165,42 +204,14 @@ function memberHTML(x){const M=D.months||[];
     <button class="btn sm ghost" data-copy="${esc(x.name)}">ティッカーをコピー</button><span class="phint" data-copied></span></div>
     <div style="overflow-x:auto"><table class="mt"><thead><tr><th class="l">銘柄</th><th>前日比</th><th>1週</th><th>今月（${esc(M[0]||'')}）</th><th>年初来</th><th>52週高値から</th><th>RS</th><th>トレンド</th></tr></thead>
     <tbody>${x.members.map(stockRow).join('')}</tbody></table></div></td></tr>`;}
-function drawTable(R){
-  const cols=[['name','テーマ','l'],['rs','RS',''],...pers().map(([k,l])=>[k,l,'']),['surge','資金（急増率）',''],['n','銘柄数',''],['trend','トレンド',''],['spark','直近60日','']];
-  const sk=st.sort||st.per;
-  $('#thead').innerHTML=cols.map(([k,l,c])=>`<th class="${c} ${k===st.per?'sel':''}" data-k="${k}">${esc(l)}${k===sk?(st.sort?(st.dir>0?' ▲':' ▼'):' ▼'):''}</th>`).join('');
-  $$('#thead th').forEach(th=>th.onclick=()=>{const k=th.dataset.k;if(k==='spark'||k==='trend')return;
-    if(st.sort===k)st.dir=-st.dir;else{st.sort=k;st.dir=k==='name'?1:-1;}draw();});
-  const scale={chg1:3,w1:6,m0:10,m1:10,m2:10,m3:10,r6m:25,ytd:35,hi52:25};
-  $('#tbody').innerHTML=R.map(x=>{const t=TREND[x.trend]||TREND.flat,open=OPEN.has(x.name);
-    return `<tr class="th-row ${open?'open':''}" data-nm="${esc(x.name)}"><td class="l"><span class="nm2" style="font-weight:600">${open?'▾':'▸'} ${esc(x.name)}</span><span class="g" style="font-size:11px;color:var(--faint)">${esc(x.group)}</span></td>
-      <td style="font-weight:600;${x.rs>=80?'color:var(--up)':x.rs<=20?'color:var(--down)':''}">${x.rs}</td>
-      ${pers().map(([k])=>{const v=val(x,k);return `<td class="heat ${v>=0?'up':'down'}" style="${heatBg(v,scale[k])}">${sign(v)}</td>`;}).join('')}
-      <td class="${(x.surge??0)>=0?'up':'down'}">${x.surge==null?'–':(x.surge>=0?'+':'−')+fmt(Math.abs(x.surge),1)+'%'}</td><td>${x.n}</td>
-      <td><span class="trend ${t[2]}" title="${t[1]}">${t[0]} ${t[1]}</span></td><td>${spark(x.spark)}</td></tr>`+(open?memberHTML(x):'');}).join('')
+function drawTable(R){head([['name','テーマ','l']]);
+  $('#tbody').innerHTML=R.map(x=>{const open=OPEN.has(x.name);
+    return `<tr class="th-row ${open?'open':''}" data-nm="${esc(x.name)}"><td class="l"><span class="nm2" style="font-weight:600">${open?'▾':'▸'} ${esc(x.name)}</span><span style="font-size:11px;color:var(--faint)">${esc(x.group)} ・ ${x.n}銘柄</span></td>${cells(x)}</tr>`+(open?memberHTML(x):'');}).join('')
     ||'<tr><td colspan="17" class="l muted" style="padding:14px">該当がありません。</td></tr>';
   $$('#tbody tr.th-row').forEach(tr=>tr.onclick=()=>{const n=tr.dataset.nm;OPEN.has(n)?OPEN.delete(n):OPEN.add(n);drawTable(rows());});
   $$('#tbody [data-copy]').forEach(b=>b.onclick=e=>{e.stopPropagation();const x=D.rows.find(r=>r.name===b.dataset.copy);
     const txt=x.members.map(c=>mk==='jp'?c+'.T':c).join(',');const note=b.parentNode.querySelector('[data-copied]');
-    navigator.clipboard.writeText(txt).then(()=>note.textContent='コピーしました（'+x.members.length+'銘柄）').catch(()=>{note.textContent=txt;});});
-}
-function drawHeat(R){const k=st.per,scale={chg1:3,w1:6,m0:10,m1:10,m2:10,m3:10,r6m:25,ytd:35,hi52:25}[k];
-  const groups=st.grp==='all'?D.groups:[st.grp];
-  $('#heat').innerHTML=groups.map(g=>{const G=R.filter(x=>x.group===g).sort((a,b)=>(val(b,k)??-1e9)-(val(a,k)??-1e9));if(!G.length)return'';
-    return `<div class="ghead">${esc(g)}</div><div class="tiles">${G.map(x=>{const v=val(x,k),a=v==null?0:Math.min(1,Math.abs(v)/scale);
-      const bg=v==null?'var(--surface-2)':`rgba(${v>=0?cssv('--brandrgb'):cssv('--downrgb')},${(0.12+a*0.78).toFixed(2)})`,fg=a>0.55?'#fff':'var(--ink)';
-      return `<div class="tile" style="background:${bg};color:${fg}" title="${esc(x.name)} ${sign(v)}"><b>${esc(x.name)}</b><small>${x.n}銘柄</small><span>${sign(v)}</span></div>`;}).join('')}</div>`;}).join('');}
-
-function load(m){mk=m;$$('#mseg button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.m===mk));try{localStorage.setItem('tf_market',mk);}catch(e){}
-  if(DATA[mk]){D=DATA[mk];st.grp='all';draw();return;}
-  $('#tbody').innerHTML='<tr><td class="l muted" style="padding:14px">読み込み中…</td></tr>';
-  fetch('../pro/themes_'+mk+'.json?cb='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.json():null).then(j=>{
-    if(!j){$('#tbody').innerHTML='<tr><td class="l muted" style="padding:14px">データを準備中です。</td></tr>';return;}
-    DATA[mk]=j;D=j;st.grp='all';draw();}).catch(()=>{$('#tbody').innerHTML='<tr><td class="l muted" style="padding:14px">データを読み込めませんでした。</td></tr>';});}
-$('#mseg').onclick=e=>{const b=e.target.closest('button');if(b)load(b.dataset.m);};
-$('#view').onclick=e=>{const b=e.target.closest('button');if(!b)return;st.view=b.dataset.v;$$('#view button').forEach(x=>x.setAttribute('aria-pressed',x===b));draw();};
-$('#q').addEventListener('input',e=>{st.q=e.target.value.trim();draw();});
-matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change',()=>D&&draw());
-load(mk==='us'?'us':'jp');
+    navigator.clipboard.writeText(txt).then(()=>note.textContent='コピーしました（'+x.members.length+'銘柄）').catch(()=>{note.textContent=txt;});});}
+load(mk);
 </script>
 </body></html>

@@ -1,5 +1,6 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<link rel="icon" href="assets/icon-64.png">
 <title>テーマ別資金フロー</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -81,6 +82,7 @@ nav.jump{position:sticky;top:calc(env(safe-area-inset-top,0px) + 60px);z-index:2
 nav.jump .wrap{display:flex;align-items:center;gap:28px;overflow-x:auto;scrollbar-width:none}
 nav.jump a{padding:12px 0;font-size:14px;font-weight:500;color:var(--muted);border-bottom:2px solid transparent;white-space:nowrap}
 nav.jump a.on{color:var(--ink);border-bottom-color:var(--brand)}
+nav.jump .sep{color:var(--line-strong);font-size:16px}
 nav.jump .upd{margin-left:auto;font-size:12px;color:var(--faint);white-space:nowrap}
 nav.jump .upd a{color:var(--brand);margin-left:8px;font-weight:600}
 .upd-banner{background:var(--brand-soft);border:1px solid var(--brand);border-radius:10px;padding:8px 14px;margin-top:14px;font-size:13px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
@@ -306,15 +308,13 @@ footer a:hover{color:var(--brand)}
 <header class="top">
   <div class="wrap hbar">
     <a class="logo" href="#market" aria-label="テーマ別資金フロー トップ">
-      <svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="15" fill="var(--brand)"/><path d="M9 20c3-7 9-10 15-9-3 1-5 3-6 6l-9 3z" fill="var(--brand-ink)"/><circle cx="19" cy="13" r="1.4" fill="var(--brand)"/></svg>
+      <img src="assets/icon-64.png" width="32" height="32" alt="" style="border-radius:50%;flex:none">
       <b>テーマ別 資金フロー</b>
     </a>
     <div class="mseg" role="group" aria-label="市場" id="mseg">
       <button data-m="jp" aria-pressed="true">日本株</button><button data-m="us" aria-pressed="false">米国株</button>
     </div>
     <label class="hsearch"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="hq" placeholder="銘柄・コード・テーマを検索" autocomplete="off"></label>
-    <a class="hlink" href="tools/sectors.html">ツール</a>
-    <a class="hlink" href="note.html">note紹介銘柄検証</a>
     <a class="btn" href="join.html">ログイン</a>
   </div>
 </header>
@@ -327,6 +327,11 @@ footer a:hover{color:var(--brand)}
     <a href="#themes">テーマ別資金フロー</a>
     <a href="#stocks">銘柄を探す</a>
     <a href="#screening">スクリーニング</a>
+    <span class="sep" aria-hidden="true">|</span>
+    <a href="tools/sectors.html" data-page="1">セクター状況</a>
+    <a href="tools/themes.html" data-page="1">業界状況</a>
+    <a href="tools/research.html" data-page="1">業界銘柄リサーチ</a>
+    <a href="note.html" data-page="1">note紹介記事検証</a>
     <span class="upd">データ <b class="num" id="u-date">–</b> ・ <span id="u-sched"></span><a id="upd-btn" href="https://github.com/ikameron009/theme-flow/actions/workflows/update.yml" target="_blank" rel="noopener">更新</a></span>
   </div>
 </nav>
@@ -457,6 +462,7 @@ footer a:hover{color:var(--brand)}
       <thead><tr>
         <th class="l srt" data-k="rank" style="width:52px">順位<span class="ar" data-a="rank"></span></th><th class="l">銘柄</th>
         <th class="srt" data-k="to">売買代金<span class="ar" data-a="to"></span></th>
+        <th class="srt" data-k="vol">出来高<span class="ar" data-a="vol"></span></th>
         <th class="srt" data-k="mcap">時価総額<span class="ar" data-a="mcap"></span></th>
         <th class="srt" data-k="ratio">代金÷時価<span class="ar" data-a="ratio"></span></th>
         <th>前日比</th><th style="text-align:center">順位の推移</th>
@@ -501,7 +507,7 @@ footer a:hover{color:var(--brand)}
       </div>
       <div class="stats"><div><small>該当</small><b id="vs-n">–</b></div><div><small>新規</small><b id="vs-new" class="down">–</b></div><div><small>消失</small><b id="vs-gone" style="color:var(--faint)">–</b></div></div>
     </div>
-    <div class="pdesc" style="margin-top:12px"><b class="down">赤字＝新規</b>／<span class="muted">グレー＝消失（前回あり→今回なし）</span>／<span style="background:var(--warn-bg);color:var(--warn-ink);padding:0 5px;border-radius:4px">黄＝新しく優先度がついた</span>／継続＝連続掲載日数。◁ ▷ とスライダーで過去約半年を1日ずつさかのぼれます。行を押すとTradingViewのチャートを開きます。</div>
+    <div class="pdesc" style="margin-top:12px"><b class="down">赤字＝新規</b>／<span class="muted">グレー＝消失（前回あり→今回なし）</span>／<span style="background:var(--warn-bg);color:var(--warn-ink);padding:0 5px;border-radius:4px">黄＝新しく優先度がついた</span>／継続＝連続掲載日数。◁ ▷ とスライダーで過去約半年を1日ずつさかのぼれます。行を押すと、表の下に銘柄のチャートとリンク（TradingView・Yahoo・株探）を表示します。</div>
     <div class="ctlrow" style="gap:12px;margin:8px 0 12px">
       <button class="daybtn" id="vcp-prev" type="button" aria-label="前の日">◁</button>
       <input id="vcp-day" type="range" min="0" max="0" value="0" step="1" style="flex:1;min-width:160px">
@@ -511,6 +517,7 @@ footer a:hover{color:var(--brand)}
     </div>
     <div class="rank" style="max-height:640px"><table class="rk" id="vcptbl"><thead><tr id="vcp-head"></tr></thead><tbody id="vcp-body"></tbody></table></div>
     <div id="vcp-lock"></div>
+    <div class="scard" id="vcpcard"></div>
     <div class="foot">
       <b>データ</b>：ミネルヴィニ式トレンドテンプレート（ステージ2）＋VCP判定。米国は業績成長（EDGAR）、日本は増収15%以上・増益15%以上（EDINET）で絞り込み。<br>
       <b>優先度</b>＝買い点の近くでVCPが有効な銘柄を、VCP・買い点への近さ・RS・該当ソース数で採点（監視は空欄）。<b>Buy</b>＝買い点の上抜け。<b>VCP</b>＝収縮のタイトさ等（0〜100）。<b>ピボット</b>＝買い点までの距離。
@@ -522,7 +529,7 @@ footer a:hover{color:var(--brand)}
 <footer>
   <div class="wrap">
     <div><b style="font-family:var(--f-display);color:var(--ink);font-size:14px">テーマ別 資金フロー</b><br>運営：投資家ハシビロコウ ・ 当サイトの情報は投資助言ではありません。投資判断はご自身の責任でお願いします。</div>
-    <nav><a href="tools/sectors.html">ツール</a><a href="learn.html">学ぶ</a><a href="join.html">会員案内・ログイン</a><a href="about.html">運営者情報・免責</a></nav>
+    <nav><a href="learn.html">学ぶ</a><a href="join.html">会員案内・ログイン</a><a href="about.html">運営者情報・免責</a></nav>
   </div>
 </footer>
 

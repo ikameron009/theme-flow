@@ -42,7 +42,9 @@ def metrics(s, months):
     sp = s.iloc[-60:]
     return {
         "last": r(last, 2), "chg1": r((last / ago(1) - 1) * 100), "w1": r((last / ago(5) - 1) * 100),
-        "months": [r(x) for x in mret], "r6m": r((last / ago(126) - 1) * 100), "ytd": r(ytd),
+        "months": [r(x) for x in mret], "r1m": r((last / ago(21) - 1) * 100), "r2m": r((last / ago(42) - 1) * 100),
+        "r3m": r((last / ago(63) - 1) * 100), "r6m": r((last / ago(126) - 1) * 100), "r12m": r((last / ago(252) - 1) * 100),
+        "ytd": r(ytd),
         "hi52": r((last / hi - 1) * 100), "trend": trend, "_rs": rs_raw,
         "spark": [r(v / float(sp.iloc[0]) * 100, 1) for v in sp],
     }
@@ -54,6 +56,15 @@ def rs_rank(rows, key="_rs"):
     for x, p in zip(rows, vals.rank(pct=True)):
         x["rs"] = int(max(1, min(99, round(p * 99)))) if np.isfinite(p) else None
         del x[key]
+
+
+def surge(turnover):
+    """売買代金の急増率(%) = 直近5日平均 ÷ その前20営業日平均 − 1"""
+    t = turnover.dropna()
+    if len(t) < 25:
+        return None
+    a, b = t.iloc[-5:].mean(), t.iloc[-25:-5].mean()
+    return r((a / b - 1) * 100, 1) if b else None
 
 
 def equal_weight_index(close, cols, clip=0.3):

@@ -42,7 +42,7 @@ function marketReset(){
   const top=flowRows().inn.map(t=>t.name).slice(0,5);
   state.selected=top; state.focus=top[0]||null; state.mapTheme=top[0]||(themes[0]&&themes[0].name)||null;
   state.rkSel=null; state.spStock=null; state.hquery=''; state.rkQuery=''; state.scCode=null;
-  state.vcpIdx=null; state.vcpQuery='';
+  state.vcpIdx=null; state.vcpQuery=''; state.vcCode=null;
   ['#hsearch','#rksearch','#vcpsearch','#sq'].forEach(s=>{const el=$(s);if(el)el.value='';});
   ['#hsearch-x','#rksearch-x','#vcpsearch-x'].forEach(s=>{const el=$(s);if(el)el.hidden=true;});
   const r=$('#sres');if(r)r.hidden=true;
@@ -62,9 +62,10 @@ function niceStep(r,n){const raw=r/Math.max(1,n),p=Math.pow(10,Math.floor(Math.l
 function niceAxis(lo,hi,n){const st=niceStep(hi-lo,n||5);const a=Math.floor(lo/st)*st,b=Math.ceil(hi/st)*st,t=[];for(let v=a;v<=b+st*1e-6;v+=st)t.push(+v.toFixed(10));return{lo:a,hi:b,ticks:t,step:st};}
 function fmtTurn(v,unit){if(v==null||!isFinite(v))return'–';if(unit==='億円'&&Math.abs(v)>=10000)return fmt(v/10000,1)+'兆円';return fmt(v,v>=100?0:1)+unit;}
 function mdLabel(d){return d.slice(5).replace('-','/').replace(/^0/,'').replace('/0','/');}
-function stockLinks(code){return market==='us'
+function tvUrl(code){return 'https://jp.tradingview.com/chart/?symbol='+encodeURIComponent(market==='us'?code.replace('-','.'):'TSE:'+code);}
+function stockLinks(code){return `<a class="extl" href="${tvUrl(code)}" target="_blank" rel="noopener">TradingView↗</a>`+(market==='us'
   ?`<a class="extl" href="https://finance.yahoo.com/quote/${code}" target="_blank" rel="noopener">Yahoo↗</a><a class="extl" href="https://finviz.com/quote.ashx?t=${code}" target="_blank" rel="noopener">Finviz↗</a>`
-  :`<a class="extl" href="https://finance.yahoo.co.jp/quote/${code}.T" target="_blank" rel="noopener">Yahoo↗</a><a class="extl" href="https://kabutan.jp/stock/?code=${code}" target="_blank" rel="noopener">株探↗</a>`;}
+  :`<a class="extl" href="https://finance.yahoo.co.jp/quote/${code}.T" target="_blank" rel="noopener">Yahoo↗</a><a class="extl" href="https://kabutan.jp/stock/?code=${code}" target="_blank" rel="noopener">株探↗</a>`);}
 function goto(id){const el=document.getElementById(id);if(el)el.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'start'});}
 
 /* ================= 指数の帯 ================= */
@@ -424,21 +425,21 @@ function rankMini(arr){const w=64,h=16,cl=v=>Math.min(105,v);let p='';arr.forEac
 function rkChip(d){if(d==null)return'<span class="muted">NEW</span>';if(d>0)return`<span class="up">▲${d}</span>`;if(d<0)return`<span class="down">▼${-d}</span>`;return'<span class="muted">―</span>';}
 function drawRkList(){
   const top=rkTop(),mrank=new Map(top.map((c,i)=>[c,i+1])),{k,dir}=state.rkSort,sgn=dir==='asc'?1:-1;
-  const gv=c=>{const s=RK.stocks[c];if(k==='to')return s.to;if(k==='mcap')return s.mcap??-1;if(k==='ratio')return s.ratio??-1;return mrank.get(c);};
+  const gv=c=>{const s=RK.stocks[c];if(k==='to')return s.to;if(k==='vol')return s.vol??-1;if(k==='mcap')return s.mcap??-1;if(k==='ratio')return s.ratio??-1;return mrank.get(c);};
   const nv=gateN('top100',top.length),open=new Set(top.slice(0,nv));
   let rows=[...top].filter(c=>open.has(c)).sort((a,b)=>(gv(a)-gv(b))*sgn);
   if(state.rkQuery){const q=state.rkQuery.toLowerCase();rows=rows.filter(c=>(RK.stocks[c].name||'').toLowerCase().includes(q)||c.toLowerCase().includes(q));}
   $('#rksearch-hint').textContent=state.rkQuery?`${rows.length}件`:'';
   $$('#rktbl .ar').forEach(a=>a.textContent=a.dataset.a===k?(dir==='asc'?'▲':'▼'):'');
-  const H={to:`売買代金（${U.turn}）`,mcap:`時価総額（${U.mcap}）`,ratio:'代金÷時価'};
+  const H={to:`売買代金（${U.turn}）`,vol:market==='us'?'出来高（百万株）':'出来高（万株）',mcap:`時価総額（${U.mcap}）`,ratio:'代金÷時価'};
   $$('#rktbl thead th.srt').forEach(th=>{const kk=th.dataset.k;if(H[kk])th.innerHTML=H[kk]+`<span class="ar" data-a="${kk}">${kk===k?(dir==='asc'?'▲':'▼'):''}</span>`;});
   $('#rktbody').innerHTML=rows.length?rows.map(code=>{const s=RK.stocks[code],on=code===state.rkSel;
     return `<tr class="${on?'on':''}" data-code="${esc(code)}"><td class="num" style="text-align:left;font-weight:600;${on?'color:var(--brand)':''}">${mrank.get(code)}</td>
       <td><span class="nm"><span class="t" title="${esc(s.name)}">${esc(s.name)}</span><span class="cat num">${esc(code)}</span></span></td>
-      <td class="num">${fmt(s.to,s.to>=100?0:1)}</td><td class="num">${s.mcap!=null?fmt(s.mcap,s.mcap>=100?0:1):'–'}</td>
+      <td class="num">${fmt(s.to,s.to>=100?0:1)}</td><td class="num">${s.vol==null?'–':(market==='us'?fmt(s.vol/1e6,1):fmt(s.vol/1e4,0))}</td><td class="num">${s.mcap!=null?fmt(s.mcap,s.mcap>=100?0:1):'–'}</td>
       <td class="num">${s.ratio==null?'–':(s.ratio>=10?`<span class="ratio-hi">${s.ratio.toFixed(2)}%</span>`:s.ratio.toFixed(2)+'%')}</td>
       <td class="num">${rkChip(rkDelta(code))}</td><td>${rankMini(rkSeries(code))}</td></tr>`;}).join('')
-    :'<tr><td colspan="7" style="padding:12px;color:var(--faint)">該当する銘柄がありません。</td></tr>';
+    :'<tr><td colspan="8" style="padding:12px;color:var(--faint)">該当する銘柄がありません。</td></tr>';
   $$('#rktbody tr[data-code]').forEach(tr=>tr.onclick=()=>selectRk(tr.dataset.code));
   $('#rkl-lock').innerHTML=lockHTML('top100',top.length-nv,7);
 }
@@ -489,22 +490,25 @@ function searchStocks(q){q=_nz(q).trim();if(!q)return[];UIDX=UIDX||univIndex();c
     .filter(o=>o.s>=0).sort((a,b)=>a.s-b.s||a.x.code.localeCompare(b.x.code)).slice(0,30).map(o=>o.x);}
 function themesOf(code){return themes.filter(t=>(t.members||[]).includes(code));}
 function showStock(code){state.scCode=code;$('#sres').hidden=true;drawStockCard();}
-function drawStockCard(){
-  const box=$('#scard'),code=state.scCode;if(!code){box.innerHTML='';return;}
+function drawStockCard(){renderCard('scard','sc',state.scCode);}
+function renderCard(boxId,idp,code){
+  const box=document.getElementById(boxId);if(!box)return;if(!code){box.innerHTML='';return;}
   UIDX=UIDX||univIndex();const u=UIDX.find(x=>x.code===code)||{code,name:code,sec:''};
   const s=STK[code],r=RK&&RK.stocks[code],top=rkTop(),rank=top.indexOf(code);
   const ths=themesOf(code);
-  box.innerHTML=`<div class="shead"><b>${esc(u.name)}</b><span class="num muted">${esc(code)}</span>${u.sec?`<span class="tag">${esc(u.sec)}</span>`:''}${stockLinks(code)}</div>
+  box.innerHTML=`<div class="shead"><b>${esc(u.name)}</b><span class="num muted">${esc(code)}</span>${u.sec?`<span class="tag">${esc(u.sec)}</span>`:''}${stockLinks(code)}${boxId!=='scard'?'<button class="btn sm ghost" data-close style="margin-left:auto">閉じる</button>':''}</div>
     <div class="kv"><div><small>売買代金（${U.turn}）</small><b>${s?fmt(s.to,1):r?fmt(r.to,1):'–'}</b></div>
-      <div><small>20日の騰落</small><b id="sc-r20" class="${s&&s.ret20>=0?'up':'down'}">${s?sign(s.ret20)+'%':'–'}</b></div>
+      <div><small>20日の騰落</small><b id="${idp}-r20" class="${s&&s.ret20>=0?'up':'down'}">${s?sign(s.ret20)+'%':'–'}</b></div>
       <div><small>売買代金の急増率</small><b>${s&&s.surge!=null?sign(s.surge,0)+'%':'–'}</b></div>
       <div><small>売買代金の順位</small><b>${rank>=0?(rank+1)+'位':'100位圏外'}</b></div></div>
     ${ths.length?`<div class="meta" style="margin-bottom:6px">所属テーマ（押すとテーマ別資金フローへ）</div><div class="chips">${ths.map(t=>`<button class="chip" data-nm="${esc(t.name)}">${esc(t.name)} <span class="${(t.surge??0)>=0?'up':'down'}">${sign(t.surge,0)}%</span></button>`).join('')}</div>`:''}
-    ${candleCtl('sc',state.scPer,state.scFreq)}<div id="sccandle"></div>`;
+    ${candleCtl(idp,state[idp+'Per']||126,state[idp+'Freq']||'day')}<div id="${idp}candle"></div>`;
   box.querySelectorAll('.chips .chip[data-nm]').forEach(b=>b.onclick=()=>{focusTheme(b.dataset.nm,true);goto('themes');});
-  mountCandle('sccandle','sc',code,()=>state.scPer,v=>state.scPer=v,()=>state.scFreq,v=>state.scFreq=v,340,()=>state.scCode===code,1100);
-  if(!s)loadOHLC(code).then(oh=>{const el=$('#sc-r20');if(!oh||!el||state.scCode!==code||oh.c.length<21)return;
-    const r=(oh.c[oh.c.length-1]/oh.c[oh.c.length-21]-1)*100;el.textContent=sign(r)+'%';el.className=r>=0?'up':'down';});
+  const cl=box.querySelector('[data-close]');if(cl)cl.onclick=()=>{box.innerHTML='';if(idp==='vc')state.vcCode=null;};
+  const cur=()=>(idp==='sc'?state.scCode:state.vcCode)===code;
+  mountCandle(idp+'candle',idp,code,()=>state[idp+'Per']||126,v=>state[idp+'Per']=v,()=>state[idp+'Freq']||'day',v=>state[idp+'Freq']=v,340,cur,1100);
+  if(!s)loadOHLC(code).then(oh=>{const el=document.getElementById(idp+'-r20');if(!oh||!el||!cur()||oh.c.length<21)return;
+    const v=(oh.c[oh.c.length-1]/oh.c[oh.c.length-21]-1)*100;el.textContent=sign(v)+'%';el.className=v>=0?'up':'down';});
 }
 function renderResults(q){const box=$('#sres'),R=searchStocks(q);
   if(!q.trim()){box.hidden=true;return;}box.hidden=false;
@@ -523,9 +527,8 @@ function drawStockSearch(){
 const VCP_DATA={us:null,jp:null};
 function loadVcp(mkt){if(VCP_DATA[mkt]!==null)return Promise.resolve(VCP_DATA[mkt]);
   return fetch('vcp_'+mkt+'.json?cb='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.json():{sessions:[]}).catch(()=>({sessions:[]})).then(j=>{VCP_DATA[mkt]=j;return j;});}
-function vcpCols(){return market==='us'
-  ?[['prio','優先度','r'],['name','銘柄','l'],['buy','Buy','c'],['vcp','VCP','r'],['dist','ピボット','r'],['rs','RS','r'],['mcap','時価総額','r'],['listing','上場','r'],['streak','継続','r'],['tl','最近の掲載','c']]
-  :[['prio','優先度','r'],['name','銘柄','l'],['buy','Buy','c'],['vcp','VCP','r'],['dist','ピボット','r'],['rs','RS','r'],['streak','継続','r'],['tl','最近の掲載','c']];}
+function vcpCols(){return [['prio','優先度','r'],['name','銘柄','l'],['sector','セクター','l'],['mcap','時価総額','r'],['listing','上場','r'],['buy','Buy','c'],['vcp','VCP','r'],['dist','ピボット','r'],['rs','RS','r'],['streak','継続','r'],['tl','最近の掲載','c']];}
+function numOf(v){if(v==null||v==='')return null;if(typeof v==='number')return v;const n=parseFloat(String(v).replace(/[^0-9.]/g,''));return isFinite(n)?n:null;}
 function vcpTL(sess,idx,code){const s=Math.max(0,idx-19);let g='<span class="vtl">';for(let i=s;i<=idx;i++){const on=sess[i].rows.some(r=>r.code===code);g+=`<i style="background:${on?'var(--brand)':'var(--surface-2)'}"></i>`;}return g+'</span>';}
 function drawVcp(){
   const mk=market,D=VCP_DATA[mk],head=$('#vcp-head'),body=$('#vcp-body'),slider=$('#vcp-day'),sess=(D&&D.sessions)?D.sessions:[];
@@ -543,7 +546,7 @@ function drawVcp(){
   let rows=cur.rows.map(r=>{const pr=prevMap.get(r.code);return Object.assign({},r,{_new:!!prev&&!prevCodes.has(r.code),_gone:false,_newprio:!!prev&&r.prio!=null&&!(pr&&pr.prio!=null)});});
   if(prev)prev.rows.filter(r=>!curCodes.has(r.code)).forEach(r=>rows.push(Object.assign({},r,{_gone:true,vcp:null,dist:null,prio:null,buy:false})));
   const q=_nz(state.vcpQuery);if(q)rows=rows.filter(r=>_nz(r.name).includes(q)||_nz(r.code).includes(q));
-  const{k,dir}=state.vcpSort,sgn=dir==='asc'?1:-1,gv=r=>{if(k==='name')return r.code;const v=r[k];return v==null?-1e9:v;};
+  const{k,dir}=state.vcpSort,sgn=dir==='asc'?1:-1,gv=r=>{if(k==='name'||k==='sector')return r[k==='name'?'code':'sector']||'';const v=(k==='mcap'||k==='listing')?(String(r[k]||'').includes('以上')?99:numOf(r[k])):r[k];return v==null?-1e9:v;};
   rows.sort((a,b)=>{if(a._gone!==b._gone)return a._gone?1:-1;const x=gv(a),y=gv(b);return(x<y?-1:x>y?1:0)*sgn;});
   const nv=gateN('vcp',rows.length),hidden=rows.length-nv;rows=rows.slice(0,nv);
   const cols=vcpCols();
@@ -554,12 +557,14 @@ function drawVcp(){
     if(c==='name')return`<span class="nm"><span class="t" title="${esc(r.name)}" style="${r._new?'color:var(--down)':''}">${esc(r.name)}</span><span class="cat num">${esc(r.code)}</span>${r._new?'<span class="vtag down">●新規</span>':''}${r._gone?'<span class="vtag muted">消失</span>':''}</span>`;
     if(c==='vcp')return r.vcp!=null?`<b>${r.vcp}</b>`:'<span class="muted">–</span>';
     if(c==='dist')return r.dist!=null?`<span class="${r.dist>=0&&r.dist<=2?'up':''}">${r.dist>=0?'+':''}${r.dist.toFixed(1)}%</span>`:'<span class="muted">–</span>';
-    if(c==='rs')return r.rs??'';if(c==='mcap')return r.mcap?('$'+r.mcap+'B'):'<span class="muted">–</span>';
-    if(c==='listing')return r.listing?(String(r.listing).match(/[A-Za-z]/)?esc(r.listing):esc(r.listing)+'年'):'';
+    if(c==='rs')return r.rs??'';if(c==='mcap')return r.mcap?(typeof r.mcap==='number'?'$'+r.mcap+'B':esc(r.mcap)):'<span class="muted">–</span>';
+    if(c==='sector')return `<span class="cat" style="font-size:11.5px">${esc(r.sector||'')}</span>`;
+    if(c==='listing')return r.listing?(/[A-Za-z年]/.test(String(r.listing))?esc(String(r.listing).replace(/^(\d+)M$/,'$1か月')):esc(r.listing)+'年'):'<span class="muted">–</span>';
     if(c==='streak')return r._gone?'':r.streak;if(c==='tl')return vcpTL(sess,idx,r.code);return'';};
-  body.innerHTML=rows.map(r=>`<tr class="${r._gone?'gone':''}" data-url="${esc(r.url||'')}">`+cols.map(c=>`<td ${c[0]==='tl'?'style="text-align:center"':(c[2]==='l'?'':'class="num"')}>${cell(r,c[0])}</td>`).join('')+'</tr>').join('');
-  body.querySelectorAll('tr').forEach(tr=>tr.onclick=()=>{const u=tr.dataset.url;if(u)window.open(u,'_blank','noopener');});
+  body.innerHTML=rows.map(r=>`<tr class="${r._gone?'gone':''}" data-code="${esc(r.code)}" style="cursor:pointer">`+cols.map(c=>`<td ${c[0]==='tl'?'style="text-align:center"':(c[2]==='l'?'':'class="num"')}>${cell(r,c[0])}</td>`).join('')+'</tr>').join('');
+  body.querySelectorAll('tr').forEach(tr=>tr.onclick=()=>{const c=tr.dataset.code;if(!c)return;state.vcCode=c;renderCard('vcpcard','vc',c);const el=$('#vcpcard');if(el)el.scrollIntoView({behavior:'smooth',block:'nearest'});});
   $('#vcp-lock').innerHTML=lockHTML('vcp',hidden,8);
+  if(!state.vcCode){const b=$('#vcpcard');if(b)b.innerHTML='';}
 }
 function drawScreening(){const mk=market;loadVcp(mk).then(()=>{if(market===mk)drawVcp();});}
 
@@ -609,12 +614,12 @@ $('#hq').addEventListener('keydown',e=>{if(e.key!=='Enter')return;const q=e.targ
   $('#sq').value=q;renderResults(q);const R=searchStocks(q);if(R.length===1)showStock(R[0].code);goto('stocks');});
 
 /* ジャンプリンクの現在位置 */
-const navLinks=$$('nav.jump a[href^="#"]');
+const navLinks=$$('nav.jump a[href^="#"]');/* ページ移動のリンクは除外 */
 const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting)navLinks.forEach(a=>a.classList.toggle('on',a.getAttribute('href')==='#'+e.target.id));}),{rootMargin:'-35% 0px -60% 0px'});
 $$('section.sec').forEach(s=>io.observe(s));
 
 /* 配色の切り替え(ライト/ダーク)で描き直す */
-function redrawAll(){drawStrip();drawIndexCards();drawBreadth();drawMacro();drawRatios();drawChart();drawRank();drawHeat();drawStock();drawRkBump();drawRkCandle();drawStockCard();}
+function redrawAll(){if(state.vcCode)renderCard('vcpcard','vc',state.vcCode);drawStrip();drawIndexCards();drawBreadth();drawMacro();drawRatios();drawChart();drawRank();drawHeat();drawStock();drawRkBump();drawRkCandle();drawStockCard();}
 matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change',redrawAll);
 new MutationObserver(redrawAll).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
 window.addEventListener('resize',()=>syncPanelHeight());

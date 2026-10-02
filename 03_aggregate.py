@@ -157,6 +157,7 @@ for c in rankset:
         "d_vol": int(rv_prev - rv_now) if (pd.notna(rv_prev) and pd.notna(rv_now)) else None,
         "rt": ser_int(to_rank[c]),
         "rv": ser_int(vo_rank[c]),
+        "vol": int(last_vo[c]) if pd.notna(last_vo[c]) else None,   # 出来高(株・当日)
     }
 
 rankings = {
