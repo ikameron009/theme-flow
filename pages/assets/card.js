@@ -49,8 +49,8 @@
     if(typeof box==='string')box=document.getElementById(box);if(!box)return;
     const per=o.per||st.per,src=o.src||(ROOT+(o.market==='us'?'us_ohlc/':'ohlc/')+encodeURIComponent(o.code)+'.json');
     const tok=Symbol();box._sc=tok;
-    box.innerHTML=`<div class="panel sc-card" style="margin-top:14px"><div class="shead"><b>${esc(o.name)}</b><span class="num muted">${esc(o.code)}</span>${o.sub?`<span class="tag">${esc(o.sub)}</span>`:''}${o.links===false?'':links(o.market,o.code)}
-        <button class="btn sm ghost" data-close style="margin-left:auto">閉じる</button></div>
+    box.innerHTML=`<div class="panel sc-card" style="margin-top:14px;position:relative"><div class="shead" style="padding-right:76px"><b>${esc(o.name)}</b><span class="num muted">${esc(o.code)}</span>${o.sub?`<span class="tag">${esc(o.sub)}</span>`:''}${o.links===false?'':links(o.market,o.code)}
+        <button class="btn sm ghost" data-close style="position:absolute;top:12px;right:12px">閉じる</button></div>
       ${o.kv&&o.kv.length?`<div class="kv" style="grid-template-columns:repeat(${Math.min(o.kv.length,4)},minmax(0,1fr))">${o.kv.map(k=>`<div><small>${k.l}</small><b class="${k.cls||''}">${k.v}</b></div>`).join('')}</div>`:''}
       <div class="ctlrow" style="margin:6px 0 4px"><div class="seg" data-g="per">${PER.map(p=>`<button data-v="${p[0]}" aria-pressed="${+p[0]===per}">${p[1]}</button>`).join('')}</div>
         <div class="seg" data-g="freq"><button data-v="day" aria-pressed="${st.freq==='day'}">日足</button><button data-v="week" aria-pressed="${st.freq==='week'}">週足</button></div>
