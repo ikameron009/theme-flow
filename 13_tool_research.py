@@ -19,6 +19,16 @@ from tool_common import month_starts
 BASE = os.path.dirname(os.path.abspath(__file__))
 P = lambda f: os.path.join(BASE, f)
 PRE = {"jp": "", "us": "us_"}
+TOPIX17 = [("食品", ["水産・農林業", "食料品"]), ("エネルギー資源", ["鉱業", "石油・石炭製品"]),
+           ("建設・資材", ["建設業", "ガラス・土石製品", "金属製品"]), ("素材・化学", ["繊維製品", "パルプ・紙", "化学"]),
+           ("医薬品", ["医薬品"]), ("自動車・輸送機", ["ゴム製品", "輸送用機器"]), ("鉄鋼・非鉄", ["鉄鋼", "非鉄金属"]),
+           ("機械", ["機械"]), ("電機・精密", ["電気機器", "精密機器"]), ("情報通信・サービスその他", ["情報・通信業", "サービス業", "その他製品"]),
+           ("電気・ガス", ["電気・ガス業"]), ("運輸・物流", ["陸運業", "海運業", "空運業", "倉庫・運輸関連業"]),
+           ("商社・卸売", ["卸売業"]), ("小売", ["小売業"]), ("銀行", ["銀行業"]),
+           ("金融（除く銀行）", ["証券、商品先物取引業", "保険業", "その他金融業"]), ("不動産", ["不動産業"])]
+US_SECTOR = {"Technology": "情報技術", "Communication Services": "通信サービス", "Consumer Cyclical": "一般消費財",
+             "Consumer Defensive": "生活必需品", "Healthcare": "ヘルスケア", "Financial Services": "金融", "Industrials": "資本財",
+             "Energy": "エネルギー", "Basic Materials": "素材", "Real Estate": "不動産", "Utilities": "公益事業"}
 COLS = ["code", "name", "sector", "themes", "price", "mcap", "to20", "chg1", "w1", "m0", "m1", "m2", "m3",
         "r1m", "r3m", "r6m", "ytd", "hi52", "ma50", "ma200", "ema21", "rs", "volx", "adr", "stage"]
 
@@ -133,6 +143,22 @@ def main():
     out = {"market": mk, "updated": c.index[-1].strftime("%Y-%m-%d"), "months": [f"{m.month}月" for m in months],
            "units": {"to": "億円" if mk == "jp" else "百万ドル", "mcap": "億円" if mk == "jp" else "十億ドル"},
            "cols": COLS, "themes": themes, "theme_cat": [tcat.get(t, "") for t in themes], "stocks": rows}
+    # 業種の大分類(小分類→大分類は1対1): 日本=東証17業種(小分類=33業種)、米国=Yahooのセクター(小分類=業種)
+    smalls = {r[2] for r in rows if r[2]}
+    if mk == "jp":
+        big_of = {s: b for b, ss in TOPIX17 for s in ss}
+        order = [b for b, _ in TOPIX17]
+    else:
+        cnt = {}
+        for t, i, sc in zip(ind["ticker"], ind["industry"], ind["sector"]):
+            lab = b.IND.get(i, (i, ""))[0] if i else ""
+            if lab and sc:
+                cnt.setdefault(lab, {}).setdefault(US_SECTOR.get(sc, sc), 0)
+                cnt[lab][US_SECTOR.get(sc, sc)] += 1
+        big_of = {lab: max(v, key=v.get) for lab, v in cnt.items()}
+        order = list(US_SECTOR.values())
+    out["sec_big"] = {s: big_of.get(s, "その他") for s in sorted(smalls)}
+    out["sec_bigs"] = [x for x in order + ["その他"] if x in set(out["sec_big"].values())]
     with open(P(f"pro_research_{mk}.json"), "w", encoding="utf-8") as f:
         json.dump(out, f, ensure_ascii=False, separators=(",", ":"))
     cnt = pd.Series([r[-1] for r in rows]).value_counts().to_dict()

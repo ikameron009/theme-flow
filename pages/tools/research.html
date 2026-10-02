@@ -58,6 +58,18 @@ table.rx td .nm3{display:block;font-size:11px;color:var(--muted);max-width:170px
 #tmap text{pointer-events:none}
 nav.jump .sep{color:var(--line-strong);font-size:16px}
 .tagline{display:inline-block;font:500 11px var(--f-body);color:var(--ink);margin-left:10px;vertical-align:3px;letter-spacing:0}
+.ms{position:relative}
+.ms>button.ms-btn{font:13px var(--f-body);color:var(--ink);background:var(--surface);border:1px solid var(--line-strong);border-radius:8px;padding:4px 28px 4px 10px;cursor:pointer;min-width:210px;text-align:left;position:relative}
+.ms>button.ms-btn::after{content:"";position:absolute;right:10px;top:50%;margin-top:-5px;width:6px;height:6px;border-right:1.5px solid var(--muted);border-bottom:1.5px solid var(--muted);transform:rotate(45deg)}
+.ms>button.ms-btn .n{display:inline-block;margin-left:6px;font-size:11px;font-weight:700;color:#fff;background:var(--brand);border-radius:999px;padding:0 7px}
+.ms-pop{position:absolute;left:0;top:calc(100% + 4px);z-index:20;background:var(--surface);border:1px solid var(--line-strong);border-radius:10px;box-shadow:0 10px 28px rgba(10,40,40,.16);width:300px;max-width:86vw;padding:8px}
+.ms-pop>input{width:100%;box-sizing:border-box;font:13px var(--f-body);border:1px solid var(--line-strong);border-radius:7px;padding:5px 8px;margin-bottom:6px;background:var(--surface);color:var(--ink)}
+.ms-list{max-height:300px;overflow:auto}
+.ms-list label{display:flex;align-items:center;gap:7px;font-size:12.5px;text-align:left;padding:4px 6px;border-radius:6px;cursor:pointer}
+.ms-list label:hover{background:var(--surface-2)}
+.ms-list label small{margin-left:auto;color:var(--faint);font-size:10.5px}
+.ms-list .gh{font-size:10.5px;color:var(--faint);font-weight:700;padding:6px 6px 2px}
+.ms-foot{display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--line);margin-top:6px;padding-top:6px}
 </style>
 </head><body>
 
@@ -97,15 +109,14 @@ nav.jump .sep{color:var(--line-strong);font-size:16px}
   <div class="panel">
     <div class="frow"><label class="bigq"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" style="color:var(--faint);flex:none"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="q" placeholder="銘柄名・コード・テーマ名で検索" autocomplete="off"></label></div>
     <div class="frow"><span class="flabel">よく使う条件</span><div id="presets" style="display:flex;gap:6px;flex-wrap:wrap"></div><button class="preset" id="clear" style="border-style:solid">すべて解除</button></div>
-    <div class="frow"><span class="flabel">テーマ・業種</span>
-      <select id="selCat"></select><select id="selTheme" style="max-width:240px"></select><button class="btn sm" id="addTheme">テーマを追加</button>
-      <select id="selSector" style="max-width:200px"></select><button class="btn sm ghost" id="addSector">業種を追加</button>
-      <div id="tchips" style="display:flex;gap:6px;flex-wrap:wrap;width:100%"></div></div>
+    <div class="frow"><span class="flabel">業種</span><div class="ms" id="msSecBig"></div><div class="ms" id="msSecSmall"></div><span class="phint" id="secHint"></span></div>
+    <div class="frow"><span class="flabel">テーマ</span><div class="ms" id="msThBig"></div><div class="ms" id="msThSmall"></div></div>
     <div class="frow"><span class="flabel">ステージ色</span><div id="stages" style="display:flex;gap:6px;flex-wrap:wrap"></div></div>
     <div class="frow"><span class="flabel">条件を追加</span>
       <select id="cField"></select><select id="cOp"><option value="ge">≧</option><option value="le">≦</option></select>
       <input class="num-in" id="cVal" type="number" step="any" placeholder="値"><span class="phint" id="cUnit"></span><button class="btn sm" id="addCond">追加</button>
-      <div id="cchips" style="display:flex;gap:6px;flex-wrap:wrap"></div></div>
+</div>
+    <div class="frow"><span class="flabel">選択中の条件</span><div id="chips" style="display:flex;gap:6px;flex-wrap:wrap;flex:1"><span class="phint">まだありません</span></div></div>
   </div>
 
   <div class="resbar">
@@ -150,7 +161,7 @@ const STV={tt:'--up',vcp:'--c4',up:'--c3',flat:'--grey-line',down:'--down'};
 const PCT=new Set(['chg1','w1','m0','m1','m2','m3','r1m','r3m','r6m','ytd','hi52','ma50','ma200','ema21']);
 let mk='jp',D=null,TH=null,S=[],ci={};
 const DATA={},THEMES={};
-const st={q:'',themes:new Set(),sectors:new Set(),stages:new Set(),conds:[],sort:'rs',dir:-1,view:'table',color:'m0',size:'to20',limit:300};
+const st={q:'',themes:new Set(),sectors:new Set(),secBig:new Set(),thBig:new Set(),stages:new Set(),conds:[],sort:'rs',dir:-1,view:'table',color:'m0',size:'to20',limit:300};
 try{mk=new URLSearchParams(location.search).get('m')||localStorage.getItem('tf_market')||'jp';}catch(e){}
 
 function fields(){const M=D.months,U=D.units;return [
@@ -161,11 +172,17 @@ function fields(){const M=D.months,U=D.units;return [
 function g(r,k){return r[ci[k]];}
 
 /* ---------- 絞り込み ---------- */
-function filtered(){
+const secBigOf=s=>(D.sec_big||{})[s]||'',thBigOf=t=>D.theme_cat[D.themes.indexOf(t)]||'';
+/* 大分類の中で小分類も選ばれていれば、その大分類はその小分類だけに絞る */
+let secNarrow=new Set(),thNarrow=new Set();
+function narrowSets(){secNarrow=new Set([...st.sectors].map(secBigOf));thNarrow=new Set([...st.themes].map(thBigOf));}
+function hit(v,small,big,bigOf,narrow){if(small.has(v))return true;const b=bigOf(v);return big.has(b)&&!narrow.has(b);}
+function filtered(){narrowSets();
   const q=nz(st.q),tsel=[...st.themes].map(n=>D.themes.indexOf(n)),ssel=st.sectors;
   return S.filter(r=>{
     if(st.stages.size&&!st.stages.has(g(r,'stage')))return false;
-    if(tsel.length||ssel.size){const okT=tsel.some(i=>g(r,'themes').includes(i)),okS=ssel.has(g(r,'sector'));if(!okT&&!okS)return false;}
+    if(ssel.size||st.secBig.size){const sc=g(r,'sector');if(!hit(sc,ssel,st.secBig,secBigOf,secNarrow))return false;}
+    if(tsel.length||st.thBig.size){const T=g(r,'themes');if(!T.some(i=>hit(D.themes[i],st.themes,st.thBig,thBigOf,thNarrow)))return false;}
     for(const c of st.conds){const v=g(r,c.k);if(v==null)return false;if(c.op==='ge'?v<c.v:v>c.v)return false;}
     if(q){const t=nz(g(r,'code')+' '+g(r,'name')+' '+g(r,'sector')+' '+g(r,'themes').map(i=>D.themes[i]).join(' '));if(!t.includes(q))return false;}
     return true;});
@@ -174,14 +191,40 @@ function sorted(R){const k=st.sort,dir=st.dir;return R.slice().sort((a,b)=>{let 
   if(k==='stage'){const o={vcp:0,tt:1,up:2,flat:3,down:4};x=o[x];y=o[y];}
   if(x==null)return 1;if(y==null)return -1;return (x<y?-1:x>y?1:0)*dir;});}
 
+/* ---------- 複数選択のドロップダウン ---------- */
+let MS_OPEN=null;
+function msBox(id,ph,items,sel,grouped){const el=document.getElementById(id);const open=MS_OPEN===id;
+  el.innerHTML=`<button class="ms-btn" type="button">${ph}${sel.size?`<span class="n">${sel.size}</span>`:''}</button>`+(open?`<div class="ms-pop"><input placeholder="絞り込み（名前の一部）" autocomplete="off"><div class="ms-list"></div>
+    <div class="ms-foot"><button class="btn sm ghost" type="button" data-clr>この欄を解除</button><button class="btn sm" type="button" data-ok>閉じる</button></div></div>`:'');
+  el.querySelector('.ms-btn').onclick=e=>{e.stopPropagation();MS_OPEN=open?null:id;drawMS();if(!open){const i=el.querySelector('.ms-pop input');i&&i.focus();}};
+  if(!open)return;const pop=el.querySelector('.ms-pop');pop.onclick=e=>e.stopPropagation();
+  const fill=q=>{q=nz(q);let html='',last=null;items.filter(x=>!q||nz(x.v+' '+(x.g||'')).includes(q)).forEach(x=>{if(grouped&&x.g!==last){last=x.g;html+=`<div class="gh">${esc(x.g)}</div>`;}
+      html+=`<label><input type="checkbox" value="${esc(x.v)}" ${sel.has(x.v)?'checked':''}>${esc(x.v)}<small>${x.n}</small></label>`;});
+    pop.querySelector('.ms-list').innerHTML=html||'<div class="phint" style="padding:6px">該当がありません</div>';
+    pop.querySelectorAll('.ms-list input').forEach(c=>c.onchange=()=>{c.checked?sel.add(c.value):sel.delete(c.value);st.limit=300;render();el.querySelector('.ms-btn').innerHTML=ph+(sel.size?`<span class="n">${sel.size}</span>`:'');});};
+  const qi=pop.querySelector('input');qi.oninput=()=>fill(qi.value);fill('');
+  pop.querySelector('[data-clr]').onclick=()=>{sel.clear();st.limit=300;render();drawMS();};
+  pop.querySelector('[data-ok]').onclick=()=>{MS_OPEN=null;drawMS();};}
+function drawMS(){
+  const cnt=k=>{const m={};S.forEach(r=>{const v=g(r,k);if(k==='themes')v.forEach(i=>m[D.themes[i]]=(m[D.themes[i]]||0)+1);else if(v)m[v]=(m[v]||0)+1;});return m;};
+  const sc=drawMS.sc||(drawMS.sc=cnt('sector')),tc=drawMS.tc||(drawMS.tc=cnt('themes'));
+  const bigs=D.sec_bigs||[],smalls=Object.keys(D.sec_big||{});
+  const bigN=b=>smalls.filter(s=>secBigOf(s)===b).reduce((a,s)=>a+(sc[s]||0),0);
+  msBox('msSecBig','大分類を追加（複数可）',bigs.map(b=>({v:b,n:bigN(b)})),st.secBig,false);
+  const sItems=smalls.filter(s=>!st.secBig.size||st.secBig.has(secBigOf(s))).map(s=>({v:s,g:secBigOf(s),n:sc[s]||0}))
+    .sort((a,b)=>bigs.indexOf(a.g)-bigs.indexOf(b.g)||a.v.localeCompare(b.v,'ja'));
+  msBox('msSecSmall','小分類を追加（複数可）',sItems,st.sectors,true);
+  const cats=[...new Set(D.theme_cat)].filter(Boolean);
+  msBox('msThBig','大分類を追加（複数可）',cats.map(c=>({v:c,n:D.themes.filter((t,i)=>D.theme_cat[i]===c).length+'テーマ'})),st.thBig,false);
+  const tItems=D.themes.map((t,i)=>({v:t,g:D.theme_cat[i]||'その他',n:tc[t]||0})).filter(x=>!st.thBig.size||st.thBig.has(x.g))
+    .sort((a,b)=>cats.indexOf(a.g)-cats.indexOf(b.g)||b.n-a.n);
+  msBox('msThSmall','小分類を追加（複数可）',tItems,st.themes,true);
+  $('#secHint').textContent=mk==='us'?'大分類＝セクター、小分類＝業種':'大分類＝東証17業種、小分類＝東証33業種';}
+document.addEventListener('click',()=>{if(MS_OPEN){MS_OPEN=null;drawMS();}});
+
 /* ---------- 画面 ---------- */
 function drawFilters(){
-  const cats=[...new Set(D.theme_cat)].filter(Boolean);
-  $('#selCat').innerHTML='<option value="">カテゴリ（すべて）</option>'+cats.map(c=>`<option>${esc(c)}</option>`).join('');
-  const fillTheme=()=>{const c=$('#selCat').value;$('#selTheme').innerHTML='<option value="">テーマを選ぶ</option>'+D.themes.map((t,i)=>[t,D.theme_cat[i]]).filter(x=>!c||x[1]===c).map(x=>`<option>${esc(x[0])}</option>`).join('');};
-  $('#selCat').onchange=fillTheme;fillTheme();
-  const secs=[...new Set(S.map(r=>g(r,'sector')).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'ja'));
-  $('#selSector').innerHTML='<option value="">業種を選ぶ</option>'+secs.map(s=>`<option>${esc(s)}</option>`).join('');
+  drawMS.sc=null;drawMS.tc=null;MS_OPEN=null;drawMS();
   $('#stages').innerHTML=STAGES.map(([k,l])=>`<button class="stbtn" data-s="${k}" aria-pressed="${st.stages.has(k)}"><span class="dot st-${k}"></span>${l}</button>`).join('');
   $$('#stages .stbtn').forEach(b=>b.onclick=()=>{const k=b.dataset.s;st.stages.has(k)?st.stages.delete(k):st.stages.add(k);render();});
   $('#cField').innerHTML=fields().map(([k,l])=>`<option value="${k}">${esc(l)}</option>`).join('');
@@ -198,16 +241,20 @@ function drawPresets(){const M=D.months;
     else if(k==='tt'||k==='vcp')st.stages.add(k);
     else if(k==='hi')addCond('hi52','ge',-5);
     else if(k==='vol')addCond('volx','ge',2);
-    st.limit=300;render();});}
+    st.limit=300;render();drawMS();});}
 function addCond(k,op,v){st.conds=st.conds.filter(c=>!(c.k===k&&c.op===op));st.conds.push({k,op,v});}
 function drawChips(){
-  $('#tchips').innerHTML=[...st.themes].map(t=>`<span class="fchip">テーマ：${esc(t)}<button data-t="${esc(t)}" aria-label="外す">✕</button></span>`).join('')
-    +[...st.sectors].map(s=>`<span class="fchip" style="background:var(--surface-2);color:var(--ink-2)">業種：${esc(s)}<button data-s="${esc(s)}" aria-label="外す">✕</button></span>`).join('');
-  $$('#tchips button[data-t]').forEach(b=>b.onclick=()=>{st.themes.delete(b.dataset.t);render();});
-  $$('#tchips button[data-s]').forEach(b=>b.onclick=()=>{st.sectors.delete(b.dataset.s);render();});
-  const F=Object.fromEntries(fields().map(f=>[f[0],f]));
-  $('#cchips').innerHTML=st.conds.map((c,i)=>`<span class="fchip">${esc(F[c.k][1])} ${c.op==='ge'?'≧':'≦'} ${c.v}${esc(F[c.k][2])}<button data-i="${i}" aria-label="外す">✕</button></span>`).join('');
-  $$('#cchips button').forEach(b=>b.onclick=()=>{st.conds.splice(+b.dataset.i,1);render();});
+  const F=Object.fromEntries(fields().map(f=>[f[0],f])),SB='background:var(--surface-2);color:var(--ink-2)';
+  const chip=(txt,k,v,sty)=>`<span class="fchip" style="${sty||''}">${txt}<button data-k="${k}" data-v="${esc(v)}" aria-label="外す">✕</button></span>`;
+  narrowSets();
+  const html=[...[...st.secBig].map(b=>chip('業種：'+esc(b)+(secNarrow.has(b)?'':'（すべて）'),'secBig',b,SB)),
+    ...[...st.sectors].map(s=>chip('業種：'+esc(secBigOf(s))+' › '+esc(s),'sectors',s,SB)),
+    ...[...st.thBig].map(c=>chip('テーマ：'+esc(c)+(thNarrow.has(c)?'':'（すべて）'),'thBig',c)),
+    ...[...st.themes].map(t=>chip('テーマ：'+esc(thBigOf(t))+' › '+esc(t),'themes',t)),
+    ...[...st.stages].map(k=>chip('ステージ：'+esc((STAGES.find(x=>x[0]===k)||[k,k])[1]),'stages',k,SB)),
+    ...st.conds.map((c,i)=>chip(esc(F[c.k][1])+' '+(c.op==='ge'?'≧':'≦')+' '+c.v+esc(F[c.k][2]),'conds',i))];
+  $('#chips').innerHTML=html.length?html.join('')+(st.secBig.size+st.sectors.size&&st.thBig.size+st.themes.size?'<span class="phint">業種とテーマは両方に当てはまる銘柄</span>':''):'<span class="phint">まだありません</span>';
+  $$('#chips button').forEach(b=>b.onclick=()=>{const k=b.dataset.k,v=b.dataset.v;if(k==='conds')st.conds.splice(+v,1);else st[k].delete(v);render();drawMS();});
   $$('#stages .stbtn').forEach(b=>b.setAttribute('aria-pressed',st.stages.has(b.dataset.s)));
 }
 function drawSummary(R){
@@ -224,9 +271,9 @@ function drawSummary(R){
     box.innerHTML=L.map(([n,v])=>`<div class="barrow" data-n="${esc(n)}"><span>${esc(n)}</span><span class="b"><i style="width:${(v/max*100).toFixed(0)}%"></i></span><span class="n">${v}</span></div>`).join('')||'<div class="phint">該当なし</div>';
     box.querySelectorAll('.barrow').forEach(e=>e.onclick=()=>click(e.dataset.n));};
   const sec={};R.forEach(r=>{const s=g(r,'sector');if(s)sec[s]=(sec[s]||0)+1;});
-  bars(Object.fromEntries(Object.entries(sec).sort((a,b)=>b[1]-a[1]).slice(0,5)),$('#topSec'),n=>{st.sectors.add(n);render();});
+  bars(Object.fromEntries(Object.entries(sec).sort((a,b)=>b[1]-a[1]).slice(0,5)),$('#topSec'),n=>{st.sectors.add(n);render();drawMS();});
   const th={};R.forEach(r=>g(r,'themes').forEach(i=>th[i]=(th[i]||0)+1));
-  bars(Object.fromEntries(Object.entries(th).sort((a,b)=>b[1]-a[1]).slice(0,8).map(([i,v])=>[D.themes[i],v])),$('#topTh'),n=>{st.themes.add(n);render();});
+  bars(Object.fromEntries(Object.entries(th).sort((a,b)=>b[1]-a[1]).slice(0,8).map(([i,v])=>[D.themes[i],v])),$('#topTh'),n=>{st.themes.add(n);render();drawMS();});
 }
 function heat(v,k){if(v==null)return'';const sc={chg1:4,w1:8,m0:12,m1:12,m2:12,m3:12,r1m:15,r3m:30,r6m:50,ytd:60,hi52:30,ma50:15,ma200:30,ema21:10}[k];if(!sc)return'';
   const a=Math.min(1,Math.abs(v)/sc)*0.5;return `background:rgba(${v>=0?cssv('--brandrgb'):cssv('--downrgb')},${a.toFixed(2)})`;}
@@ -246,7 +293,7 @@ function drawTable(R){
       <td>${fmt(g(r,'to20'),g(r,'to20')>=100?0:1)}</td><td>${g(r,'mcap')==null?'–':fmt(g(r,'mcap'),g(r,'mcap')>=100?0:1)}</td>
       <td>${g(r,'volx')==null?'–':fmt(g(r,'volx'),2)+'倍'}</td><td>${fmt(g(r,'adr'),1)}</td></tr>`;}).join('')
     ||'<tr><td colspan="30" class="l muted" style="padding:14px">条件に合う銘柄がありません。</td></tr>';
-  $$('#tbody .tchip').forEach(e=>e.onclick=()=>{st.themes.add(e.dataset.t);render();});
+  $$('#tbody .tchip').forEach(e=>e.onclick=()=>{st.themes.add(e.dataset.t);render();drawMS();});
   $('#more').hidden=R.length<=st.limit;$('#more').textContent=`さらに表示（残り${(R.length-st.limit).toLocaleString()}件）`;
 }
 function colorOf(v,k,min){min=min??0.12;if(v==null)return cssv('--surface-2');if(k==='rs'){const a=Math.abs(v-50)/49;return `rgba(${v>=50?cssv('--brandrgb'):cssv('--downrgb')},${(min+a*(0.9-min)).toFixed(2)})`;}
@@ -299,11 +346,11 @@ function boot(){
   $('#meta').textContent=`${mk==='us'?'米国株':'日本株'} ・ ${D.updated}まで ・ ${S.length.toLocaleString()}銘柄`;
   $('#upd').textContent=mk==='us'?'毎日 7:00 JST 更新':'毎日 17:00 JST 更新';
   $('#foot').innerHTML=`<b>ステージ色</b>：<span class="dot st-tt"></span> トレンドテンプレート合格（株価＞50日線＞150日線＞200日線・200日線が上向き・52週安値から+25%以上・52週高値から−25%以内・RS70以上）／<span class="dot st-vcp"></span> VCPスクリーナーの最新日に該当／<span class="dot st-up"></span> 上昇途中（株価と50日線が200日線より上）／<span class="dot st-flat"></span> 中立／<span class="dot st-down"></span> 下落（株価＜50日線＜150日線＜200日線）。
-    <b>RS</b>＝3か月（40%）・6か月・9か月・12か月（各20%）の騰落を全銘柄の中で順位づけ（1〜99）。<b>出来高倍率</b>＝当日÷50日平均。<b>ADR%</b>＝20日間の（高値÷安値−1）の平均。${mk==='us'?'株価2ドル未満・売買代金1日200万ドル未満の銘柄は除いています。':''}テーマ・業種は複数選ぶと「どれかに当てはまる」、条件は「すべて満たす」で絞り込みます。`;
+    <b>RS</b>＝3か月（40%）・6か月・9か月・12か月（各20%）の騰落を全銘柄の中で順位づけ（1〜99）。<b>出来高倍率</b>＝当日÷50日平均。<b>ADR%</b>＝20日間の（高値÷安値−1）の平均。${mk==='us'?'株価2ドル未満・売買代金1日200万ドル未満の銘柄は除いています。':''}<b>業種・テーマ</b>：同じ段の中で複数選ぶと「どれかに当てはまる」、業種とテーマを両方選ぶと「両方に当てはまる」銘柄。大分類だけ選ぶとその中すべて、同じ大分類の小分類も選ぶとその小分類だけに絞ります（業種の大分類＝${mk==='us'?'セクター、小分類＝業種':'東証17業種、小分類＝東証33業種'}）。条件は「すべて満たす」で絞り込みます。`;
   drawFilters();render();
 }
 function load(m){mk=m==='us'?'us':'jp';$$('#mseg button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.m===mk));try{localStorage.setItem('tf_market',mk);}catch(e){}
-  st.themes.clear();st.sectors.clear();st.conds=[];st.stages.clear();st.q='';$('#q').value='';st.limit=300;
+  st.themes.clear();st.sectors.clear();st.secBig.clear();st.thBig.clear();st.conds=[];st.stages.clear();st.q='';$('#q').value='';st.limit=300;
   $('#tbody').innerHTML='<tr><td class="l muted" style="padding:14px">読み込み中…</td></tr>';
   const get=f=>fetch('../pro/'+f+'_'+mk+'.json?cb='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.json():null).catch(()=>null);
   (DATA[mk]?Promise.resolve(DATA[mk]):get('research')).then(j=>{if(!j){$('#tbody').innerHTML='<tr><td class="l muted" style="padding:14px">データを準備中です。</td></tr>';return;}
@@ -312,10 +359,8 @@ function load(m){mk=m==='us'?'us':'jp';$$('#mseg button').forEach(b=>b.setAttrib
 
 $('#mseg').onclick=e=>{const b=e.target.closest('button');if(b)load(b.dataset.m);};
 $('#q').addEventListener('input',e=>{st.q=e.target.value.trim();st.limit=300;render();});
-$('#addTheme').onclick=()=>{const t=$('#selTheme').value;if(t){st.themes.add(t);st.limit=300;render();}};
-$('#addSector').onclick=()=>{const s=$('#selSector').value;if(s){st.sectors.add(s);st.limit=300;render();}};
 $('#addCond').onclick=()=>{const v=parseFloat($('#cVal').value);if(!isFinite(v))return;addCond($('#cField').value,$('#cOp').value,v);st.limit=300;render();};
-$('#clear').onclick=()=>{st.themes.clear();st.sectors.clear();st.conds=[];st.stages.clear();st.q='';$('#q').value='';render();};
+$('#clear').onclick=()=>{MS_OPEN=null;setTimeout(drawMS);st.themes.clear();st.sectors.clear();st.secBig.clear();st.thBig.clear();st.conds=[];st.stages.clear();st.q='';$('#q').value='';render();};
 $('#view').onclick=e=>{const b=e.target.closest('button');if(!b)return;st.view=b.dataset.v;$$('#view button').forEach(x=>x.setAttribute('aria-pressed',x===b));render();};
 $('#colorBy').onchange=e=>{st.color=e.target.value;render();};
 $('#sizeBy').onchange=e=>{st.size=e.target.value;render();};
