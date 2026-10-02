@@ -1,7 +1,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <link rel="icon" href="assets/icon-64.png">
-<title>テーマ別資金フロー</title>
+<title>投資家ハシビロコウの株式ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@600;800&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
@@ -56,6 +56,9 @@ header.top{background:var(--surface);border-bottom:1px solid var(--line);positio
 .logo{display:flex;align-items:center;gap:10px;flex-shrink:0}
 .logo svg{width:30px;height:30px}
 .logo b{font-family:var(--f-display);font-weight:800;font-size:19px;letter-spacing:.02em;white-space:nowrap}
+.logo .lg{display:flex;flex-direction:column;line-height:1.15}
+.logo .lg small{font-size:10.5px;color:var(--muted);font-weight:500;letter-spacing:.04em;white-space:nowrap}
+.logo .lg b{font-size:18px}
 .mseg{display:inline-flex;background:var(--bg);border:1px solid var(--line);border-radius:999px;padding:3px;flex-shrink:0}
 .mseg button{border:0;background:transparent;font:500 13px var(--f-body);color:var(--muted);padding:4px 14px;border-radius:999px;cursor:pointer}
 .mseg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.08)}
@@ -110,7 +113,7 @@ h3 .sub,.meta{font-size:12px;color:var(--faint);font-weight:400}
 @media (max-width:980px){.g-main,.g-map{grid-template-columns:minmax(0,1fr)}}
 @media (max-width:860px){.g-hero,.g-2{grid-template-columns:minmax(0,1fr)}}
 @media (max-width:760px){.hlink,.hsearch{display:none}.hbar{gap:10px}.logo b{font-size:16px}.hbar .btn{margin-left:auto}nav.jump .upd{display:none}h2{font-size:24px}}
-@media (max-width:520px){.logo b{display:none}.mseg button{padding:4px 11px}}
+@media (max-width:520px){.logo .lg{display:none}.mseg button{padding:4px 11px}}
 
 /* ---------- controls ---------- */
 .ctlrow{display:flex;align-items:center;gap:8px 10px;margin-bottom:8px;flex-wrap:wrap}
@@ -307,9 +310,9 @@ footer a:hover{color:var(--brand)}
 
 <header class="top">
   <div class="wrap hbar">
-    <a class="logo" href="#market" aria-label="テーマ別資金フロー トップ">
+    <a class="logo" href="#market" aria-label="投資家ハシビロコウの株式ダッシュボード トップ">
       <img src="assets/icon-64.png" width="32" height="32" alt="" style="border-radius:50%;flex:none">
-      <b>テーマ別 資金フロー</b>
+      <span class="lg"><small>投資家ハシビロコウの</small><b>株式ダッシュボード</b></span>
     </a>
     <div class="mseg" role="group" aria-label="市場" id="mseg">
       <button data-m="jp" aria-pressed="true">日本株</button><button data-m="us" aria-pressed="false">米国株</button>
@@ -329,8 +332,8 @@ footer a:hover{color:var(--brand)}
     <a href="#screening">スクリーニング</a>
     <span class="sep" aria-hidden="true">|</span>
     <a href="tools/sectors.html" data-page="1">セクター状況</a>
-    <a href="tools/themes.html" data-page="1">業界状況</a>
-    <a href="tools/research.html" data-page="1">業界銘柄リサーチ</a>
+    <a href="tools/themes.html" data-page="1">業種状況</a>
+    <a href="tools/research.html" data-page="1">業種銘柄リサーチ</a>
     <a href="note.html" data-page="1">note紹介記事検証</a>
     <span class="upd">データ <b class="num" id="u-date">–</b> ・ <span id="u-sched"></span><a id="upd-btn" href="https://github.com/ikameron009/theme-flow/actions/workflows/update.yml" target="_blank" rel="noopener">更新</a></span>
   </div>
@@ -528,7 +531,7 @@ footer a:hover{color:var(--brand)}
 
 <footer>
   <div class="wrap">
-    <div><b style="font-family:var(--f-display);color:var(--ink);font-size:14px">テーマ別 資金フロー</b><br>運営：投資家ハシビロコウ ・ 当サイトの情報は投資助言ではありません。投資判断はご自身の責任でお願いします。</div>
+    <div><b style="font-family:var(--f-display);color:var(--ink);font-size:14px">投資家ハシビロコウの株式ダッシュボード</b><br>運営：投資家ハシビロコウ ・ 当サイトの情報は投資助言ではありません。投資判断はご自身の責任でお願いします。</div>
     <nav><a href="learn.html">学ぶ</a><a href="join.html">会員案内・ログイン</a><a href="about.html">運営者情報・免責</a></nav>
   </div>
 </footer>
