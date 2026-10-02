@@ -19,8 +19,6 @@ on:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
   actions: read
 
 # ★衝突しても"キャンセルしない"= 定時フェッチがVCP pushに殺されない(順番待ち)
@@ -156,9 +154,7 @@ jobs:
         run: python check_status.py
 
       # 公開先: Cloudflare Workers(静的配信) site_worker/wrangler.toml → https://theme-flow.ikameron009.workers.dev
-      # (移行期間中は GitHub Pages にも並行して公開。Cloudflare側の失敗はまだ致命にしない)
       - name: Cloudflareへ公開
-        continue-on-error: true
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
@@ -169,36 +165,9 @@ jobs:
           done
           exit 1
 
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          path: ./site
-
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      # 直前のPages公開が処理中だと "in progress deployment" で弾かれる → 待って最大2回やり直す
-      - id: deployment
-        continue-on-error: true
-        uses: actions/deploy-pages@v4
-      - if: steps.deployment.outcome == 'failure'
-        run: sleep 90
-      - id: deployment2
-        if: steps.deployment.outcome == 'failure'
-        continue-on-error: true
-        uses: actions/deploy-pages@v4
-      - if: steps.deployment.outcome == 'failure' && steps.deployment2.outcome == 'failure'
-        run: sleep 180
-      - id: deployment3
-        if: steps.deployment.outcome == 'failure' && steps.deployment2.outcome == 'failure'
-        uses: actions/deploy-pages@v4
-
   # 取りこぼしがあった回はランを失敗にする → Cloudflare Workerの見張りが再実行・通知
   verify:
-    needs: [build, deploy]
+    needs: [build]
     if: always() && needs.build.result == 'success'
     runs-on: ubuntu-latest
     steps:
