@@ -30,6 +30,12 @@ try:
     codes.update(r["code"] for s_ in _v.get("sessions", [])[-20:] for r in s_["rows"])
 except Exception:
     pass
+# 業種状況(有料ツール)の構成銘柄も(銘柄名を押すとチャート)
+try:
+    _t = json.load(open(BASE + "pro_themes_us.json", encoding="utf-8"))
+    codes.update(c for r_ in _t.get("rows", []) for c in r_.get("members", []))
+except Exception:
+    pass
 codes.update(rk.get("top_vol", []))
 codes.update(rk.get("stocks", {}).keys())
 codes = sorted(c for c in codes if c in avail)

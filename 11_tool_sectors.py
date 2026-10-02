@@ -14,7 +14,7 @@ import numpy as np
 import pandas as pd
 from market_calendar import expected_session
 from tool_common import r, metrics, rs_rank, month_starts, equal_weight_index, surge
-from us_etf_list import US_ETF_ALL, NO_DEDUPE, MIN_TURNOVER, MAX_CORR
+from us_etf_list import US_ETF_ALL, NO_DEDUPE, MIN_TURNOVER, MAX_CORR, REP_CORR
 
 BASE = os.path.dirname(os.path.abspath(__file__))
 P = lambda f: os.path.join(BASE, f)
@@ -112,7 +112,7 @@ def fetch(tickers):
                     sub.index = pd.to_datetime(sub.index).tz_localize(None).normalize()
                     sub = sub[~sub.index.duplicated(keep="last")]
                     if len(sub) > 30:
-                        out[t] = (sub["Close"], sub["Close"] * sub["Volume"].fillna(0))
+                        out[t] = (sub["Close"], sub["Close"] * sub["Volume"].fillna(0), sub)
                 except Exception:
                     pass
             break
@@ -121,6 +121,24 @@ def fetch(tickers):
             time.sleep(3)
     print(f"  ETF 取得 {len(out)}/{len(tickers)}  未取得={[t for t in tickers if t not in out]}")
     return out
+
+
+def write_ohlc(mk, key, df, close=None):
+    """銘柄カードのチャート用。銘柄を探すと同じ置き場(キャッシュされる site/ohlc・site/us_ohlc)に sec_<key>.json。
+    自前の業種指数は終値だけ(折れ線で描く)"""
+    d = P(os.path.join("site", "ohlc" if mk == "jp" else "us_ohlc"))
+    os.makedirs(d, exist_ok=True)
+    if df is not None:
+        df = df.iloc[-520:]
+        c = df["Close"]
+        rec = {"d": [x.strftime("%Y-%m-%d") for x in df.index]}
+        for k, col in (("o", "Open"), ("h", "High"), ("l", "Low"), ("c", "Close")):
+            rec[k] = [round(float(v), 2) for v in df[col].fillna(c)]
+    else:
+        close = close.dropna().iloc[-520:]
+        rec = {"d": [x.strftime("%Y-%m-%d") for x in close.index], "c": [round(float(v), 2) for v in close]}
+    with open(os.path.join(d, f"sec_{key}.json"), "w", encoding="utf-8") as f:
+        json.dump(rec, f, ensure_ascii=False, separators=(",", ":"))
 
 
 def select_us(lst, px):
@@ -148,7 +166,23 @@ def select_us(lst, px):
     order = {t: i for i, (t, _, _) in enumerate(lst)}
     keep.sort(key=lambda x: order[x[0]])
     print(f"  候補{len(lst)} → 掲載{len(keep)}  売買代金不足{len(cut_low)}:{cut_low}  値動きが重複{len(merged)}:{merged}")
-    return keep
+    # ③ 代表ETF: 同じ分類で値動きが似ている(相関 REP_CORR 以上)グループの中で、売買代金が一番多いものを代表にする
+    rep_of = {}
+    for g in {x[2] for x in keep}:
+        items = sorted([x[0] for x in keep if x[2] == g], key=lambda t: -to20[t])
+        reps = []
+        for t in items:
+            if g in NO_DEDUPE:
+                rep_of[t] = t; continue
+            rt = px[t][0].pct_change().iloc[-252:]
+            twin = next((k for k in reps if rt.corr(px[k][0].pct_change().iloc[-252:]) >= REP_CORR), None)
+            if twin:
+                rep_of[t] = twin
+            else:
+                reps.append(t); rep_of[t] = t
+    n_rep = sum(1 for t, v in rep_of.items() if t == v)
+    print(f"  代表ETF {n_rep}本(相関{REP_CORR}以上を1つにまとめる)")
+    return keep, rep_of
 
 
 def sector_indices(cut):
@@ -173,15 +207,18 @@ def main():
     rows = []
     lst = JP_ETF if mk == "jp" else US_ETF_ALL
     px = fetch([t for t, _, _ in lst])
+    rep_of = {}
     if mk == "us":
-        lst = select_us(lst, px)
+        lst, rep_of = select_us(lst, px)
     series = []
     for t, nm, g in lst:
         if t in px:
-            c, to = px[t]
+            c, to, df = px[t]
+            write_ohlc(mk, t.replace(".T", ""), df[df.index.date <= cut])
             series.append((t.replace(".T", ""), nm, g, c[c.index.date <= cut], to[to.index.date <= cut], True))
     if mk == "jp" and os.path.exists(P("close.pkl")):
         for sec, (s, to) in sector_indices(cut).items():
+            write_ohlc(mk, sec, None, s)
             series.append((sec, sec + "（33業種）", SECTOR33_CAT.get(sec, "指数"), s, to, False))
     if not series:
         raise SystemExit("データなし")
@@ -196,6 +233,8 @@ def main():
                   "surge": surge(to)})
         if not is_etf:
             m["last"] = None            # 自前の業種指数は価格を出さない
+        if rep_of:
+            m["rep"] = rep_of.get(key, key)  # 代表ETF(自分が代表なら自分)
         rows.append(m)
     rs_rank(rows)                       # RS = 一覧内の順位(1-99)
     out = {

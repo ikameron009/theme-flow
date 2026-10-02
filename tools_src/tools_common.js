@@ -24,6 +24,7 @@ function keyNum(){return NUMK.has(st.sort)&&st.sort!=='last'?st.sort:'m0';}
 function rows(){let R=D.rows.filter(x=>st.grp==='all'||x.group===st.grp);
   if(st.pick)R=D.rows.filter(x=>x.name===st.pick);
   if(st.q){const q=st.q.normalize('NFKC').toLowerCase();R=R.filter(x=>(x.name+' '+(x.key||'')+' '+x.group).normalize('NFKC').toLowerCase().includes(q)||memberHit(x,q));}
+  if(typeof FILTER==='function')R=R.filter(FILTER);
   const k=st.sort,dir=st.dir;
   return R.slice().sort((a,b)=>{const x=(k==='name'||k==='key')?a[k]:val(a,k),y=(k==='name'||k==='key')?b[k]:val(b,k);if(x==null)return 1;if(y==null)return -1;return (x<y?-1:x>y?1:0)*dir;});}
 function memberHit(x,q){if(!x.members||!D.stocks)return false;return x.members.some(c=>(c+' '+((D.stocks[c]||[''])[0])).normalize('NFKC').toLowerCase().includes(q));}
@@ -45,7 +46,7 @@ function drawCtl(){
 }
 function pick(n){st.pick=n;$('#tpick').value='';if(n){const x=D.rows.find(r=>r.name===n);if(x)st.grp=x.group;if(typeof OPEN!=='undefined')OPEN.add(n);}draw();}
 function draw(){
-  drawCtl();const R=rows(),k=keyNum();
+  drawCtl();if(typeof EXTRA==='function')EXTRA();const R=rows(),k=keyNum();
   const up=D.rows.filter(x=>(x.chg1||0)>0).length,dn=D.rows.filter(x=>(x.chg1||0)<0).length;
   $('#meta').innerHTML=`${mk==='us'?'米国株':'日本株'} ・ ${D.updated}まで ・ <span class="up">▲${up}</span> <span class="muted">＝${D.rows.length-up-dn}</span> <span class="down">▼${dn}</span>（前日比）`;
   $('#upd').textContent=mk==='us'?'毎日 7:00 JST 更新':'毎日 17:00 JST 更新';
@@ -71,7 +72,10 @@ function drawHeat(R){const k=keyNum();
   $('#heat').innerHTML=`<div class="phint" style="margin-bottom:6px">色＝${esc(label(k))}（リスト表示で見出しを押すと切り替わります）</div>`+groups.map(g=>{const G=R.filter(x=>x.group===g).sort((a,b)=>(val(b,k)??-1e9)-(val(a,k)??-1e9));if(!G.length)return'';
     return `<div class="ghead">${esc(g)}</div><div class="tiles">${G.map(x=>{const v=val(x,k),sc=SCALE[k]||50,a=v==null?0:Math.min(1,Math.abs(k==='rs'?v-50:v)/(k==='rs'?49:sc));
       const pos=k==='rs'?v>=50:v>=0,bg=v==null?'var(--surface-2)':`rgba(${pos?cssv('--brandrgb'):cssv('--downrgb')},${(0.12+a*0.78).toFixed(2)})`,fg=a>0.55?'#fff':'var(--ink)';
-      return `<div class="tile" style="background:${bg};color:${fg}" title="${esc(x.name)}"><b>${esc(x.name)}</b><small>${x.etf?esc(x.key):(x.n?x.n+'銘柄':'')}</small><span>${k==='rs'?v:sign(v)}</span></div>`;}).join('')}</div>`;}).join('');}
+      return `<div class="tile" style="background:${bg};color:${fg};${typeof TILE==='function'?'cursor:pointer':''}" title="${esc(x.name)}" data-k="${esc(x.key||x.name)}"><b>${esc(x.name)}</b><small>${x.etf?esc(x.key):(x.n?x.n+'銘柄':'')}</small><span>${k==='rs'?v:sign(v)}</span></div>`;}).join('')}</div>`;}).join('');
+  if(typeof TILE==='function')$$('#heat .tile').forEach(t=>t.onclick=()=>TILE(t.dataset.k));}
+function cardSlot(id){return `<div id="${id}" class="cardslot"></div>`;}
+function fitSlot(id){const el=document.getElementById(id),w=document.querySelector('.sx-wrap');if(el&&w)el.style.width=Math.max(320,w.clientWidth-28)+'px';}
 const COMMON_FOOT='<b>今月</b>＝月初来。<b>1か月前〜1年前</b>＝その時点から今日までの騰落（1か月＝21営業日、2か月＝42、3か月＝63、6か月＝126、1年＝252）。<b>52週高値</b>＝過去1年の最高値からの距離。<b>資金急増率</b>＝売買代金（終値×出来高）の直近5日平均 ÷ その前20営業日の平均 −1。<b>RS</b>＝3か月（40%）・6か月・9か月・12か月（各20%）の騰落を一覧の中で順位づけ（1〜99）。<b>トレンド</b>＝株価・50日線・200日線の並び（上昇＝株価＞50日線＞200日線）。';
 
 function load(m){mk=m==='us'?'us':'jp';$$('#mseg button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.m===mk));try{localStorage.setItem('tf_market',mk);}catch(e){}

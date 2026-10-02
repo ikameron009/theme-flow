@@ -30,10 +30,28 @@ table.st td.l{font-family:var(--f-body)}
 .wbar{display:inline-block;width:70px;height:7px;background:var(--surface-2);border-radius:4px;vertical-align:middle;position:relative;margin-left:6px}
 .wbar i{position:absolute;left:0;top:0;bottom:0;border-radius:4px;background:var(--up)}
 .ref{font-size:10px;color:var(--faint);margin-left:4px}
-.pk-wrap{overflow-x:auto;margin:0 -6px}
+.pk-wrap{overflow:auto;max-height:var(--pkh,560px);margin:0 -6px;border-bottom:1px solid var(--line)}
+.pk-top{overflow-x:auto;overflow-y:hidden;margin:0 -6px 2px;height:14px}
+.pk-top>div{height:1px}
+table.pk tr.ctl th{position:static;text-align:right;white-space:nowrap;cursor:default;vertical-align:bottom;padding:4px 7px 6px;border-bottom:0;background:var(--surface-2)}
+table.pk tr.ctl th:first-child{border-radius:8px 0 0 8px}
+table.pk tr.ctl th:last-child{border-radius:0 8px 8px 0}
+table.pk tr.ctl .seg{display:inline-flex;flex-wrap:nowrap;gap:0}
+table.pk tr.ctl .seg button{font-size:10.5px;padding:2px 7px}
+table.pk tr.ctl .cl{display:flex;align-items:center;justify-content:flex-end;gap:6px}
+table.pk tr.ctl .cl+.cl{margin-top:3px}
+table.pk tr.ctl small{font-size:10px;color:var(--faint)}
+table.pk th small{display:block;font-size:10px;font-weight:400}
+table.pk td .nmb{background:none;border:0;padding:0;font:inherit;color:var(--ink);cursor:pointer;text-align:left}
+table.pk td .nmb b{font-weight:600;border-bottom:1px dotted var(--faint)}
+table.pk td .nmb:hover b{color:var(--brand);border-color:var(--brand)}
+table.pk tr.sel td{background:var(--surface-2)}
+.art{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:8px;color:var(--brand);border:1px solid var(--line-strong)}
+.art:hover{background:var(--brand);color:#fff;border-color:var(--brand)}
+.art svg{width:16px;height:16px}
 table.pk{width:100%;border-collapse:collapse;font-size:12.5px;min-width:1240px}
-table.pk th{position:sticky;top:0;background:var(--surface);font-size:11px;color:var(--faint);font-weight:500;padding:8px 7px;border-bottom:1px solid var(--line-strong);text-align:right;white-space:nowrap;cursor:pointer;user-select:none}
-table.pk th.l{text-align:left}
+table.pk tr:not(.ctl) th{position:sticky;top:0;z-index:1;background:var(--surface);font-size:11px;color:var(--faint);font-weight:500;padding:8px 7px;border-bottom:1px solid var(--line-strong);text-align:right;white-space:nowrap;cursor:pointer;user-select:none}
+table.pk tr:not(.ctl) th.l{text-align:left}
 table.pk th.on{color:var(--brand)}
 table.pk td{padding:7px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap;font-family:var(--f-num);font-variant-numeric:tabular-nums}
 table.pk td.l{text-align:left;font-family:var(--f-body)}
@@ -77,24 +95,25 @@ table.pk td .sc{display:inline-block;min-width:34px;text-align:center;font-weigh
   </div>
 
   <div class="panel">
-    <div class="ctlrow"><span class="ctl-label">期間</span><div class="seg" id="hz"><button data-v="now" aria-pressed="true">現在まで</button><button data-v="1m" aria-pressed="false">1か月</button><button data-v="3m" aria-pressed="false">3か月</button><button data-v="6m" aria-pressed="false">半年</button><button data-v="1y" aria-pressed="false">1年</button></div></div>
-    <div class="ctlrow"><span class="ctl-label">売り方</span><div class="seg" id="rule"><button data-v="hold" aria-pressed="true">持ち続ける</button><button data-v="ma50" aria-pressed="false">50日線割れで売る</button><button data-v="ma10" aria-pressed="false">10日線割れで売る</button></div></div>
-    <div class="ctlrow"><span class="ctl-label">比べる指数</span><div class="seg" id="bm"><button data-v="main" aria-pressed="true">TOPIX・S&amp;P500</button><button data-v="small" aria-pressed="false">グロース250・ラッセル2000</button></div></div>
-    <div class="ctlrow"><span class="ctl-label">市場</span><div class="seg" id="mk"><button data-v="all" aria-pressed="true">すべて</button><button data-v="jp" aria-pressed="false">日本株</button><button data-v="us" aria-pressed="false">米国株</button></div></div>
+    <div class="ctlrow"><span class="ctl-label">期間</span><div class="seg" data-key="hz"><button data-v="now" aria-pressed="true">現在まで</button><button data-v="1m" aria-pressed="false">1か月</button><button data-v="3m" aria-pressed="false">3か月</button><button data-v="6m" aria-pressed="false">半年</button><button data-v="1y" aria-pressed="false">1年</button></div></div>
+    <div class="ctlrow"><span class="ctl-label">売り方</span><div class="seg" data-key="rule"><button data-v="hold" aria-pressed="true">持ち続ける</button><button data-v="ma50" aria-pressed="false">50日線割れで売る</button><button data-v="ma10" aria-pressed="false">10日線割れで売る</button></div></div>
+    <div class="ctlrow"><span class="ctl-label">比べる指数</span><div class="seg" data-key="bm"><button data-v="main" aria-pressed="true">TOPIX・S&amp;P500</button><button data-v="small" aria-pressed="false">グロース250・ラッセル2000</button></div></div>
+    <div class="ctlrow"><span class="ctl-label">市場</span><div class="seg" data-key="mk"><button data-v="all" aria-pressed="true">すべて</button><button data-v="jp" aria-pressed="false">日本株</button><button data-v="us" aria-pressed="false">米国株</button></div></div>
+    <div class="ctlrow"><span class="ctl-label">配当</span><div class="seg" data-key="dv"><button data-v="div" aria-pressed="true">配当込み</button><button data-v="raw" aria-pressed="false">配当なし</button></div></div>
     <div class="phint" id="cond"></div>
   </div>
 
   <div class="kpis" id="kpis"></div>
 
   <div class="panel">
-    <div class="phead"><h3>点数の区分ごとの成績 <span class="sub">掲載日時点の銘柄データシートの点数（急成長スコア）</span></h3></div>
+    <div class="phead"><h3>急成長スコアの区分ごとの成績 <span class="sub">掲載時の銘柄データシートの急成長スコア</span></h3></div>
     <div style="overflow-x:auto"><table class="st" id="tBand"></table></div>
     <div class="phint" style="margin-top:6px">件数が10件未満の区分は、偶然の影響が大きいため「参考値」です。</div>
   </div>
 
   <div class="two">
     <div class="panel"><div class="phead"><h3>状態ラベル別の成績</h3></div><div style="overflow-x:auto"><table class="st" id="tLabel"></table></div></div>
-    <div class="panel"><div class="phead"><h3>点数とリターン</h3><span class="meta">1点＝1銘柄</span></div><svg id="scatter" viewBox="0 0 520 300"></svg><div class="phint" id="scNote"></div></div>
+    <div class="panel"><div class="phead"><h3>急成長スコアとリターン</h3><span class="meta">1点＝1銘柄</span></div><svg id="scatter" viewBox="0 0 520 300"></svg><div class="phint" id="scNote"></div></div>
   </div>
 
   <div class="panel mt">
@@ -104,7 +123,10 @@ table.pk td .sc{display:inline-block;min-width:34px;text-align:center;font-weigh
 
   <div class="panel mt">
     <div class="phead"><h3>紹介した全銘柄 <span class="sub" id="pkSub"></span></h3><span class="search"><input id="q" type="text" placeholder="銘柄名・コード" autocomplete="off"><span class="x" id="qx" hidden title="消す">✕</span></span></div>
-    <div class="pk-wrap"><table class="pk"><thead><tr id="pkHead"></tr></thead><tbody id="pkBody"></tbody></table></div>
+    <div class="pk-top" id="pkTop"><div></div></div>
+    <div class="pk-wrap" id="pkWrap"><table class="pk"><thead><tr class="ctl" id="pkCtl"></tr><tr id="pkHead"></tr></thead><tbody id="pkBody"></tbody></table></div>
+    <div class="phint" style="margin-top:6px">銘柄名を押すと、下にチャートが出ます（点線＝noteで公開した日）。<a href="https://note.com/hashibirokou_jp" target="_blank" rel="noopener" style="color:var(--brand)">noteの記事一覧↗</a></div>
+    <div id="pkCard"></div>
     <div class="foot" id="foot"></div>
   </div>
 </section>
@@ -117,18 +139,28 @@ table.pk td .sc{display:inline-block;min-width:34px;text-align:center;font-weigh
   </div>
 </footer>
 
+<script src="assets/card.js"></script>
 <script>
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 const cssv=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 const fmt=(x,d=1)=>x==null||!isFinite(x)?'–':Number(x).toLocaleString('ja-JP',{minimumFractionDigits:d,maximumFractionDigits:d});
 const pct=(x,d=1)=>x==null||!isFinite(x)?'–':(x>=0?'+':'−')+fmt(Math.abs(x),d)+'%';
+const pt=x=>x==null?'–':(x>=0?'+':'−')+fmt(Math.abs(x),1)+'pt';
 const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const st={hz:'now',rule:'hold',bm:'main',mk:'all',q:'',sort:'date',dir:-1};
+const st={hz:'now',rule:'hold',bm:'main',mk:'all',dv:'div',q:'',sort:'date',dir:-1,sel:null};
 const HZ={now:'現在まで','1m':'1か月','3m':'3か月','6m':'半年','1y':'1年'},RULE={hold:'持ち続ける',ma50:'50日線割れで売る',ma10:'10日線割れで売る'};
+const OPTS={hz:Object.entries(HZ),rule:Object.entries(RULE),bm:[['main','TOPIX・S&P500'],['small','グロース250・ラッセル2000']],mk:[['all','すべて'],['jp','日本株'],['us','米国株']],dv:[['div','配当込み'],['raw','配当なし']]};
 const BANDS=[[0,50,'50点未満'],[50,60,'50〜59点'],[60,70,'60〜69点'],[70,80,'70〜79点'],[80,101,'80点以上']];
+/* 記事アイコン。候補＝book(本)・paper(新聞)・pen(ペン)。ART_ICON を変えると切り替わる */
+const ICON={book:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 5.5C4.5 4 8 4 12 6c4-2 7.5-2 10-.5V19c-2.5-1.5-6-1.5-10 .5-4-2-7.5-2-10-.5z"/><path d="M12 6v13.5"/></svg>',
+  paper:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="15" height="16" rx="2"/><path d="M18 8h3v10a2 2 0 0 1-2 2h-1M7 8h7M7 12h7M7 16h4"/></svg>',
+  pen:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M16.5 3.5l4 4L8 20H4v-4z"/><path d="M14 6l4 4"/></svg>'};
+const ART_ICON='book';
 let D=null;
 
-function res(p){const x=p.res&&p.res[st.rule]&&p.res[st.rule][st.hz];if(!x)return null;return {r:x.r,ex:st.bm==='main'?x.ex:x.ex_s,sold:x.sold,end:x.end};}
+const M=p=>p[st.dv];                                     // 配当込み／なし
+function res(p){const x=M(p).res[st.rule]&&M(p).res[st.rule][st.hz];if(!x)return null;return {r:x.r,ex:st.bm==='main'?x.ex:x.ex_s,sold:x.sold,end:x.end};}
+const nowEx=p=>(M(p).res.hold.now||{})[st.bm==='main'?'ex':'ex_s'];
 function base(){return D.picks.filter(p=>st.mk==='all'||p.market===st.mk);}
 function stats(L){const v=L.filter(p=>p.days>0).map(p=>res(p)).filter(Boolean);if(!v.length)return null;
   const R=v.map(x=>x.r).sort((a,b)=>a-b),E=v.map(x=>x.ex).filter(x=>x!=null);
@@ -136,24 +168,25 @@ function stats(L){const v=L.filter(p=>p.days>0).map(p=>res(p)).filter(Boolean);i
   return {n:v.length,win:v.filter(x=>x.r>0).length/v.length*100,avg:mean(R),med:med(R),ex:E.length?mean(E):null,beat:E.length?E.filter(x=>x>0).length/E.length*100:null,best:R[R.length-1],worst:R[0]};}
 function statRow(label,S,refN){if(!S)return `<tr><td class="l">${label}</td><td colspan="7" class="muted" style="text-align:left">${st.hz==='now'?'該当なし':'まだ期間がたっていません'}</td></tr>`;
   return `<tr><td class="l">${label}${S.n<(refN||10)?'<span class="ref">参考値</span>':''}</td><td>${S.n}</td><td>${fmt(S.win,0)}%<span class="wbar"><i style="width:${S.win.toFixed(0)}%"></i></span></td>
-    <td class="${S.avg>=0?'up':'down'}">${pct(S.avg)}</td><td class="${S.med>=0?'up':'down'}">${pct(S.med)}</td><td class="${(S.ex??0)>=0?'up':'down'}">${S.ex==null?'–':(S.ex>=0?'+':'−')+fmt(Math.abs(S.ex),1)+'pt'}</td>
+    <td class="${S.avg>=0?'up':'down'}">${pct(S.avg)}</td><td class="${S.med>=0?'up':'down'}">${pct(S.med)}</td><td class="${(S.ex??0)>=0?'up':'down'}">${pt(S.ex)}</td>
     <td>${S.beat==null?'–':fmt(S.beat,0)+'%'}</td><td><span class="up">${pct(S.best)}</span> ／ <span class="down">${pct(S.worst)}</span></td></tr>`;}
 const SHEAD='<thead><tr><th class="l">区分</th><th>件数</th><th>勝率</th><th>平均</th><th>中央値</th><th>指数との差（平均）</th><th>指数に勝った割合</th><th>最高 ／ 最低</th></tr></thead>';
+const segHTML=key=>`<div class="seg" data-key="${key}">${OPTS[key].map(([v,l])=>`<button data-v="${v}" aria-pressed="${st[key]===v}">${esc(l)}</button>`).join('')}</div>`;
 
 function draw(){
-  const L=base(),S=stats(L),bn=D.bench[st.bm];
+  const L=base(),S=stats(L),bn=D.bench[st.bm],dvl=st.dv==='div'?'配当込み':'配当なし';
   $('#meta').textContent=`${D.updated}まで ・ 紹介 ${D.picks.length}銘柄`;
-  $('#cond').textContent=`条件：期間＝${HZ[st.hz]} ／ 売り方＝${RULE[st.rule]} ／ 比べる指数＝日本株は${bn.jp}、米国株は${bn.us}（いずれも配当込みのETF）`;
+  $('#cond').textContent=`条件：期間＝${HZ[st.hz]} ／ 売り方＝${RULE[st.rule]} ／ 比べる指数＝日本株は${bn.jp}、米国株は${bn.us} ／ ${dvl}（株価も指数も同じ扱い）`;
   const k=(t,v,sub,cls)=>`<div class="panel kpi"><small>${t}</small><b class="${cls||''}">${v}</b>${sub?`<span>${sub}</span>`:''}</div>`;
-  $('#kpis').innerHTML=S?[k('集計した銘柄',S.n,`全${L.length}銘柄のうち（掲載当日の銘柄を除く）`),k('勝率',fmt(S.win,0)+'%','プラスで終えた割合'),k('平均リターン',pct(S.avg),'',S.avg>=0?'up':'down'),
-    k('中央値',pct(S.med),'真ん中の銘柄',S.med>=0?'up':'down'),k('指数との差（平均）',S.ex==null?'–':(S.ex>=0?'+':'−')+fmt(Math.abs(S.ex),1)+'pt','',(S.ex??0)>=0?'up':'down'),k('指数に勝った割合',S.beat==null?'–':fmt(S.beat,0)+'%')].join('')
+  $('#kpis').innerHTML=S?[k('集計した銘柄',S.n,`全${L.length}銘柄のうち（公開当日の銘柄を除く）`),k('勝率',fmt(S.win,0)+'%','プラスで終えた割合'),k('平均リターン',pct(S.avg),'',S.avg>=0?'up':'down'),
+    k('中央値',pct(S.med),'真ん中の銘柄',S.med>=0?'up':'down'),k('指数との差（平均）',pt(S.ex),'',(S.ex??0)>=0?'up':'down'),k('指数に勝った割合',S.beat==null?'–':fmt(S.beat,0)+'%')].join('')
     :`<div class="panel kpi" style="grid-column:1/-1"><small>集計</small><b style="font-size:15px">この期間がたった銘柄はまだありません</b><span>${st.hz==='now'?'':'期間を「現在まで」にすると、今日までの成績を見られます'}</span></div>`;
-  $('#tBand').innerHTML=SHEAD+'<tbody>'+BANDS.map(([a,b,l])=>statRow(l,stats(L.filter(p=>p.score!=null&&p.score>=a&&p.score<b)))).join('')+'</tbody>';
+  $('#tBand').innerHTML=SHEAD.replace('区分','急成長スコア')+'<tbody>'+BANDS.map(([a,b,l])=>statRow(l,stats(L.filter(p=>p.score!=null&&p.score>=a&&p.score<b)))).join('')+'</tbody>';
   const labs=[...new Set(L.map(p=>p.label))];
   $('#tLabel').innerHTML=SHEAD.replace('区分','状態ラベル')+'<tbody>'+labs.map(l=>statRow(esc(l),stats(L.filter(p=>p.label===l)))).join('')+'</tbody>';
   $('#tMkt').innerHTML=SHEAD.replace('区分','市場')+'<tbody>'+[['jp','日本株'],['us','米国株']].map(([m,l])=>statRow(l,stats(D.picks.filter(p=>p.market===m)))).join('')+'</tbody>';
   drawScatter(L);drawPicks(L);
-  $('#foot').innerHTML=`<b>集計のしかた</b>：noteで紹介した銘柄を、外れた銘柄も含めてすべて載せています。<b>掲載時の株価</b>＝記事の株価基準日の終値。株価と比べる指数は、どちらも<b>配当込み</b>（配当を受け取って再投資した場合）で計算し、指数は連動ETF（TOPIX＝1306、グロース250＝2516、S&P500＝SPY、ラッセル2000＝IWM）で代用しています。<b>期間</b>は掲載日からの営業日数（1か月＝21、3か月＝63、半年＝126、1年＝252）。<b>売り方</b>：「50日線割れ／10日線割れで売る」は、掲載日の翌日以降に終値が移動平均線を初めて下回った日の終値で売ったものとし、損切りの設定はありません。<b>指数との差</b>は、実際に持っていた期間（売った場合は売った日まで）の指数の騰落と比べています。<b>点数・状態ラベル</b>は、銘柄データシートの今の計算方法で、掲載日時点の株価を使って計算し直した値です（記事の公開時と方式が違う古い記事は、記事に載せた点数を「記事の点数」に併記）。過去の成績は将来の成績を約束するものではありません。投資助言ではありません。`;
+  $('#foot').innerHTML=`<b>集計のしかた</b>：noteで公開した記事の銘柄を、外れた銘柄も含めてすべて載せています（記事の公開日とリンクはnoteから自動で取得。作成しただけで未公開の記事は載せません）。<b>掲載日</b>＝noteで公開した日。<b>掲載時の株価</b>＝公開した時点で確定していた最後の終値（日本株は15:30、米国株は米国時間16:00の引け。例：日本時間の夜に公開した米国株は、前日の終値）。<b>配当込み</b>は配当を受け取って再投資した場合、<b>配当なし</b>は株価だけの値動きで、比べる指数も同じ扱いにそろえます。指数は連動ETF（TOPIX＝1306、グロース250＝2516、S&P500＝SPY、ラッセル2000＝IWM）で代用しています。<b>期間</b>は掲載日からの営業日数（1か月＝21、3か月＝63、半年＝126、1年＝252）。<b>売り方</b>：「50日線割れ／10日線割れで売る」は、掲載日の翌日以降に終値が移動平均線を初めて下回った日の終値で売ったものとし、損切りの設定はありません。<b>選んだ期間・売り方での成績</b>＝上で選んだ期間の終わりまで持つか、それより前に売りの条件に当たればその日に売った場合の損益（利益確定だけでなく損失確定も含みます）。<b>指数との差</b>は、実際に持っていた期間の指数の騰落と比べています。<b>急成長スコア・状態ラベル</b>は、銘柄データシートの今の計算方法で、記事の株価基準日の時点で計算し直した値です。過去の成績は将来の成績を約束するものではありません。投資助言ではありません。`;
 }
 function drawScatter(L){const W=520,H=300,Lm=44,R=12,T=12,B=30,pts=L.filter(p=>p.days>0).map(p=>({p,v:res(p)})).filter(x=>x.v&&x.p.score!=null);
   const svg=$('#scatter');if(!pts.length){svg.innerHTML=`<text x="${W/2}" y="${H/2}" text-anchor="middle" font-size="12" fill="${cssv('--faint')}">表示できる銘柄がありません</text>`;$('#scNote').textContent='';return;}
@@ -162,38 +195,65 @@ function drawScatter(L){const W=520,H=300,Lm=44,R=12,T=12,B=30,pts=L.filter(p=>p
   [30,40,50,60,70,80,90].forEach(s=>{g+=`<line x1="${X(s)}" x2="${X(s)}" y1="${T}" y2="${H-B}" stroke="${cssv('--line')}"/><text x="${X(s)}" y="${H-12}" font-size="10.5" text-anchor="middle" fill="${cssv('--faint')}" font-family="IBM Plex Sans">${s}点</text>`;});
   const step=Math.max(5,Math.ceil((hi-lo)/5/5)*5);for(let v=Math.ceil(lo/step)*step;v<=hi;v+=step)g+=`<line x1="${Lm}" x2="${W-R}" y1="${Y(v)}" y2="${Y(v)}" stroke="${cssv(v===0?'--line-strong':'--line')}"/><text x="${Lm-6}" y="${Y(v)+3.5}" font-size="10.5" text-anchor="end" fill="${cssv('--faint')}" font-family="IBM Plex Sans">${v>0?'+':''}${v}%</text>`;
   pts.forEach(({p,v})=>{g+=`<circle cx="${X(Math.max(30,Math.min(90,p.score))).toFixed(1)}" cy="${Y(v.r).toFixed(1)}" r="5" fill="${cssv(v.r>=0?'--up':'--down')}" fill-opacity=".75"><title>${esc(p.name)}（${esc(p.code)}） ${p.score}点 ${pct(v.r)}</title></circle>`;});
-  svg.innerHTML=g;$('#scNote').textContent=`横＝掲載時の点数、縦＝${HZ[st.hz]}のリターン（${RULE[st.rule]}）。点に触れると銘柄名が出ます。`;}
+  svg.innerHTML=g;$('#scNote').textContent=`横＝掲載時の急成長スコア、縦＝${HZ[st.hz]}のリターン（${RULE[st.rule]}・${st.dv==='div'?'配当込み':'配当なし'}）。点に触れると銘柄名が出ます。`;}
+const pid=p=>p.code+'@'+p.date;
 function drawPicks(L){
   const q=st.q.normalize('NFKC').toLowerCase();let R=L.filter(p=>!q||(p.name+' '+p.code).normalize('NFKC').toLowerCase().includes(q));
   const bn=D.bench[st.bm];
-  const cols=[['date','掲載日','l'],['name','銘柄','l'],['sector','日米・業種','l'],['score','点数',''],['must','必須条件',''],['label','状態ラベル（掲載時）','l'],['entry','掲載時の株価',''],['last','現在の株価',''],['diff','差',''],['ret','騰落（現在まで）',''],['ex','指数との差',''],['sel','選んだ条件での成績',''],['mfe','最大上昇',''],['mae','最大下落',''],['days','経過',''],['trend','今のトレンド',''],['url','記事','']];
-  const gv=(p,k)=>k==='ex'?((p.res.hold.now||{})[st.bm==='main'?'ex':'ex_s']):k==='sel'?((res(p)||{}).r??-1e9):k==='must'?parseInt(p.must):p[k];
+  const cols=[['date','掲載日','l'],['name','銘柄','l'],['sector','日米／業種','l'],['score','急成長スコア','','（掲載時）'],['must','必須条件',''],['label','状態ラベル','l','（掲載時）'],['entry','掲載時の株価',''],['last','現在の株価',''],['diff','差',''],['ret','騰落','','（掲載日から現在まで）'],['ex','指数との差','','（掲載日から現在まで）'],['sel','選んだ期間・売り方','','での成績'],['mfe','最大上昇',''],['mae','最大下落',''],['days','経過',''],['trend','今のトレンド',''],['url','記事','']];
+  // 操作ボタン(それぞれの項目の上)
+  const line=(l,k)=>`<div class="cl"><small>${l}</small>${segHTML(k)}</div>`;
+  const CTL={sector:line('市場','mk'),ret:line('配当','dv'),ex:line('比べる指数','bm'),sel:line('期間','hz')+line('売り方','rule')};
+  $('#pkCtl').innerHTML=cols.map(([k])=>`<th>${CTL[k]||''}</th>`).join('');
+  const gv=(p,k)=>k==='ex'?nowEx(p):k==='sel'?((res(p)||{}).r??-1e9):k==='must'?parseInt(p.must):(k==='ret'||k==='mfe'||k==='mae')?M(p)[k]:k==='date'?p.publish_at:p[k];
   R.sort((a,b)=>{const x=gv(a,st.sort),y=gv(b,st.sort);if(x==null)return 1;if(y==null)return -1;return(x<y?-1:x>y?1:0)*st.dir;});
-  $('#pkSub').textContent=`${R.length}銘柄 ・ 指数との差は${bn.jp}／${bn.us}と比較`;
-  $('#pkHead').innerHTML=cols.map(([k,l,c])=>`<th class="${c} ${st.sort===k?'on':''}" data-k="${k}">${l}${st.sort===k?(st.dir>0?' ▲':' ▼'):''}</th>`).join('');
+  $('#pkSub').textContent=`${R.length}銘柄 ・ 指数との差は${bn.jp}／${bn.us}と比較 ・ ${st.dv==='div'?'配当込み':'配当なし'}`;
+  const ar=k=>st.sort===k?(st.dir>0?' ▲':' ▼'):'';
+  $('#pkHead').innerHTML=cols.map(([k,l,c,sub])=>`<th class="${c} ${st.sort===k?'on':''}" data-k="${k}">${l}${ar(k)}${sub?`<small>${sub}</small>`:''}</th>`).join('');
   $$('#pkHead th').forEach(th=>th.onclick=()=>{const k=th.dataset.k;if(k==='url'||k==='trend')return;if(st.sort===k)st.dir=-st.dir;else{st.sort=k;st.dir=(k==='name'||k==='sector'||k==='label')?1:-1;}drawPicks(base());});
   const scBg=s=>s==null?'':s>=70?'background:var(--up-soft);color:var(--up)':s<50?'background:var(--down-soft);color:var(--down)':'background:var(--surface-2)';
   const money=(p,v)=>p.market==='us'?'$'+fmt(v,2):fmt(v,v>=1000?0:1)+'円';
-  $('#pkBody').innerHTML=R.map(p=>{const ex=(p.res.hold.now||{})[st.bm==='main'?'ex':'ex_s'],sel=res(p);
-    return `<tr><td class="l num">${esc(p.date)}</td><td class="l"><b style="font-weight:600">${esc(p.name)}</b> <span class="muted num">${esc(p.code)}</span></td>
-      <td class="l"><span class="muted">${p.market==='jp'?'日本':'米国'}</span> ${esc(p.sector)}</td>
-      <td><span class="sc" style="${scBg(p.score)}">${p.score??'–'}</span>${p.score_article&&p.score_article!==p.score?`<div class="ref">記事 ${p.score_article}点</div>`:''}</td>
+  $('#pkBody').innerHTML=R.map(p=>{const ex=nowEx(p),sel=res(p),m=M(p);
+    return `<tr class="${st.sel===pid(p)?'sel':''}"><td class="l num">${esc(p.date)}</td><td class="l"><button class="nmb" data-id="${esc(pid(p))}" title="チャートを表示"><b>${esc(p.name)}</b></button> <span class="muted num">${esc(p.code)}</span></td>
+      <td class="l">${p.market==='jp'?'日本':'米国'}/${esc(p.sector)}</td>
+      <td><span class="sc" style="${scBg(p.score)}">${p.score??'–'}</span></td>
       <td>${esc(p.must)}</td><td class="l"><span class="lab ${p.label==='条件クリア'?'ok':''}">${esc(p.label)}</span></td>
       <td>${money(p,p.entry)}</td><td>${money(p,p.last)}</td>
       <td class="${p.diff>=0?'up':'down'}">${p.diff>=0?'+':'−'}${p.market==='us'?'$'+fmt(Math.abs(p.diff),2):fmt(Math.abs(p.diff),Math.abs(p.diff)>=100?0:1)+'円'}</td>
-      <td class="${p.ret>=0?'up':'down'}" style="font-weight:600">${pct(p.ret)}</td>
-      <td class="${(ex??0)>=0?'up':'down'}">${ex==null?'–':(ex>=0?'+':'−')+fmt(Math.abs(ex),1)+'pt'}</td>
+      <td class="${m.ret>=0?'up':'down'}" style="font-weight:600">${pct(m.ret)}</td>
+      <td class="${(ex??0)>=0?'up':'down'}">${pt(ex)}</td>
       <td class="${sel&&sel.r>=0?'up':'down'}">${sel?pct(sel.r)+(sel.sold?' <span class="ref">'+sel.end.slice(5).replace('-','/')+'に売却</span>':''):'<span class="muted">期間前</span>'}</td>
-      <td class="up">${pct(p.mfe)}</td><td class="down">${pct(p.mae)}</td><td>${p.days}日</td>
+      <td class="up">${pct(m.mfe)}</td><td class="down">${pct(m.mae)}</td><td>${p.days}日</td>
       <td><span class="${p.trend==='up'?'up':'down'}">${p.trend==='up'?'▲ 50日線の上':'▼ 50日線の下'}</span></td>
-      <td>${p.url?`<a href="${esc(p.url)}" target="_blank" rel="noopener" style="color:var(--brand)">読む↗</a>`:'<span class="muted">準備中</span>'}</td></tr>`;}).join('')
+      <td style="text-align:center">${p.url?`<a class="art" href="${esc(p.url)}" target="_blank" rel="noopener" title="${esc(p.title||'noteの記事を読む')}" aria-label="noteの記事を読む">${ICON[ART_ICON]}</a>`:'<span class="muted">–</span>'}</td></tr>`;}).join('')
     ||'<tr><td colspan="17" class="l muted" style="padding:14px">該当がありません。</td></tr>';
+  $$('#pkBody .nmb').forEach(b=>b.onclick=()=>openCard(b.dataset.id));
+  bindSegs();fitTable();
 }
-function seg(id,key){$('#'+id).onclick=e=>{const b=e.target.closest('button');if(!b)return;st[key]=b.dataset.v;$$('#'+id+' button').forEach(x=>x.setAttribute('aria-pressed',x===b));draw();};}
-seg('hz','hz');seg('rule','rule');seg('bm','bm');seg('mk','mk');
+function openCard(id){const p=D.picks.find(x=>pid(x)===id);if(!p)return;st.sel=id;
+  $$('#pkBody tr').forEach(tr=>{const b=tr.querySelector('.nmb');tr.classList.toggle('sel',!!b&&b.dataset.id===id);});
+  const m=M(p),money=v=>p.market==='us'?'$'+fmt(v,2):fmt(v,v>=1000?0:1)+'円';
+  StockCard.open('pkCard',{market:p.market,code:p.code,name:p.name,sub:(p.market==='jp'?'日本':'米国')+'/'+p.sector,per:63,
+    mark:{date:p.entry_date,label:'note公開 '+p.date.slice(5).replace('-','/')},
+    kv:[{l:'掲載時の株価',v:money(p.entry)},{l:'現在の株価',v:money(p.last)},{l:'騰落（掲載日から現在まで）',v:pct(m.ret),cls:m.ret>=0?'up':'down'},{l:'急成長スコア（掲載時）',v:p.score??'–'}],
+    foot:p.url?`記事：<a href="${esc(p.url)}" target="_blank" rel="noopener" style="color:var(--brand)">${esc(p.title||'noteの記事')}↗</a>`:'',
+    onClose:()=>{st.sel=null;$$('#pkBody tr.sel').forEach(tr=>tr.classList.remove('sel'));}});}
+/* 10行ぶんの高さ＋上のスクロールバー */
+function fitTable(){const w=$('#pkWrap'),t=w.querySelector('table'),top=$('#pkTop');
+  const rows=[...t.tBodies[0].rows].slice(0,10),hd=t.tHead.getBoundingClientRect().height;
+  const h=hd+rows.reduce((s,r)=>s+r.getBoundingClientRect().height,0);if(h>0)w.style.setProperty('--pkh',Math.ceil(h+2)+'px');
+  top.firstElementChild.style.width=t.scrollWidth+'px';top.hidden=t.scrollWidth<=w.clientWidth+1;}
+const syncX=(a,b)=>()=>{if(Math.abs(a.scrollLeft-b.scrollLeft)>1)b.scrollLeft=a.scrollLeft;};
+$('#pkTop').addEventListener('scroll',syncX($('#pkTop'),$('#pkWrap')));
+$('#pkWrap').addEventListener('scroll',syncX($('#pkWrap'),$('#pkTop')));
+addEventListener('resize',()=>D&&fitTable());
+/* 上の操作パネルと表の中のボタンを同期 */
+function bindSegs(){$$('.seg[data-key]').forEach(el=>{el.onclick=e=>{const b=e.target.closest('button');if(!b)return;const key=el.dataset.key;st[key]=b.dataset.v;
+  $$(`.seg[data-key="${key}"] button`).forEach(x=>x.setAttribute('aria-pressed',x.dataset.v===st[key]));
+  const sl=$('#pkWrap').scrollLeft;draw();$('#pkWrap').scrollLeft=sl;$('#pkTop').scrollLeft=sl;if(st.sel)openCard(st.sel);};});}
 $('#q').addEventListener('input',e=>{st.q=e.target.value.trim();$('#qx').hidden=!st.q;drawPicks(base());});
 $('#qx').onclick=()=>{$('#q').value='';st.q='';$('#qx').hidden=true;drawPicks(base());};
 matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change',()=>D&&draw());
-fetch('note_track.json?cb='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.json():null).then(j=>{if(!j){$('#pkBody').innerHTML='<tr><td class="l muted" style="padding:14px">データを準備中です。</td></tr>';return;}D=j;draw();});
+fetch('note_track.json?cb='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.json():null).then(j=>{if(!j||!j.picks||!j.picks[0]||!j.picks[0].div){$('#pkBody').innerHTML='<tr><td class="l muted" style="padding:14px">データを準備中です。</td></tr>';return;}D=j;draw();});
 </script>
 </body></html>

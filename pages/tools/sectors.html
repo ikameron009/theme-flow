@@ -53,6 +53,15 @@ nav.jump .sep{color:var(--line-strong);font-size:16px}
 .fchip{display:inline-flex;align-items:center;gap:6px;font-size:12px;border-radius:999px;padding:3px 10px;background:var(--brand-soft);color:var(--brand);font-weight:500}
 .fchip button{border:0;background:transparent;color:inherit;cursor:pointer;font-size:12px;padding:0}
 .search input{width:100%}
+.cardslot{position:sticky;left:6px;text-align:left;white-space:normal;font-family:var(--f-body)}
+.cardslot .panel{margin-top:4px}
+tr.cardrow td{padding:0 0 12px;background:var(--bg)}
+table.sx tr.xrow{cursor:pointer}
+table.sx tr.xrow.open td{background:var(--surface-2)}
+.mnb{background:none;border:0;padding:0;font:inherit;color:var(--ink);cursor:pointer;text-align:left}
+.mnb b{font-weight:500;border-bottom:1px dotted var(--faint)}
+.mnb:hover b{color:var(--brand);border-color:var(--brand)}
+table.mt tr.on td{background:var(--surface-2)}
 </style>
 </head><body>
 
@@ -99,11 +108,13 @@ nav.jump .sep{color:var(--line-strong);font-size:16px}
       <span class="phint" id="cnt"></span></div>
   </div>
 
+  <div class="ctlrow" id="repRow" hidden style="margin-top:10px"><span class="ctl-label">ETF</span><div class="seg" id="rep"></div><span class="phint">値動きがほぼ同じETFは、売買代金が一番多い1本（代表）にまとめて表示</span></div>
   <div class="top3" id="top3"></div>
 
   <div class="panel">
     <div id="list"><div class="sx-wrap"><table class="sx"><thead><tr id="thead"></tr></thead><tbody id="tbody"></tbody></table></div></div>
     <div id="heat" hidden></div>
+    <div id="hcard"></div>
     <div class="foot" id="foot"></div>
   </div>
 </section>
@@ -116,6 +127,7 @@ nav.jump .sep{color:var(--line-strong);font-size:16px}
   </div>
 </footer>
 
+<script src="../assets/card.js"></script>
 <script>
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 const cssv=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
@@ -142,6 +154,7 @@ function keyNum(){return NUMK.has(st.sort)&&st.sort!=='last'?st.sort:'m0';}
 function rows(){let R=D.rows.filter(x=>st.grp==='all'||x.group===st.grp);
   if(st.pick)R=D.rows.filter(x=>x.name===st.pick);
   if(st.q){const q=st.q.normalize('NFKC').toLowerCase();R=R.filter(x=>(x.name+' '+(x.key||'')+' '+x.group).normalize('NFKC').toLowerCase().includes(q)||memberHit(x,q));}
+  if(typeof FILTER==='function')R=R.filter(FILTER);
   const k=st.sort,dir=st.dir;
   return R.slice().sort((a,b)=>{const x=(k==='name'||k==='key')?a[k]:val(a,k),y=(k==='name'||k==='key')?b[k]:val(b,k);if(x==null)return 1;if(y==null)return -1;return (x<y?-1:x>y?1:0)*dir;});}
 function memberHit(x,q){if(!x.members||!D.stocks)return false;return x.members.some(c=>(c+' '+((D.stocks[c]||[''])[0])).normalize('NFKC').toLowerCase().includes(q));}
@@ -163,7 +176,7 @@ function drawCtl(){
 }
 function pick(n){st.pick=n;$('#tpick').value='';if(n){const x=D.rows.find(r=>r.name===n);if(x)st.grp=x.group;if(typeof OPEN!=='undefined')OPEN.add(n);}draw();}
 function draw(){
-  drawCtl();const R=rows(),k=keyNum();
+  drawCtl();if(typeof EXTRA==='function')EXTRA();const R=rows(),k=keyNum();
   const up=D.rows.filter(x=>(x.chg1||0)>0).length,dn=D.rows.filter(x=>(x.chg1||0)<0).length;
   $('#meta').innerHTML=`${mk==='us'?'米国株':'日本株'} ・ ${D.updated}まで ・ <span class="up">▲${up}</span> <span class="muted">＝${D.rows.length-up-dn}</span> <span class="down">▼${dn}</span>（前日比）`;
   $('#upd').textContent=mk==='us'?'毎日 7:00 JST 更新':'毎日 17:00 JST 更新';
@@ -189,7 +202,10 @@ function drawHeat(R){const k=keyNum();
   $('#heat').innerHTML=`<div class="phint" style="margin-bottom:6px">色＝${esc(label(k))}（リスト表示で見出しを押すと切り替わります）</div>`+groups.map(g=>{const G=R.filter(x=>x.group===g).sort((a,b)=>(val(b,k)??-1e9)-(val(a,k)??-1e9));if(!G.length)return'';
     return `<div class="ghead">${esc(g)}</div><div class="tiles">${G.map(x=>{const v=val(x,k),sc=SCALE[k]||50,a=v==null?0:Math.min(1,Math.abs(k==='rs'?v-50:v)/(k==='rs'?49:sc));
       const pos=k==='rs'?v>=50:v>=0,bg=v==null?'var(--surface-2)':`rgba(${pos?cssv('--brandrgb'):cssv('--downrgb')},${(0.12+a*0.78).toFixed(2)})`,fg=a>0.55?'#fff':'var(--ink)';
-      return `<div class="tile" style="background:${bg};color:${fg}" title="${esc(x.name)}"><b>${esc(x.name)}</b><small>${x.etf?esc(x.key):(x.n?x.n+'銘柄':'')}</small><span>${k==='rs'?v:sign(v)}</span></div>`;}).join('')}</div>`;}).join('');}
+      return `<div class="tile" style="background:${bg};color:${fg};${typeof TILE==='function'?'cursor:pointer':''}" title="${esc(x.name)}" data-k="${esc(x.key||x.name)}"><b>${esc(x.name)}</b><small>${x.etf?esc(x.key):(x.n?x.n+'銘柄':'')}</small><span>${k==='rs'?v:sign(v)}</span></div>`;}).join('')}</div>`;}).join('');
+  if(typeof TILE==='function')$$('#heat .tile').forEach(t=>t.onclick=()=>TILE(t.dataset.k));}
+function cardSlot(id){return `<div id="${id}" class="cardslot"></div>`;}
+function fitSlot(id){const el=document.getElementById(id),w=document.querySelector('.sx-wrap');if(el&&w)el.style.width=Math.max(320,w.clientWidth-28)+'px';}
 const COMMON_FOOT='<b>今月</b>＝月初来。<b>1か月前〜1年前</b>＝その時点から今日までの騰落（1か月＝21営業日、2か月＝42、3か月＝63、6か月＝126、1年＝252）。<b>52週高値</b>＝過去1年の最高値からの距離。<b>資金急増率</b>＝売買代金（終値×出来高）の直近5日平均 ÷ その前20営業日の平均 −1。<b>RS</b>＝3か月（40%）・6か月・9か月・12か月（各20%）の騰落を一覧の中で順位づけ（1〜99）。<b>トレンド</b>＝株価・50日線・200日線の並び（上昇＝株価＞50日線＞200日線）。';
 
 function load(m){mk=m==='us'?'us':'jp';$$('#mseg button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.m===mk));try{localStorage.setItem('tf_market',mk);}catch(e){}
@@ -206,11 +222,31 @@ $('#tpick').addEventListener('change',e=>{const v=e.target.value.trim();if(D&&D.
 $('#tpick').addEventListener('keydown',e=>{if(e.key==='Enter'){const v=e.target.value.trim();const hit=D&&(D.rows.find(x=>x.name===v)||D.rows.find(x=>x.name.includes(v)));if(hit)pick(hit.name);}});
 matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change',()=>D&&draw());
 const FILE='sectors',MINN=0;
-function FOOT(){return (mk==='us'?'<b>データ</b>：各ETFの日次終値と出来高（Yahoo Finance）。'
-  :'<b>データ</b>：「（33業種）」は、各業種の構成銘柄（東証上場の内国普通株）を等しい重みで平均して自前で算出した指数（現在値は表示なし）。そのほかは東証上場ETFの日次終値と出来高（Yahoo Finance）。')+COMMON_FOOT;}
+let SEL=null;st.allEtf=false;
+/* ③ 米国は代表ETFだけを表示(「すべて」で全部)。検索・テーマを選んだ時は全部から探す */
+const FILTER=x=>mk!=='us'||st.allEtf||st.q||st.pick||!x.rep||x.rep===x.key;
+const twins=x=>D.rows.filter(y=>y.rep===x.key&&y.key!==x.key);
+function EXTRA(){const r=$('#repRow');if(!r)return;r.hidden=mk!=='us';if(mk!=='us')return;
+  const nRep=D.rows.filter(x=>!x.rep||x.rep===x.key).length;
+  $('#rep').innerHTML=`<button data-v="rep" aria-pressed="${!st.allEtf}">代表ETFだけ（${nRep}本）</button><button data-v="all" aria-pressed="${st.allEtf}">すべて（${D.rows.length}本）</button>`;
+  $('#rep').onclick=e=>{const b=e.target.closest('button');if(!b)return;st.allEtf=b.dataset.v==='all';draw();};}
+function FOOT(){return (mk==='us'?'<b>データ</b>：各ETFの日次終値と出来高（Yahoo Finance）。<b>代表ETF</b>＝同じテーマの中で、日々の値動きの相関（直近1年）が0.85以上のETFを1つのグループにまとめ、売買代金が一番多いものを代表として表示（「すべて」で全部表示。名前の下の「似た動き」がまとめたETF）。'
+  :'<b>データ</b>：「（33業種）」は、各業種の構成銘柄（東証上場の内国普通株）を等しい重みで平均して自前で算出した指数（現在値は表示なし・チャートは終値の折れ線）。そのほかは東証上場ETFの日次終値と出来高（Yahoo Finance）。')+COMMON_FOOT+'行（ヒートマップはタイル）を押すと、下にチャート。';}
 function drawTable(R){head([['key','銘柄','l'],['name','テーマ','l']]);
-  $('#tbody').innerHTML=R.map(x=>`<tr><td class="l"><span class="tk">${x.etf?esc(x.key):'<span class="muted">―</span>'}</span></td><td class="l"><span class="nm2">${esc(x.name)}</span><span style="font-size:11px;color:var(--faint)">${esc(x.group)}</span></td>${cells(x)}</tr>`).join('')
-    ||'<tr><td colspan="17" class="l muted" style="padding:14px">該当がありません。</td></tr>';}
+  $('#tbody').innerHTML=R.map(x=>{const tw=mk==='us'&&!st.allEtf&&x.rep===x.key?twins(x):[],on=SEL===x.key;
+    return `<tr class="xrow ${on?'open':''}" data-k="${esc(x.key)}"><td class="l"><span class="tk">${x.etf?esc(x.key):'<span class="muted">―</span>'}</span></td><td class="l"><span class="nm2">${esc(x.name)}</span><span style="font-size:11px;color:var(--faint)">${esc(x.group)}${tw.length?` ・ 似た動き：${tw.map(t=>esc(t.key)).join('・')}`:''}${mk==='us'&&x.rep&&x.rep!==x.key?` ・ 代表：${esc(x.rep)}`:''}</span></td>${cells(x)}</tr>`
+      +(on?`<tr class="cardrow"><td colspan="17">${cardSlot('card')}</td></tr>`:'');}).join('')
+    ||'<tr><td colspan="17" class="l muted" style="padding:14px">該当がありません。</td></tr>';
+  $$('#tbody tr.xrow').forEach(tr=>tr.onclick=()=>{SEL=SEL===tr.dataset.k?null:tr.dataset.k;drawTable(rows());});
+  if(SEL)openSec('card');}
+function TILE(k){SEL=k;openSec('hcard');}
+function openSec(id){const x=D.rows.find(r=>r.key===SEL);if(!x)return;fitSlot(id);const tw=twins(x);
+  StockCard.open(id,{market:mk,code:x.etf?x.key:'',name:x.name,sub:x.group,links:x.etf,line:!x.etf,scroll:id==='hcard',
+    src:StockCard.root+(mk==='us'?'us_ohlc/':'ohlc/')+'sec_'+encodeURIComponent(x.key)+'.json',
+    kv:[{l:'現在値',v:x.last==null?'–':fmt(x.last,mk==='us'?2:0)},{l:'前日比',v:sign(x.chg1),cls:(x.chg1??0)>=0?'up':'down'},{l:'今月（'+esc((D.months||[])[0]||'')+'）',v:sign(x.months[0]),cls:(x.months[0]??0)>=0?'up':'down'},
+      {l:'年初来',v:sign(x.ytd),cls:(x.ytd??0)>=0?'up':'down'},{l:'52週高値から',v:sign(x.hi52),cls:(x.hi52??0)>=0?'up':'down'},{l:'資金急増率',v:sign(x.surge,0),cls:(x.surge??0)>=0?'up':'down'},{l:'RS',v:x.rs??'–'},{l:'トレンド',v:(TREND[x.trend]||TREND.flat).slice(0,2).join(' '),cls:(TREND[x.trend]||TREND.flat)[2]}],
+    foot:tw.length?'似た動きのETF：'+tw.map(t=>esc(t.key)+' '+esc(t.name)).join('、'):'',
+    onClose:()=>{SEL=null;if(id==='card')drawTable(rows());}});}
 load(mk);
 </script>
 </body></html>
