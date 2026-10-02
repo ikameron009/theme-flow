@@ -5,11 +5,8 @@ compatibility_date = "2026-09-01"
 workers_dev = false
 preview_urls = false
 
-# UTC。JST = UTC+9。UTC月-金 = JST火-土(金曜の結果は土曜朝。JST月曜朝はNYがまだ日曜で日付がずれるため)
+# UTC。JST = UTC+9。無料枠の登録数を節約するため1本にまとめ、src/index.js の PLAN で時刻ごとに振り分ける
+#   08:00 起動(日本株 17:00 JST) / 09:00・11:00 見張り
+#   22:00 起動(米国株 7:00 JST)  / 23:00・01:00 見張り
 [triggers]
-crons = [
-  "0 18 * * MON-FRI",  # 03:00 JST 日本株を起動
-  "0 22 * * MON-FRI",  # 07:00 JST 米国株+世界を起動
-  "0 19 * * MON-FRI",  # 04:00 JST 日本株の完了確認(失敗なら再実行+通知)
-  "0 23 * * MON-FRI",  # 08:00 JST 米国株の完了確認(失敗なら再実行+通知)
-]
+crons = ["0 1,8,9,11,22,23 * * *"]

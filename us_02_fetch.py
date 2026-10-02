@@ -9,7 +9,7 @@ TODAY_JST 以降のバーを落とすだけで「直近の確定した取引日�
 
 出力: us_close.pkl / us_volume.pkl / us_turnover.pkl / us_open.pkl / us_high.pkl / us_low.pkl
 """
-import warnings, time, sys, os
+import json, warnings, time, sys, os
 warnings.filterwarnings("ignore")
 from datetime import datetime, timedelta
 import pandas as pd
@@ -77,10 +77,20 @@ def main():
     close = close[close.index.date < TODAY_JST]   # 未確定の当日(JST)を除外
     # 末尾の日に一部の銘柄しか値が無い(Yahooの集計待ち)場合はその日を捨てる=前日までで公開
     cnt = close.notna().sum(axis=1)
+    dropped = []
     while len(cnt) > 20 and cnt.iloc[-1] < cnt.iloc[-21:-1].median() * 0.8:
         print(f"[skip] {close.index[-1].date()} は {int(cnt.iloc[-1])} 銘柄しか値がないため除外(平常 {int(cnt.iloc[-21:-1].median())})")
+        dropped.append({"date": str(close.index[-1].date()), "n": int(cnt.iloc[-1]), "normal": int(cnt.iloc[-21:-1].median())})
         close = close.iloc[:-1]
         cnt = cnt.iloc[:-1]
+    # 取りこぼし判定: 本来そろっているはずの最新取引日より古ければ「不完全」(ワークフローが失敗扱い→見張りが再実行)
+    from market_calendar import expected_session
+    latest, expected = close.index[-1].date(), expected_session("us")
+    status = {"market": "us", "latest": str(latest), "expected": str(expected),
+              "ok": latest >= expected, "dropped": dropped}
+    with open(BASE + "fetch_status_us.json", "w", encoding="utf-8") as f:
+        json.dump(status, f, ensure_ascii=False)
+    print(("[ok] " if status["ok"] else "[INCOMPLETE] ") + f"最新 {latest} / 期待 {expected}")
     volume = volume.reindex(close.index)
     turnover = close * volume
 

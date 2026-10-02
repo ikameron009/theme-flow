@@ -6,7 +6,7 @@ const sign=(x,d=1)=>x==null||!isFinite(x)?'–':(x>=0?'+':'−')+fmt(Math.abs(x)
 const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const PAL=()=>[1,2,3,4,5,6,7,8].map(i=>cssv('--c'+i));
 const US_ON=!!(US_DATA&&US_DATA.themes&&US_DATA.themes.length);
-const SCHED={jp:'毎日 3:00 JST 更新',us:'毎日 7:00 JST 更新'};
+const SCHED={jp:'毎日 17:00 JST 更新',us:'毎日 7:00 JST 更新'};
 const MKNAME={jp:'日本株',us:'米国株'};
 
 /* ---------- 会員限定の設定(site_config.json → GATE) ---------- */

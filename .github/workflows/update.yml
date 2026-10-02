@@ -4,10 +4,10 @@ run-name: ${{ github.event_name == 'workflow_dispatch' && format('Update theme f
 
 on:
   schedule:
-    # 2段階: 18:00 UTC = 翌03:00 JST → 日本株のみ取得(前営業日の確定足・寄付き前)。
+    # 2段階: 08:00 UTC = 17:00 JST → 日本株のみ取得(当日の大引け後。翌3:00だとYahooの前日分が未反映)。
     #        22:00 UTC = 翌07:00 JST → 米国株+世界のみ取得(米引け後で確定)。
     # ※GitHubの定時cronは数十分〜数時間遅れることがある(無料枠の仕様)。
-    - cron: '0 18 * * 1-5'   # 03:00 JST 日本株
+    - cron: '0 8 * * 1-5'    # 17:00 JST 日本株(当日の大引け後)
     - cron: '0 22 * * 1-5'   # 07:00 JST 米国株+世界
   workflow_dispatch:
     inputs:
@@ -40,7 +40,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           if [ "${{ github.event_name }}" != "schedule" ]; then echo "go=true" >> "$GITHUB_OUTPUT"; exit 0; fi
-          if [ "${{ github.event.schedule }}" = "0 18 * * 1-5" ]; then M=jp; else M=us; fi
+          if [ "${{ github.event.schedule }}" = "0 8 * * 1-5" ]; then M=jp; else M=us; fi
           SINCE=$(date -u -d '12 hours ago' +%Y-%m-%dT%H:%M:%SZ)
           N=$(gh run list -R "${{ github.repository }}" --workflow update.yml --event workflow_dispatch --created ">=$SINCE" --limit 20 --json displayTitle,status,conclusion --jq "[.[] | select((.displayTitle|contains(\"[$M]\")) or (.displayTitle|contains(\"[both]\"))) | select(.conclusion==\"success\" or .status!=\"completed\")] | length") || N=0
           echo "market=$M 済み件数=$N"
@@ -50,6 +50,9 @@ jobs:
     needs: gate
     if: needs.gate.outputs.go == 'true'
     runs-on: ubuntu-latest
+    outputs:
+      incomplete: ${{ steps.chk.outputs.incomplete }}
+      detail: ${{ steps.chk.outputs.detail }}
     steps:
       - uses: actions/checkout@v4
 
@@ -83,7 +86,7 @@ jobs:
         id: mkt
         run: |
           if [ "${{ github.event_name }}" = "schedule" ]; then
-            if [ "${{ github.event.schedule }}" = "0 18 * * 1-5" ]; then M=jp; else M=us; fi
+            if [ "${{ github.event.schedule }}" = "0 8 * * 1-5" ]; then M=jp; else M=us; fi
           elif [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             M="${{ github.event.inputs.market }}"; [ -z "$M" ] && M=both
           else
@@ -147,6 +150,11 @@ jobs:
       - name: 04 index.html 生成
         run: python 04_build_html.py
 
+      # 取りこぼし判定(02/us_02 が書く fetch_status_*.json)。公開は前日分のまま済ませ、最後の verify で失敗扱いにする
+      - name: 取得の完全性チェック
+        id: chk
+        run: python check_status.py
+
       - uses: actions/upload-pages-artifact@v3
         with:
           path: ./site
@@ -174,3 +182,14 @@ jobs:
         if: steps.deployment.outcome == 'failure' && steps.deployment2.outcome == 'failure'
         uses: actions/deploy-pages@v4
 
+  # 取りこぼしがあった回はランを失敗にする → Cloudflare Workerの見張りが再実行・通知
+  verify:
+    needs: [build, deploy]
+    if: always() && needs.build.result == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          if [ "${{ needs.build.outputs.incomplete }}" = "true" ]; then
+            echo "::error::データの取りこぼし: ${{ needs.build.outputs.detail }}"; exit 1
+          fi
+          echo "取得は完全です"

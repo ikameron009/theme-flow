@@ -15,13 +15,18 @@ const TARGETS = [
   { repo: "vcp-screener", workflow: "screen.yml" },
 ];
 
-// cron式 → 役割
-const JOBS = {
-  "0 18 * * MON-FRI": { kind: "dispatch", market: "jp" }, // 03:00 JST 日本株
-  "0 22 * * MON-FRI": { kind: "dispatch", market: "us" }, // 07:00 JST 米国株+世界
-  "0 19 * * MON-FRI": { kind: "watch", market: "jp", sinceH: 2 }, // 04:00 JST 日本株の完了確認
-  "0 23 * * MON-FRI": { kind: "watch", market: "us", sinceH: 2 }, // 08:00 JST 米国株の完了確認
-};
+// 時刻(UTC)と曜日 → 役割。Cloudflare無料枠の定時実行の登録数(5)を節約するため、cronは1本にまとめて時刻で振り分ける。
+// JST = UTC+9。日本株=17:00 JST起動(当日の大引け後) / 米国株=7:00 JST起動(米国の引け後)。見張りは起動の1時間後と3時間後。
+const WEEKDAY = [1, 2, 3, 4, 5];          // UTC月-金
+const TUE_SAT = [2, 3, 4, 5, 6];
+const PLAN = [
+  { h: 8, days: WEEKDAY, kind: "dispatch", market: "jp" },             // 17:00 JST 日本株
+  { h: 9, days: WEEKDAY, kind: "watch", market: "jp", sinceH: 2 },     // 18:00 JST 確認
+  { h: 11, days: WEEKDAY, kind: "watch", market: "jp", sinceH: 4 },    // 20:00 JST 再確認
+  { h: 22, days: WEEKDAY, kind: "dispatch", market: "us" },            // 07:00 JST 米国株+世界
+  { h: 23, days: WEEKDAY, kind: "watch", market: "us", sinceH: 2 },    // 08:00 JST 確認
+  { h: 1, days: TUE_SAT, kind: "watch", market: "us", sinceH: 4 },     // 10:00 JST 再確認
+];
 
 const gh = (env, path, init = {}) =>
   fetch(`https://api.github.com/repos/${OWNER}/${path}`, {
@@ -103,8 +108,9 @@ async function runWatch(env, market, sinceH) {
 
 export default {
   async scheduled(event, env, ctx) {
-    const job = JOBS[event.cron];
-    if (!job) return console.log("unknown cron", event.cron);
+    const t = new Date(event.scheduledTime);
+    const job = PLAN.find((p) => p.h === t.getUTCHours() && p.days.includes(t.getUTCDay()));
+    if (!job) return console.log("no job at", t.toISOString());
     if (!env.GH_TOKEN) return notify(env, "⚠️ GH_TOKEN が未設定です");
     if (job.kind === "dispatch") ctx.waitUntil(runDispatch(env, job.market));
     else ctx.waitUntil(runWatch(env, job.market, job.sinceH));
