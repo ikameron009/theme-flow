@@ -59,7 +59,7 @@ table.pk td .sc{display:inline-block;min-width:34px;text-align:center;font-weigh
 .lab{display:inline-block;font-size:11px;border-radius:999px;padding:1px 8px;background:var(--surface-2);color:var(--ink-2)}
 .lab.ok{background:var(--up-soft);color:var(--up)}
 #scatter{width:100%;height:auto;display:block}
-.tip{position:absolute;pointer-events:none;background:var(--ink);color:var(--surface);font-size:11.5px;line-height:1.45;padding:5px 9px;border-radius:6px;white-space:nowrap;transform:translate(-50%,-100%);margin-top:-10px;z-index:3}
+.sctip{position:absolute;pointer-events:none;background:var(--ink);color:var(--surface);font-size:11.5px;line-height:1.45;padding:5px 9px;border-radius:6px;white-space:nowrap;transform:translate(-50%,-100%);margin-top:-10px;z-index:3}
 table.pk td.selc{position:relative}
 table.pk td.selc .sold{position:absolute;right:7px;bottom:0;font-size:9.5px;color:var(--faint);font-weight:400}
 table.stick1 th:first-child,table.stick1 td:first-child{position:sticky;left:0;background:var(--surface);z-index:1;box-shadow:1px 0 0 var(--line)}
@@ -122,7 +122,7 @@ table.pk .sk2{box-shadow:1px 0 0 var(--line-strong)}
 
   <div class="two">
     <div class="panel"><div class="phead"><h3>状態ラベル別の成績</h3></div><div style="overflow-x:auto"><table class="st stick1" id="tLabel"></table></div></div>
-    <div class="panel"><div class="phead"><h3>急成長スコアとリターン</h3><span class="meta">1点＝1銘柄</span></div><div style="position:relative"><svg id="scatter" viewBox="0 0 520 300"></svg><div class="tip" id="scTip" hidden></div></div><div class="phint" id="scNote"></div></div>
+    <div class="panel"><div class="phead"><h3>急成長スコアとリターン</h3><span class="meta">1点＝1銘柄</span></div><div style="position:relative"><svg id="scatter" viewBox="0 0 520 300"></svg><div class="sctip" id="scTip" hidden></div></div><div class="phint" id="scNote"></div></div>
   </div>
 
   <div class="panel mt">
@@ -132,7 +132,6 @@ table.pk .sk2{box-shadow:1px 0 0 var(--line-strong)}
 
   <div class="panel mt">
     <div class="phead"><h3>紹介した全銘柄 <span class="sub" id="pkSub"></span></h3><span class="search"><input id="q" type="text" placeholder="銘柄名・コード" autocomplete="off"><span class="x" id="qx" hidden title="消す">✕</span></span></div>
-    <div class="pk-top" id="pkTop"><div></div></div>
     <div class="pk-wrap" id="pkWrap"><table class="pk"><thead><tr class="ctl" id="pkCtl"></tr><tr id="pkHead"></tr></thead><tbody id="pkBody"></tbody></table></div>
     <div class="phint" style="margin-top:6px">銘柄名を押すと、下にチャートが出ます（点線＝noteで公開した日）。<a href="https://note.com/hashibirokou_jp" target="_blank" rel="noopener" style="color:var(--brand)">noteの記事一覧↗</a></div>
     <div id="pkCard"></div>
@@ -204,7 +203,7 @@ function bindTip(svg,pts){const tip=$('#scTip');const cs=[...svg.querySelectorAl
     cs.forEach(c=>c.setAttribute('r',5));
     if(!best||bd>18*18){tip.hidden=true;return;}best.setAttribute('r',7);const {p,v}=pts[+best.dataset.i];
     tip.innerHTML=`<b>${esc(p.name)}</b>（${esc(p.code)}）<br>急成長スコア ${p.score}点 ・ ${pct(v.r)}`;tip.hidden=false;
-    tip.style.left=best.cx.baseVal.value*k+'px';tip.style.top=best.cy.baseVal.value*k+'px';};
+    const tw=tip.offsetWidth/2,x=best.cx.baseVal.value*k;tip.style.left=Math.max(tw,Math.min(r.width-tw,x))+'px';tip.style.top=best.cy.baseVal.value*k+'px';};
   svg.onmouseleave=()=>{tip.hidden=true;cs.forEach(c=>c.setAttribute('r',5));};}
 function drawScatter(L){const W=520,H=300,Lm=44,R=12,T=12,B=30,pts=L.filter(p=>p.days>0).map(p=>({p,v:res(p)})).filter(x=>x.v&&x.p.score!=null);
   const svg=$('#scatter');if(!pts.length){svg.innerHTML=`<text x="${W/2}" y="${H/2}" text-anchor="middle" font-size="12" fill="${cssv('--faint')}">表示できる銘柄がありません</text>`;$('#scNote').textContent='';return;}
@@ -261,18 +260,15 @@ function openCard(id){const p=D.picks.find(x=>pid(x)===id);if(!p)return;st.sel=i
 function stickCols(){const t=$('#pkWrap table');const w0=t.querySelector('#pkHead th').getBoundingClientRect().width;
   [...t.rows].forEach(tr=>{const c=tr.cells;if(c.length<2)return;c[0].classList.add('sk');c[0].style.left='0px';c[1].classList.add('sk','sk2');c[1].style.left=w0+'px';});}
 /* 10行ぶんの高さ＋上のスクロールバー */
-function fitTable(){const w=$('#pkWrap'),t=w.querySelector('table'),top=$('#pkTop');
+function fitTable(){const w=$('#pkWrap'),t=w.querySelector('table');
   const rows=[...t.tBodies[0].rows].slice(0,10),hd=t.tHead.getBoundingClientRect().height;
-  const h=hd+rows.reduce((s,r)=>s+r.getBoundingClientRect().height,0);if(h>0)w.style.setProperty('--pkh',Math.ceil(h+2)+'px');
-  top.firstElementChild.style.width=t.scrollWidth+'px';top.hidden=t.scrollWidth<=w.clientWidth+1;}
-const syncX=(a,b)=>()=>{if(Math.abs(a.scrollLeft-b.scrollLeft)>1)b.scrollLeft=a.scrollLeft;};
-$('#pkTop').addEventListener('scroll',syncX($('#pkTop'),$('#pkWrap')));
-$('#pkWrap').addEventListener('scroll',syncX($('#pkWrap'),$('#pkTop')));
+  const h=hd+rows.reduce((s,r)=>s+r.getBoundingClientRect().height,0);if(h>0)w.style.setProperty('--pkh',Math.ceil(h+2)+'px');}
+
 addEventListener('resize',()=>D&&fitTable());
 /* 上の操作パネルと表の中のボタンを同期 */
 function bindSegs(){$$('.seg[data-key]').forEach(el=>{el.onclick=e=>{const b=e.target.closest('button');if(!b)return;const key=el.dataset.key;st[key]=b.dataset.v;
   $$(`.seg[data-key="${key}"] button`).forEach(x=>x.setAttribute('aria-pressed',x.dataset.v===st[key]));
-  const sl=$('#pkWrap').scrollLeft;draw();$('#pkWrap').scrollLeft=sl;$('#pkTop').scrollLeft=sl;if(st.sel)openCard(st.sel);};});}
+  const sl=$('#pkWrap').scrollLeft;draw();$('#pkWrap').scrollLeft=sl;if(st.sel)openCard(st.sel);};});}
 $('#q').addEventListener('input',e=>{st.q=e.target.value.trim();$('#qx').hidden=!st.q;drawPicks(base());});
 $('#qx').onclick=()=>{$('#q').value='';st.q='';$('#qx').hidden=true;drawPicks(base());};
 matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change',()=>D&&draw());
