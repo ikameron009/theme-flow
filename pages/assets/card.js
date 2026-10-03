@@ -46,8 +46,10 @@
   }
 
   /* ---------- バリュエーション(株価が織り込む成長率・過去5年PERの位置・PEG) ---------- */
-  /* データ= /pro/valuation_{jp,us}.json(valuation/v07_publish.py)。「割安・割高」「理論株価」は出さない */
-  const vload=mk=>load(ROOT+'pro/valuation_'+mk+'.json');
+  /* データ= /valuation_{jp,us}.json(valuation/v07_publish.py)。「割安・割高」「理論株価」は出さない */
+  /* 置き場所はここ1か所。カードは無料なので公開側(/valuation_{jp,us}.json)。会員だけにするなら Worker の鍵の対象に足す */
+  const VAL_URL=mk=>ROOT+'valuation_'+mk+'.json';
+  const vload=mk=>load(VAL_URL(mk));
   const vp=(x,d=1)=>x==null||!isFinite(x)?'—':(x>=0?'+':'−')+Math.abs(x*100).toFixed(d)+'%';
   const vig=x=>x==null?'—':x>0.4?'40%超':x<-0.1?'−10%未満':vp(x);
   const VCLS={'期待は控えめ':'low','実績並み':'mid','期待が先行':'high'};

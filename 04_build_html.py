@@ -88,17 +88,22 @@ os.makedirs(os.path.join(SITE, "pro"), exist_ok=True)
 for fn in os.listdir(BASE):
     if fn.startswith("pro_") and fn.endswith(".json"):
         shutil.copyfile(P(fn), os.path.join(SITE, "pro", fn[len("pro_"):]))
-# バリュエーション(valuation/v07_publish.py がローカルから毎日 push する valuation_pub/)→ /pro/
+# バリュエーション(valuation/v07_publish.py が毎日 push する valuation_pub/)→ 公開側 site/valuation_{jp,us}.json
+# 1銘柄のカードは無料なので /pro/ には置かない(会員の価値は業種銘柄リサーチの絞り込み・並べ替え側)。
+# 会員だけにするときは Worker の鍵の対象に /valuation_*.json を足す(置き場所は card.js の VAL_URL と1か所)
 for mk in ("jp", "us"):
     src = os.path.join(BASE, "valuation_pub", f"valuation_{mk}.json")
     if os.path.exists(src):
-        shutil.copyfile(src, os.path.join(SITE, "pro", f"valuation_{mk}.json"))
+        shutil.copyfile(src, os.path.join(SITE, f"valuation_{mk}.json"))
+    old = os.path.join(SITE, "pro", f"valuation_{mk}.json")
+    if os.path.exists(old):
+        os.remove(old)
 
 
 # キャッシュ設定(Cloudflareの静的配信が読む _headers)
 HEADERS = [
     ("/", "no-cache"), ("/index.html", "no-cache"), ("/version.json", "no-store"),
-    ("/vcp_*.json", "no-cache"), ("/note_track.json", "no-cache"), ("/pro/*", "no-cache"), ("/ohlc/*", "public, max-age=3600"), ("/us_ohlc/*", "public, max-age=3600"),
+    ("/vcp_*.json", "no-cache"), ("/note_track.json", "no-cache"), ("/valuation_*.json", "no-cache"), ("/pro/*", "no-cache"), ("/ohlc/*", "public, max-age=3600"), ("/us_ohlc/*", "public, max-age=3600"),
 ]
 with open(os.path.join(SITE, "_headers"), "w", encoding="utf-8") as f:
     for path, cc in HEADERS:

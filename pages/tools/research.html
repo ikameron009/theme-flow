@@ -209,7 +209,7 @@ function fields(){const M=D.months,U=D.units;return [
   ['ma50','50日線から','%'],['ma200','200日線から','%'],['ema21','21日EMAから','%'],['rs','RS',''],['volx','出来高倍率','倍'],
   ['adr','ADR%（20日）','%'],['to20','売買代金（20日平均）',U.to],['mcap','時価総額',U.mcap],['price','株価','']];}
 function g(r,k){return VK.has(k)?vv(r,k):r[ci[k]];}
-/* バリュエーション(/pro/valuation_{jp,us}.json)。計算結果の表示で、売買の推奨ではない */
+/* バリュエーション(StockCard.valData=公開側の /valuation_{jp,us}.json)。計算結果の表示で、売買の推奨ではない */
 const VK=new Set(['ig','g3','g1','gap','vl','vpos','peg']),VORD={'期待は控えめ':1,'実績並み':2,'期待が先行':3};
 let VAL={};
 function vrec(r){return VAL[r[ci.code]]||null;}
@@ -469,7 +469,7 @@ function load(m){mk=m==='us'?'us':'jp';$$('#mseg button').forEach(b=>b.setAttrib
   const get=f=>fetch('../pro/'+f+'_'+mk+'.json?cb='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.json():null).catch(()=>null);
   (DATA[mk]?Promise.resolve(DATA[mk]):get('research')).then(j=>{if(!j){$('#tbody').innerHTML='<tr><td class="l muted" style="padding:14px">データを準備中です。</td></tr>';return;}
     DATA[mk]=j;D=j;TH=THEMES[mk]||null;VAL={};boot();
-    const m0=mk;(VALS[m0]?Promise.resolve(VALS[m0]):get('valuation')).then(v=>{VALS[m0]=v||{stocks:{}};if(mk===m0){VAL=VALS[m0].stocks||{};render();}});
+    const m0=mk;(VALS[m0]?Promise.resolve(VALS[m0]):StockCard.valData(m0)).then(v=>{VALS[m0]=v||{stocks:{}};if(mk===m0){VAL=VALS[m0].stocks||{};render();}});
     if(!THEMES[mk])get('themes').then(t=>{THEMES[mk]=t;if(D===DATA[mk])TH=t;});});}
 
 $('#mseg').onclick=e=>{const b=e.target.closest('button');if(b)load(b.dataset.m);};
