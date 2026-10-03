@@ -1,5 +1,6 @@
 /* 銘柄カード(「銘柄を探す」と同じ見た目のチャート＋情報)。ツールのページとnote紹介記事検証で共通に使う。
-   StockCard.open(箱, {market, code, name, sub, kv:[{l,v,cls}], src, mark:{date,label}, per, line, foot, onClose})
+   StockCard.open(箱, {market, code, name, sub, kv:[{l,v,cls}], src, mark:{date,label}, per, line, foot, onClose, val})
+   val:false でバリュエーション欄を出さない(ETF・指数)。StockCard.mountVal(箱, 市場, コード) は単独でも使える
    src を省くと 銘柄を探す と同じ ohlc/<code>.json(米国は us_ohlc/)を読む。o/h/l の無いデータは折れ線で描く。 */
 (function(){
   const ROOT=(document.currentScript&&document.currentScript.src||'').replace(/assets\/card\.js.*$/,'');
@@ -43,6 +44,82 @@
     return a(tv,'TradingView')+(m==='us'?a('https://finance.yahoo.com/quote/'+code,'Yahoo')+a('https://finviz.com/quote.ashx?t='+code,'Finviz')
       :a('https://finance.yahoo.co.jp/quote/'+code+'.T','Yahoo')+a('https://kabutan.jp/stock/?code='+code,'株探'));
   }
+
+  /* ---------- バリュエーション(株価が織り込む成長率・過去5年PERの位置・PEG) ---------- */
+  /* データ= /pro/valuation_{jp,us}.json(valuation/v07_publish.py)。「割安・割高」「理論株価」は出さない */
+  const vload=mk=>load(ROOT+'pro/valuation_'+mk+'.json');
+  const vp=(x,d=1)=>x==null||!isFinite(x)?'—':(x>=0?'+':'−')+Math.abs(x*100).toFixed(d)+'%';
+  const vig=x=>x==null?'—':x>0.4?'40%超':x<-0.1?'−10%未満':vp(x);
+  const VCLS={'期待は控えめ':'low','実績並み':'mid','期待が先行':'high'};
+  function vlab(v){if(!v||v.status!=='ok'||v.ex)return null;if(v.nolabel||!v.label)return['none','判定なし'];return[VCLS[v.label]||'mid',v.label];}
+  function vgap(v){return v&&v.status==='ok'&&!v.ex&&!v.nolabel&&v.g3!=null&&v.ig!=null?v.g3-v.ig:null;}
+  function vstate(v,mk){
+    if(!v)return mk==='jp'?'データ収集中です（日本株は毎日少しずつ決算データを集めています）':'';
+    if(v.status==='collecting')return v.pending?'最新決算の反映待ちです':'データ収集中です（日本株は毎日少しずつ決算データを集めています）';
+    if(v.status==='no_data')return '四半期の決算データがありません（外国企業など）';
+    if(v.status==='no_price')return '株価のデータがありません';
+    return null;}
+  function vaxis(v){const W=560,L=18,R=W-18,lo=-0.10,hi=0.40,X=x=>L+(Math.max(lo,Math.min(hi,x))-lo)/(hi-lo)*(R-L);
+    const rows=[['株価が織り込む成長率',v.ig,'var(--brand)',true],['実績（過去3年の年率）',v.nolabel?null:v.g3,'var(--ink)',false],['直近1年の伸び',v.g1,'var(--faint)',false]];
+    let g=`<svg viewBox="0 0 ${W} 150" width="100%" role="img" aria-label="成長率の比較" style="display:block;max-width:640px">`;
+    [-0.1,0,0.1,0.2,0.3,0.4].forEach(t=>{g+=`<line x1="${X(t)}" x2="${X(t)}" y1="8" y2="120" stroke="${t===0?'var(--line-strong)':'var(--line)'}" stroke-width="${t===0?1.5:1}"/>`+
+      `<text x="${X(t)}" y="140" font-size="11" fill="var(--muted)" text-anchor="${t===-0.1?'start':t===0.4?'end':'middle'}">${t===0?'0%':(t>0?'+':'−')+Math.round(Math.abs(t*100))+'%'}</text>`;});
+    rows.forEach(([nm,x,c,main],i)=>{const y=30+i*38;g+=`<text x="${X(0)+4}" y="${y-10}" font-size="11" fill="var(--muted)">${nm}</text>`;
+      if(x==null){g+=`<text x="${X(0)+4}" y="${y+4}" font-size="12" fill="var(--faint)">—</text>`;return;}
+      const px=X(x),out=x>hi||x<lo;g+=`<line x1="${X(0)}" x2="${px}" y1="${y}" y2="${y}" stroke="${c}" stroke-width="${main?6:4}" stroke-linecap="round"/><circle cx="${px}" cy="${y}" r="${main?7:5.5}" fill="${main?c:'var(--surface)'}" stroke="${c}" stroke-width="2"/>`;
+      const lab=(main?vig(x):vp(x))+(out&&!main?(x>hi?' →':' ←'):''),end=px>R-100;
+      g+=end?`<text x="${R}" y="${y-10}" font-size="12.5" font-weight="600" fill="${c}" text-anchor="end">${lab}</text>`:`<text x="${px+12}" y="${y+4}" font-size="12.5" font-weight="600" fill="${c}">${lab}</text>`;});
+    return g+'</svg>';}
+  function vgauge(v){const W=560,L=18,R=W-18,lo=v.pmin,hi=v.pmax,X=x=>L+(Math.max(lo,Math.min(hi,x))-lo)/(hi-lo||1)*(R-L);
+    const over=v.per>hi,under=v.per<lo,x=X(v.per),f=n=>(+n).toFixed(1);
+    let g=`<svg viewBox="0 0 ${W} 76" width="100%" role="img" aria-label="過去5年PERでの位置" style="display:block;max-width:640px">`;
+    g+=`<rect x="${L}" y="26" width="${R-L}" height="8" rx="4" fill="var(--line)"/><rect x="${L}" y="26" width="${Math.max(0,x-L)}" height="8" rx="4" fill="var(--brand)" opacity=".3"/>`;
+    g+=`<line x1="${X(v.pmed)}" x2="${X(v.pmed)}" y1="20" y2="40" stroke="var(--muted)" stroke-width="1.5"/>`;
+    g+=`<text x="${L}" y="58" font-size="11" fill="var(--muted)">最低 ${f(lo)}倍</text><text x="${R}" y="58" font-size="11" fill="var(--muted)" text-anchor="end">最高 ${f(hi)}倍</text>`;
+    if(Math.abs(X(v.pmed)-L)>=70&&Math.abs(R-X(v.pmed))>=70)g+=`<text x="${X(v.pmed)}" y="58" font-size="11" fill="var(--muted)" text-anchor="middle">中央 ${f(v.pmed)}倍</text>`;
+    g+=`<circle cx="${x}" cy="30" r="8" fill="var(--brand)" stroke="var(--surface)" stroke-width="2.5"/>`;
+    g+=`<text x="${x}" y="13" font-size="12" font-weight="600" fill="var(--brand)" text-anchor="${x>R-80?'end':x<L+80?'start':'middle'}">今 ${f(v.per)}倍${over?'（5年の最高超）':under?'（5年の最低未満）':''}</text>`;
+    return g+'</svg>';}
+  function vposTxt(v){if(!v||v.pos==null||v.pmin==null)return null;return '下から'+Math.round(v.pos*100)+'%'+(v.per>v.pmax?'（5年の最高超）':v.per<v.pmin?'（5年の最低未満）':'');}
+  function vmini(pos){return `<span class="vmini"><i style="left:calc(${Math.round(pos*100)}% - 1.5px)"></i></span>`;}
+  function vhtml(D,mk,code){
+    const v=D&&D.stocks?D.stocks[code]:null,src=mk==='jp'?'Powered by EDINET DB（決算）・Yahoo Finance（株価）':'SEC EDGAR（決算）・Yahoo Finance（株価）';
+    if(!v&&mk==='us')return '';
+    const head=`<div class="vh"><span class="vt">バリュエーション</span>${D&&D.asof?`<span class="vs">${esc(D.asof)}時点</span>`:''}</div>`;
+    const foot=`<div class="vsrc">出所：${src}。計算結果の表示であり、売買の推奨ではありません。</div>`;
+    const stt=vstate(v,mk);if(stt)return head+`<div class="vnote">${esc(stt)}</div>`+foot;
+    if(v.ex)return head+`<div class="vnote">— 計算しない銘柄です：${esc(v.ex)}<br><span class="vs">純利益が実力を表していない可能性が高いため、成長率・PERの位置・PEGを空欄にしています。</span></div>`+foot;
+    const lb=vlab(v),pos=vposTxt(v),r=(D.params&&D.params.disc!=null)?Math.round(D.params.disc*100)+'%':(mk==='jp'?'8%':'9%');
+    const g3=v.nolabel?'—':vp(v.g3);
+    const sentence=`市場は今後10年、年${vig(v.ig)}の利益成長を見込んでいます。`+(v.nolabel?'3年前が赤字か実績が無いため、実績との比較はしません。':`過去3年の実績は年${vp(v.g3)}`)+(v.g1!=null?`${v.nolabel?'直近1年の伸びは':'、直近1年は'}${vp(v.g1)}です。`:(v.nolabel?'':'です。'));
+    return head+(v.pending?'<div class="vpend">最新決算の反映待ち（下の数字は前回の決算まで）</div>':'')+
+      `<div class="vgrid">
+        <div><small>株価が織り込む成長率</small><b class="vb">${vig(v.ig)}</b>${lb?`<span class="vpill ${lb[0]}">${lb[1]}</span>`:''}</div>
+        <div><small>実績3年（直近1年）</small><b>${g3}</b><span class="vsub">（${vp(v.g1)}）</span></div>
+        <div><small>過去5年PERの位置</small>${pos?`<b>${pos}</b>${vmini(v.pos)}`:'<b>—</b><span class="vsub">有効な月が24か月未満</span>'}</div>
+        <div><small>PEG（実績）</small><b>${v.peg!=null?(+v.peg).toFixed(2):'—'}</b>${v.peg==null?'<span class="vsub">減益・判定なしは計算しません</span>':''}</div></div>
+      <button type="button" class="vbtn" aria-expanded="false">グラフで見る ▸</button>
+      <div class="vmore" hidden><p class="vsay">${esc(sentence)}</p>${vaxis(v)}
+        ${v.pmin!=null?`<div class="vlbl">過去5年のPERでの位置（今のPER ${(+v.per).toFixed(1)}倍・過去${v.pn}か月）</div>${vgauge(v)}`:''}
+        <p class="vs">前提：直近4四半期の純利益を起点に、10年間 年g%で伸びその後は年2%、割引率${r}で今の時価総額と等しくなるgを逆算。判定は（実績3年 − 織り込み）が+5pt超で「期待は控えめ」、±5pt以内で「実績並み」、−5pt未満で「期待が先行」。</p></div>`+foot;}
+  function mountVal(el,mk,code){if(!el)return;el.innerHTML='';
+    vload(mk).then(D=>{const h=vhtml(D,mk,code);if(!h){el.innerHTML='';return;}el.innerHTML=`<div class="sc-val">${h}</div>`;
+      const b=el.querySelector('.vbtn');if(b)b.onclick=()=>{const m=el.querySelector('.vmore'),o=m.hidden;m.hidden=!o;b.setAttribute('aria-expanded',o);b.textContent=o?'グラフを閉じる ◂':'グラフで見る ▸';};});}
+  const vcss=document.createElement('style');vcss.textContent=`.sc-val{border-top:1px solid var(--line);border-bottom:1px solid var(--line);margin:4px 0 10px;padding:10px 0 8px}
+    .sc-val .vh{display:flex;align-items:baseline;gap:10px;margin-bottom:6px}.sc-val .vt{font-weight:700;font-size:13px;color:var(--ink)}
+    .sc-val .vs{font-size:11px;color:var(--muted)}.sc-val .vgrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+    @media (max-width:640px){.sc-val .vgrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+    .sc-val .vgrid small{display:block;font-size:11px;color:var(--muted)}.sc-val .vgrid b{font:600 17px var(--f-num);margin-right:6px}.sc-val .vgrid b.vb{color:var(--brand)}
+    .sc-val .vsub{font-size:11.5px;color:var(--muted);font-family:var(--f-num)}
+    .vpill{display:inline-block;font-size:11px;font-weight:700;padding:1px 9px;border-radius:999px;border:1px solid var(--line-strong);color:var(--ink-2);background:var(--surface-2);line-height:1.6;white-space:nowrap;vertical-align:2px}
+    .vpill.low{background:var(--brand-soft);color:var(--brand);border-color:transparent}.vpill.high{background:var(--warn-bg);color:var(--warn-ink);border-color:transparent}
+    .vpill.none{color:var(--muted);background:transparent}
+    .vmini{display:inline-block;width:56px;height:6px;background:var(--line);border-radius:3px;position:relative;vertical-align:middle}.vmini i{position:absolute;top:-3px;width:3px;height:12px;background:var(--brand);border-radius:1px}
+    .sc-val .vbtn{margin-top:6px;border:0;background:none;color:var(--brand);font:600 12px var(--f-body);cursor:pointer;padding:2px 0}
+    .sc-val .vmore{margin-top:6px}.sc-val .vsay{margin:4px 0;font-size:13px;color:var(--ink-2)}.sc-val .vlbl{font-size:11.5px;color:var(--muted);margin-top:8px}
+    .sc-val .vnote{font-size:13px;color:var(--ink-2);background:var(--surface-2);border-radius:6px;padding:8px 12px}
+    .sc-val .vpend{font-size:11.5px;color:var(--warn-ink);background:var(--warn-bg);border-radius:4px;padding:2px 8px;display:inline-block;margin-bottom:6px}
+    .sc-val .vsrc{font-size:10.5px;color:var(--faint);margin-top:6px}`;document.head.appendChild(vcss);
   const PER=[['21','1か月'],['63','3か月'],['126','6か月'],['252','1年'],['520','2年']];
   const st={per:126,freq:'day'};
   function open(box,o){
@@ -52,6 +129,7 @@
     box.innerHTML=`<div class="panel sc-card" style="margin-top:14px;position:relative"><div class="shead" style="padding-right:76px"><b>${esc(o.name)}</b><span class="num muted">${esc(o.code)}</span>${o.sub?`<span class="tag">${esc(o.sub)}</span>`:''}${o.links===false?'':links(o.market,o.code)}
         <button class="btn sm ghost" data-close style="position:absolute;top:12px;right:12px">閉じる</button></div>
       ${o.kv&&o.kv.length?`<div class="kv" style="grid-template-columns:repeat(${Math.min(o.kv.length,4)},minmax(0,1fr))">${o.kv.map(k=>`<div><small>${k.l}</small><b class="${k.cls||''}">${k.v}</b></div>`).join('')}</div>`:''}
+      <div class="sc-valbox"></div>
       <div class="ctlrow" style="margin:6px 0 4px"><div class="seg" data-g="per">${PER.map(p=>`<button data-v="${p[0]}" aria-pressed="${+p[0]===per}">${p[1]}</button>`).join('')}</div>
         <div class="seg" data-g="freq"><button data-v="day" aria-pressed="${st.freq==='day'}">日足</button><button data-v="week" aria-pressed="${st.freq==='week'}">週足</button></div>
         <span class="legend" style="margin:0"><span><i style="background:var(--c2)"></i>5日線</span><span><i style="background:var(--brand)"></i>20日線</span><span><i style="background:var(--c4)"></i>50日線</span>${o.mark?`<span><i style="background:var(--warn-ink,var(--brand));height:2px"></i>${esc(o.mark.label)}</span>`:''}</span></div>
@@ -62,8 +140,9 @@
     box.querySelectorAll('.seg').forEach(sg=>sg.onclick=e=>{const b=e.target.closest('button');if(!b)return;sg.querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b));
       if(sg.dataset.g==='per'){cur.per=+b.dataset.v;st.per=cur.per;}else{cur.freq=b.dataset.v;st.freq=cur.freq;}draw();});
     box.querySelector('[data-close]').onclick=()=>{box._sc=null;box.innerHTML='';o.onClose&&o.onClose();};
+    if(o.val!==false&&o.code)mountVal(box.querySelector('.sc-valbox'),o.market,o.code);
     draw();
     if(o.scroll!==false)setTimeout(()=>box.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'nearest'}),30);
   }
-  window.StockCard={open,root:ROOT};
+  window.StockCard={open,root:ROOT,mountVal,valData:vload,vlab,vgap,vig,vp,vposTxt,vmini};
 })();

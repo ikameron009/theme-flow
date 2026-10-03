@@ -501,11 +501,13 @@ function renderCard(boxId,idp,code){
       <div><small>20日の騰落</small><b id="${idp}-r20" class="${s&&s.ret20>=0?'up':'down'}">${s?sign(s.ret20)+'%':'–'}</b></div>
       <div><small>売買代金の急増率</small><b>${s&&s.surge!=null?sign(s.surge,0)+'%':'–'}</b></div>
       <div><small>売買代金の順位</small><b>${rank>=0?(rank+1)+'位':'100位圏外'}</b></div></div>
+    <div id="${idp}-val"></div>
     ${ths.length?`<div class="meta" style="margin-bottom:6px">所属テーマ（押すとテーマ別資金フローへ）</div><div class="chips">${ths.map(t=>`<button class="chip" data-nm="${esc(t.name)}">${esc(t.name)} <span class="${(t.surge??0)>=0?'up':'down'}">${sign(t.surge,0)}%</span></button>`).join('')}</div>`:''}
     ${candleCtl(idp,state[idp+'Per']||126,state[idp+'Freq']||'day')}<div id="${idp}candle"></div>`;
   box.querySelectorAll('.chips .chip[data-nm]').forEach(b=>b.onclick=()=>{focusTheme(b.dataset.nm,true);goto('themes');});
   const cl=box.querySelector('[data-close]');if(cl)cl.onclick=()=>{box.innerHTML='';if(idp==='vc')state.vcCode=null;};
   const cur=()=>(idp==='sc'?state.scCode:state.vcCode)===code;
+  if(window.StockCard)StockCard.mountVal(document.getElementById(idp+'-val'),market,code);
   mountCandle(idp+'candle',idp,code,()=>state[idp+'Per']||126,v=>state[idp+'Per']=v,()=>state[idp+'Freq']||'day',v=>state[idp+'Freq']=v,340,cur,1100);
   if(!s)loadOHLC(code).then(oh=>{const el=document.getElementById(idp+'-r20');if(!oh||!el||!cur()||oh.c.length<21)return;
     const v=(oh.c[oh.c.length-1]/oh.c[oh.c.length-21]-1)*100;el.textContent=sign(v)+'%';el.className=v>=0?'up':'down';});
@@ -527,10 +529,12 @@ function drawStockSearch(){
 const VCP_DATA={us:null,jp:null};
 function loadVcp(mkt){if(VCP_DATA[mkt]!==null)return Promise.resolve(VCP_DATA[mkt]);
   return fetch('vcp_'+mkt+'.json?cb='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.json():{sessions:[]}).catch(()=>({sessions:[]})).then(j=>{VCP_DATA[mkt]=j;return j;});}
-function vcpCols(){return [['prio','優先度','r'],['name','銘柄','l'],['sector','セクター','l'],['mcap','時価総額','r'],['listing','上場','r'],['buy','Buy','c'],['vcp','VCP','r'],['dist','ピボット','r'],['rs','RS','r'],['streak','継続','r'],['tl','最近の掲載','c']];}
+function vcpCols(){return [['prio','優先度','r'],['name','銘柄','l'],['sector','セクター','l'],['mcap','時価総額','r'],['listing','上場','r'],['buy','Buy','c'],['vcp','VCP','r'],['dist','ピボット','r'],['rs','RS','r'],['streak','継続','r'],['tl','最近の掲載','c'],['val','判定','c']];}
 function numOf(v){if(v==null||v==='')return null;if(typeof v==='number')return v;const n=parseFloat(String(v).replace(/[^0-9.]/g,''));return isFinite(n)?n:null;}
 function vcpTL(sess,idx,code){const s=Math.max(0,idx-19);let g='<span class="vtl">';for(let i=s;i<=idx;i++){const on=sess[i].rows.some(r=>r.code===code);g+=`<i style="background:${on?'var(--brand)':'var(--surface-2)'}"></i>`;}return g+'</span>';}
+const VALD={};
 function drawVcp(){
+  if(!(market in VALD)&&window.StockCard){const m=market;VALD[m]=null;StockCard.valData(m).then(j=>{VALD[m]=j||{stocks:{}};if(market===m)drawVcp();});}
   const mk=market,D=VCP_DATA[mk],head=$('#vcp-head'),body=$('#vcp-body'),slider=$('#vcp-day'),sess=(D&&D.sessions)?D.sessions:[];
   $('#vcp-sched').textContent=SCHED[mk];
   $('#vcp-lead').textContent=mk==='us'?'上昇トレンドの条件（トレンドテンプレート）を満たし、値動きの幅が段階的に縮んでいる米国株。業績の成長条件つき。':'上昇トレンドの条件（トレンドテンプレート）を満たし、値動きの幅が段階的に縮んでいる日本株。増収15%以上・増益15%以上の条件つき。';
@@ -550,7 +554,7 @@ function drawVcp(){
   rows.sort((a,b)=>{if(a._gone!==b._gone)return a._gone?1:-1;const x=gv(a),y=gv(b);return(x<y?-1:x>y?1:0)*sgn;});
   const nv=gateN('vcp',rows.length),hidden=rows.length-nv;rows=rows.slice(0,nv);
   const cols=vcpCols();
-  head.innerHTML=cols.map(c=>c[0]==='tl'?`<th style="text-align:center">${c[1]}</th>`:`<th class="${c[2]==='l'?'l':''} srt" data-k="${c[0]}">${c[1]}<span class="ar">${c[0]===k?(dir==='asc'?'▲':'▼'):''}</span></th>`).join('');
+  head.innerHTML=cols.map(c=>c[0]==='tl'||c[0]==='val'?`<th style="text-align:center">${c[1]}</th>`:`<th class="${c[2]==='l'?'l':''} srt" data-k="${c[0]}">${c[1]}<span class="ar">${c[0]===k?(dir==='asc'?'▲':'▼'):''}</span></th>`).join('');
   const cell=(r,c)=>{
     if(c==='prio'){if(r._gone||r.prio==null)return'<span class="muted">–</span>';return`<span style="font-weight:600;${r._newprio?'background:var(--warn-bg);color:var(--warn-ink);padding:1px 7px;border-radius:5px':''}">${r.prio}</span>`;}
     if(c==='buy')return(r.buy&&!r._gone)?'<span class="up" style="font-weight:700;font-size:11px">BUY</span>':'';
@@ -560,7 +564,10 @@ function drawVcp(){
     if(c==='rs')return r.rs??'';if(c==='mcap')return r.mcap?(typeof r.mcap==='number'?'$'+r.mcap+'B':esc(r.mcap)):'<span class="muted">–</span>';
     if(c==='sector')return `<span class="cat" style="font-size:11.5px">${esc(r.sector||'')}</span>`;
     if(c==='listing')return r.listing?(/[A-Za-z年]/.test(String(r.listing))?esc(String(r.listing).replace(/^(\d+)M$/,'$1か月')):esc(r.listing)+'年'):'<span class="muted">–</span>';
-    if(c==='streak')return r._gone?'':r.streak;if(c==='tl')return vcpTL(sess,idx,r.code);return'';};
+    if(c==='streak')return r._gone?'':r.streak;if(c==='tl')return vcpTL(sess,idx,r.code);
+    if(c==='val'){const V=VALD[mk];if(!V)return '<span class="muted">…</span>';const v=V.stocks&&V.stocks[r.code],lb=window.StockCard&&StockCard.vlab(v);
+      if(lb)return `<span class="vpill ${lb[0]}">${lb[1]}</span>`;const t=!v?(mk==='jp'?'収集中':'—'):v.ex?'対象外':v.status==='no_data'?'データなし':'—';return `<span class="muted" style="font-size:11px" title="${esc(v&&v.ex||'')}">${t}</span>`;}
+    return'';};
   body.innerHTML=rows.map(r=>`<tr class="${r._gone?'gone':''}" data-code="${esc(r.code)}" style="cursor:pointer">`+cols.map(c=>`<td ${c[0]==='tl'?'style="text-align:center"':(c[2]==='l'?'':'class="num"')}>${cell(r,c[0])}</td>`).join('')+'</tr>').join('');
   body.querySelectorAll('tr').forEach(tr=>tr.onclick=()=>{const c=tr.dataset.code;if(!c)return;state.vcCode=c;renderCard('vcpcard','vc',c);const el=$('#vcpcard');if(el)el.scrollIntoView({behavior:'smooth',block:'nearest'});});
   $('#vcp-lock').innerHTML=lockHTML('vcp',hidden,8);

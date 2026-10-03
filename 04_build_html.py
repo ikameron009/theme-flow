@@ -88,6 +88,11 @@ os.makedirs(os.path.join(SITE, "pro"), exist_ok=True)
 for fn in os.listdir(BASE):
     if fn.startswith("pro_") and fn.endswith(".json"):
         shutil.copyfile(P(fn), os.path.join(SITE, "pro", fn[len("pro_"):]))
+# バリュエーション(valuation/v07_publish.py がローカルから毎日 push する valuation_pub/)→ /pro/
+for mk in ("jp", "us"):
+    src = os.path.join(BASE, "valuation_pub", f"valuation_{mk}.json")
+    if os.path.exists(src):
+        shutil.copyfile(src, os.path.join(SITE, "pro", f"valuation_{mk}.json"))
 
 
 # キャッシュ設定(Cloudflareの静的配信が読む _headers)

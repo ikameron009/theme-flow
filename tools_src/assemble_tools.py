@@ -26,7 +26,7 @@ function drawTable(R){head([['key','銘柄','l'],['name','テーマ','l']]);
   if(SEL)openSec('card');}
 function TILE(k){SEL=k;openSec('hcard');}
 function openSec(id){const x=D.rows.find(r=>r.key===SEL);if(!x)return;fitSlot(id);const tw=twins(x);
-  StockCard.open(id,{market:mk,code:x.etf?x.key:'',name:x.name,sub:x.group,links:x.etf,line:!x.etf,scroll:id==='hcard',
+  StockCard.open(id,{market:mk,code:x.etf?x.key:'',name:x.name,sub:x.group,links:x.etf,line:!x.etf,val:false,scroll:id==='hcard',
     src:StockCard.root+(mk==='us'?'us_ohlc/':'ohlc/')+'sec_'+encodeURIComponent(x.key)+'.json',
     kv:[{l:'現在値',v:x.last==null?'–':fmt(x.last,mk==='us'?2:0)},{l:'前日比',v:sign(x.chg1),cls:(x.chg1??0)>=0?'up':'down'},{l:'今月（'+esc((D.months||[])[0]||'')+'）',v:sign(x.months[0]),cls:(x.months[0]??0)>=0?'up':'down'},
       {l:'年初来',v:sign(x.ytd),cls:(x.ytd??0)>=0?'up':'down'},{l:'52週高値から',v:sign(x.hi52),cls:(x.hi52??0)>=0?'up':'down'},{l:'資金急増率',v:sign(x.surge,0),cls:(x.surge??0)>=0?'up':'down'},{l:'RS',v:x.rs??'–'},{l:'トレンド',v:(TREND[x.trend]||TREND.flat).slice(0,2).join(' '),cls:(TREND[x.trend]||TREND.flat)[2]}],
