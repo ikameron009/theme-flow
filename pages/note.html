@@ -274,4 +274,5 @@ $('#qx').onclick=()=>{$('#q').value='';st.q='';$('#qx').hidden=true;drawPicks(ba
 matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change',()=>D&&draw());
 fetch('note_track.json?cb='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.json():null).then(j=>{if(!j||!j.picks||!j.picks[0]||!j.picks[0].div){$('#pkBody').innerHTML='<tr><td class="l muted" style="padding:14px">データを準備中です。</td></tr>';return;}D=j;draw();});
 </script>
+<script src="assets/help.js"></script>
 </body></html>
