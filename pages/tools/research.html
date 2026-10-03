@@ -89,6 +89,7 @@ table.rx td .more{cursor:help;color:var(--brand);font-weight:600;border-bottom:1
 .cinfo .cth{display:flex;flex-wrap:wrap;gap:5px}
 .cinfo .threst{display:contents}
 .cinfo .threst[hidden]{display:none}
+.cinfo .gt{font-size:14px;color:var(--muted);align-self:center}
 .cinfo .thmore{border:0;background:none;color:var(--brand);font:600 12px var(--f-body);cursor:pointer;padding:3px 4px}
 </style>
 </head><body>
@@ -322,9 +323,10 @@ function openCard(code){const r=S.find(x=>g(x,'code')===code);if(!r)return;st.se
   const cl=v=>(v??0)>=0?'up':'down',T=g(r,'themes').map(i=>D.themes[i]),tk=stageKey(r);
   const sec=g(r,'sector'),secTxt=sec?secBigOf(sec)+' ＞ '+sec:'–',TOPN=10;
   const thBtn=t=>`<button class="stbtn thc" data-t="${esc(t)}" aria-pressed="${st.themes.has(t)}" title="このテーマで絞り込む">${esc(t)}</button>`;
-  const foot=`<div class="cinfo"><div><span class="cl">業種</span><span>${esc(secTxt)}</span></div>
+  const big=sec?secBigOf(sec):'',secBtn=(k,v)=>`<button class="stbtn sec" data-k="${k}" data-v="${esc(v)}" aria-pressed="${st[k].has(v)}" title="この業種で絞り込む">${esc(v)}</button>`;
+  const foot=`<div class="cinfo"><div><span class="cl">業種</span><span class="cth">${sec?secBtn('secBig',big)+'<span class="gt">＞</span>'+secBtn('sectors',sec):'<span class="muted">なし</span>'}</span></div>
     <div><span class="cl">テーマ</span><span class="cth">${T.length?T.slice(0,TOPN).map(thBtn).join('')+(T.length>TOPN?`<span class="threst" hidden>${T.slice(TOPN).map(thBtn).join('')}</span><button class="thmore" type="button">ほか${T.length-TOPN}件 ▸</button>`:''):'<span class="muted">なし</span>'}</span></div>
-    ${T.length?'<div class="phint" style="margin:2px 0 0">テーマを押すと、そのテーマで一覧を絞り込みます。</div>':''}</div>`;
+    ${T.length?'':''}<div class="phint" style="margin:2px 0 0">業種・テーマを押すと、それで一覧を絞り込みます（もう一度押すと解除）。</div></div>`;
   StockCard.open('rcard',{market:mk,code,name:g(r,'name'),
     kv:[{l:'株価',v:fmt(g(r,'price'),g(r,'price')>=1000?0:2)},{l:'前日比',v:pct(g(r,'chg1')),cls:cl(g(r,'chg1'))},{l:'今月（'+esc(D.months[0])+'）',v:pct(g(r,'m0')),cls:cl(g(r,'m0'))},{l:'年初来',v:pct(g(r,'ytd')),cls:cl(g(r,'ytd'))},
       {l:'52週高値から',v:pct(g(r,'hi52')),cls:cl(g(r,'hi52'))},{l:'RS',v:g(r,'rs')??'–'},{l:'トレンド',v:esc(stageName(tk)),cls:tk==='down'?'down':tk==='flat'?'muted':'up'},{l:'売買代金（20日平均・'+esc(D.units.to)+'）',v:fmt(g(r,'to20'),g(r,'to20')>=100?0:1)}],
@@ -332,7 +334,9 @@ function openCard(code){const r=S.find(x=>g(x,'code')===code);if(!r)return;st.se
   const box=$('#rcard'),mo=box.querySelector('.thmore');
   if(mo)mo.onclick=()=>{const rest=box.querySelector('.threst'),open=rest.hidden;rest.hidden=!open;mo.textContent=open?'閉じる ◂':`ほか${T.length-TOPN}件 ▸`;};
   box.querySelectorAll('.thc').forEach(b=>b.onclick=()=>{const t=b.dataset.t;st.themes.has(t)?st.themes.delete(t):st.themes.add(t);st.limit=300;render();drawMS();
-    box.querySelectorAll('.thc').forEach(x=>x.setAttribute('aria-pressed',st.themes.has(x.dataset.t)));});}
+    box.querySelectorAll('.thc').forEach(x=>x.setAttribute('aria-pressed',st.themes.has(x.dataset.t)));});
+  box.querySelectorAll('.stbtn.sec').forEach(b=>b.onclick=()=>{const S_=st[b.dataset.k],v=b.dataset.v;S_.has(v)?S_.delete(v):S_.add(v);st.limit=300;render();drawMS();
+    box.querySelectorAll('.stbtn.sec').forEach(x=>x.setAttribute('aria-pressed',st[x.dataset.k].has(x.dataset.v)));});}
 /* コピー・CSVの対象 = チェックした銘柄(なければ表示中の全銘柄) */
 function targets(){const R=window.__R||[];if(!st.chk.size)return R;return S.filter(r=>st.chk.has(g(r,'code')));}
 function drawCopyBtns(){const n=st.chk.size;$('#copy').textContent=n?`ティッカーをコピー（選択${n}）`:'ティッカーをコピー';$('#csv').textContent=n?`CSV出力（選択${n}）`:'CSV出力';}
@@ -402,7 +406,9 @@ function drawTree(R){const k=st.color,sz=st.size,W=1100,H=640;
   $('#treeNote').textContent=`面積＝${sz==='to20'?'売買代金（20日平均）':'時価総額'}・色＝選んだ期間。${L.length<R.length?`面積の大きい上位${L.length}件を表示（全${R.length.toLocaleString()}件）。`:''}${sz==='mcap'&&mk==='jp'?'日本株の時価総額は一部の銘柄のみです。':''}`;}
 
 function render(){
-  drawChips();drawCopyBtns();const R=sorted(filtered());
+  drawChips();drawCopyBtns();
+  $$('#rcard .thc').forEach(x=>x.setAttribute('aria-pressed',st.themes.has(x.dataset.t)));
+  $$('#rcard .stbtn.sec').forEach(x=>x.setAttribute('aria-pressed',st[x.dataset.k].has(x.dataset.v)));const R=sorted(filtered());
   $('#cnt').innerHTML=`${R.length.toLocaleString()} <span class="muted" style="font-weight:400;font-size:13px">/ ${S.length.toLocaleString()} 銘柄${R.length<S.length?'（絞り込み中）':''}</span>`;
   drawSummary(R);
   $('#vTable').hidden=st.view!=='table';$('#vHeat').hidden=st.view!=='heat';$('#vTree').hidden=st.view!=='tree';
