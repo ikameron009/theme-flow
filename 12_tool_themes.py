@@ -14,7 +14,7 @@ warnings.filterwarnings("ignore")
 import numpy as np
 import pandas as pd
 from market_calendar import expected_session
-from tool_common import r, metrics, rs_rank, month_starts, equal_weight_index, stock_table
+from tool_common import r, metrics, rs_rank, month_starts, equal_weight_index, stock_table, spark_small, surge_all
 
 BASE = os.path.dirname(os.path.abspath(__file__))
 P = lambda f: os.path.join(BASE, f)
@@ -64,6 +64,8 @@ def main():
     # 構成銘柄の騰落(展開表示用)
     used = sorted({x for t in rows for x in t["members"]})
     st = stock_table(close[used], months)
+    sg = surge_all(turn[used])
+    spk = spark_small(close[used].ffill(limit=3))
     names = dict(zip(m[c["key"]], m["name"]))
     if mk == "jp" and os.path.exists(P("ranking_universe.csv")):
         import unicodedata
@@ -74,13 +76,15 @@ def main():
         if not np.isfinite(x["last"]):
             continue
         stocks[k] = [names.get(k, k), r(x["chg1"]), r(x["w1"]), r(x["m0"]), r(x["ytd"]), r(x["hi52"]),
-                     None if not np.isfinite(x["rs"]) else int(x["rs"]), TREND.get(x["trend"], 0)]
+                     None if not np.isfinite(x["rs"]) else int(x["rs"]), TREND.get(x["trend"], 0),
+                     r(x["last"]), r(x["r1m"]), r(x["r2m"]), r(x["r3m"]), r(x["r6m"]), r(x["r12m"]),
+                     r(sg.get(k, np.nan), 1), spk.get(k)]
 
     cats = [cc for cc in cat_order if any(t["group"] == cc for t in rows)] + \
            sorted({t["group"] for t in rows} - set(cat_order))
     out = {"market": mk, "updated": latest.strftime("%Y-%m-%d"), "months": [f"{x.month}月" for x in months],
            "groups": cats, "rows": rows,
-           "stock_cols": ["name", "chg1", "w1", "m0", "ytd", "hi52", "rs", "trend"], "stocks": stocks}
+           "stock_cols": ["name", "chg1", "w1", "m0", "ytd", "hi52", "rs", "trend", "last", "r1m", "r2m", "r3m", "r6m", "r12m", "surge", "spark"], "stocks": stocks}
     with open(P(f"pro_themes_{mk}.json"), "w", encoding="utf-8") as f:
         json.dump(out, f, ensure_ascii=False, separators=(",", ":"))
     up = sum(1 for t in rows if (t["chg1"] or 0) > 0)

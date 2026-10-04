@@ -139,7 +139,7 @@ let mk='jp',D=null;
 const st={grp:'all',view:'list',q:'',sort:'m0',dir:-1,pick:null};
 try{mk=new URLSearchParams(location.search).get('m')||localStorage.getItem('tf_market')||'jp';}catch(e){}
 /* 期間の列(「Nか月前」=N か月前から今日までの騰落) */
-function pcols(){const M=D.months||[];return [['chg1','前日比'],['w1','週間%'],['m0','今月（'+(M[0]||'')+'）'],['r1m','1か月前'],['r2m','2か月前'],['r3m','3か月前'],['r6m','6か月前'],['r12m','1年前'],['hi52','52週高値']];}
+function pcols(){const M=D.months||[];return [['chg1','前日比'],['w1','週間%'],['m0','今月（'+(M[0]||'')+'）'],['r1m','1か月前'],['r2m','2か月前'],['r3m','3か月前'],['r6m','6か月前'],['r12m','1年前'],['hi52',FILE==='themes'?'52週高値から':'52週高値']];}
 const SCALE={chg1:3,w1:6,m0:10,r1m:10,r2m:15,r3m:20,r6m:30,r12m:50,hi52:25,surge:60};
 const NUMK=new Set(['chg1','w1','m0','r1m','r2m','r3m','r6m','r12m','hi52','surge','rs','last']);
 function val(x,k){return k==='m0'?x.months[0]:x[k];}
@@ -188,14 +188,14 @@ function draw(){
   $('#foot').innerHTML=FOOT();
 }
 function cells(x){const t=TREND[x.trend]||TREND.flat;
-  return `<td style="font-weight:600;${x.rs>=80?'color:var(--up)':x.rs<=20?'color:var(--down)':''}">${x.rs}</td>
+  return `<td><span class="trend ${t[2]}" title="${t[1]}">${t[0]} ${t[1]}</span></td><td>${spark(x.spark)}</td>
     <td>${x.last==null?'<span class="muted">指数</span>':fmt(x.last,x.last>=1000?0:(x.etf?2:1))}</td>
+    <td style="font-weight:600;${x.rs>=80?'color:var(--up)':x.rs<=20?'color:var(--down)':''}">${x.rs}</td>
     ${pcols().map(([k])=>{const v=val(x,k);return `<td class="heat ${v>=0?'up':'down'}" style="${heatBg(v,k)}">${sign(v)}</td>`;}).join('')}
-    <td class="${(x.surge??0)>=0?'up':'down'}">${x.surge==null?'–':sign(x.surge,1)}</td>
-    <td><span class="trend ${t[2]}" title="${t[1]}">${t[0]} ${t[1]}</span></td><td>${spark(x.spark)}</td>`;}
-function head(first){const cols=[...first,['rs','RS',''],['last','現在値',''],...pcols().map(([k,l])=>[k,l,'']),['surge','資金急増率%',''],['trend','トレンド',''],['spark','直近60日','']];
+    <td class="${(x.surge??0)>=0?'up':'down'}">${x.surge==null?'–':sign(x.surge,1)}</td>${typeof XCELLS==='function'?XCELLS(x):''}`;}
+function head(first){const cols=[...first,['trend','トレンド',''],['spark','直近60日',''],['last','現在値',''],['rs','RS',''],...pcols().map(([k,l])=>[k,l,'']),['surge','資金急増率%',''],...(typeof XCOLS!=='undefined'?XCOLS:[])];
   $('#thead').innerHTML=cols.map(([k,l,c])=>`<th class="${c} ${k===st.sort?'sel':''}" data-k="${k}">${esc(l)}${k===st.sort?(st.dir>0?' ▲':' ▼'):''}</th>`).join('');
-  $$('#thead th').forEach(th=>th.onclick=()=>{const k=th.dataset.k;if(k==='spark'||k==='trend')return;
+  $$('#thead th').forEach(th=>th.onclick=()=>{const k=th.dataset.k;if(k==='spark'||k==='trend'||(typeof XCOLS!=='undefined'&&XCOLS.some(c=>c[0]===k)))return;
     if(st.sort===k)st.dir=-st.dir;else{st.sort=k;st.dir=(k==='name'||k==='key')?1:-1;}draw();});}
 function drawHeat(R){const k=keyNum();
   const groups=st.grp==='all'?D.groups:[st.grp];

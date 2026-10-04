@@ -61,16 +61,19 @@
     if(v.status==='no_data')return '四半期の決算データがありません（外国企業など）';
     if(v.status==='no_price')return '株価のデータがありません';
     return null;}
-  function vaxis(v){const W=560,L=18,R=W-18,lo=-0.10,hi=0.40,X=x=>L+(Math.max(lo,Math.min(hi,x))-lo)/(hi-lo)*(R-L);
+  /* 成長率の比較図。左=項目名の列、中=棒、右=数字の列に分け、文字と棒が重ならないようにする */
+  function vaxis(v){const W=600,NL=150,VR=82,L=NL+8,R=W-VR-8,lo=-0.10,hi=0.40,X=x=>L+(Math.max(lo,Math.min(hi,x))-lo)/(hi-lo)*(R-L);
     const rows=[['株価が織り込む成長率',v.ig,'var(--brand)',true],['実績（過去3年の年率）',v.nolabel?null:v.g3,'var(--ink)',false],['直近1年の伸び',v.g1,'var(--faint)',false]];
-    let g=`<svg viewBox="0 0 ${W} 150" width="100%" role="img" aria-label="成長率の比較" style="display:block;max-width:640px">`;
-    [-0.1,0,0.1,0.2,0.3,0.4].forEach(t=>{g+=`<line x1="${X(t)}" x2="${X(t)}" y1="8" y2="120" stroke="${t===0?'var(--line-strong)':'var(--line)'}" stroke-width="${t===0?1.5:1}"/>`+
-      `<text x="${X(t)}" y="140" font-size="11" fill="var(--muted)" text-anchor="${t===-0.1?'start':t===0.4?'end':'middle'}">${t===0?'0%':(t>0?'+':'−')+Math.round(Math.abs(t*100))+'%'}</text>`;});
-    rows.forEach(([nm,x,c,main],i)=>{const y=30+i*38;g+=`<text x="${X(0)+4}" y="${y-10}" font-size="11" fill="var(--muted)">${nm}</text>`;
-      if(x==null){g+=`<text x="${X(0)+4}" y="${y+4}" font-size="12" fill="var(--faint)">—</text>`;return;}
-      const px=X(x),out=x>hi||x<lo;g+=`<line x1="${X(0)}" x2="${px}" y1="${y}" y2="${y}" stroke="${c}" stroke-width="${main?6:4}" stroke-linecap="round"/><circle cx="${px}" cy="${y}" r="${main?7:5.5}" fill="${main?c:'var(--surface)'}" stroke="${c}" stroke-width="2"/>`;
-      const lab=(main?vig(x):vp(x))+(out&&!main?(x>hi?' →':' ←'):''),end=px>R-100;
-      g+=end?`<text x="${R}" y="${y-10}" font-size="12.5" font-weight="600" fill="${c}" text-anchor="end">${lab}</text>`:`<text x="${px+12}" y="${y+4}" font-size="12.5" font-weight="600" fill="${c}">${lab}</text>`;});
+    let g=`<svg viewBox="0 0 ${W} 132" width="100%" role="img" aria-label="成長率の比較" style="display:block;max-width:680px">`;
+    [-0.1,0,0.1,0.2,0.3,0.4].forEach(t=>{g+=`<line x1="${X(t)}" x2="${X(t)}" y1="6" y2="104" stroke="${t===0?'var(--line-strong)':'var(--line)'}" stroke-width="${t===0?1.5:1}"/>`+
+      `<text x="${X(t)}" y="122" font-size="11" fill="var(--muted)" text-anchor="middle">${t===0?'0%':(t>0?'+':'−')+Math.round(Math.abs(t*100))+'%'}</text>`;});
+    rows.forEach(([nm,x,c,main],i)=>{const y=22+i*32;
+      g+=`<text x="0" y="${y+4}" font-size="12" fill="${main?'var(--ink)':'var(--muted)'}" ${main?'font-weight="700"':''}>${nm}</text>`;
+      if(x==null){g+=`<text x="${W}" y="${y+4}" font-size="12.5" fill="var(--faint)" text-anchor="end">—</text>`;return;}
+      const px=X(x),out=x>hi||x<lo;
+      g+=`<line x1="${X(0)}" x2="${px}" y1="${y}" y2="${y}" stroke="${c}" stroke-width="${main?6:4}" stroke-linecap="round"/><circle cx="${px}" cy="${y}" r="${main?7:5.5}" fill="${main?c:'var(--surface)'}" stroke="${c}" stroke-width="2"/>`;
+      if(out)g+=`<text x="${x>hi?R+2:L-2}" y="${y+4}" font-size="11" fill="${c}" text-anchor="${x>hi?'start':'end'}">${x>hi?'›':'‹'}</text>`;
+      g+=`<text x="${W}" y="${y+4}" font-size="13" font-weight="600" fill="${c}" text-anchor="end">${main?vig(x):vp(x)}</text>`;});
     return g+'</svg>';}
   function vgauge(v){const W=560,L=18,R=W-18,lo=v.pmin,hi=v.pmax,X=x=>L+(Math.max(lo,Math.min(hi,x))-lo)/(hi-lo||1)*(R-L);
     const over=v.per>hi,under=v.per<lo,x=X(v.per),f=n=>(+n).toFixed(1);
@@ -104,6 +107,14 @@
       <div class="vmore" hidden><p class="vsay">${esc(sentence)}</p>${vaxis(v)}
         ${v.pmin!=null?`<div class="vlbl">過去5年のPERでの位置（今のPER ${(+v.per).toFixed(1)}倍・過去${v.pn}か月）</div>${vgauge(v)}`:''}
         <p class="vs">前提：直近4四半期の純利益を起点に、10年間 年g%で伸びその後は年2%、割引率${r}で今の時価総額と等しくなるgを逆算。判定は（実績3年 − 織り込み）が+5pt超で「期待は控えめ」、±5pt以内で「実績並み」、−5pt未満で「期待が先行」。</p></div>`+foot;}
+  function vtds(v,mk){const d='<span class="muted">—</span>',m=t=>`<td colspan="7" class="l muted" style="font-size:11px">${t}</td>`;
+    if(!v)return m(mk==='jp'?'データ収集中':'—');
+    if(v.status!=='ok')return m(v.status==='collecting'?(v.pending?'最新決算の反映待ち':'データ収集中'):v.status==='no_data'?'決算データなし':'株価データなし');
+    if(v.ex)return `<td colspan="7" class="l muted" style="font-size:11px" title="${esc(v.ex)}">対象外（${esc(v.ex)}）</td>`;
+    const lb=vlab(v),gp=vgap(v),pc=x=>x==null?d:vp(x);
+    return `<td style="color:var(--brand);font-weight:600">${vig(v.ig)}</td><td>${v.nolabel?d:pc(v.g3)}</td><td>${pc(v.g1)}</td>
+      <td>${gp==null?d:(gp>=0?'+':'−')+Math.abs(gp*100).toFixed(1)+'pt'}</td><td class="l">${lb?`<span class="vpill ${lb[0]}">${lb[1]}</span>`:d}</td>
+      <td>${v.pos!=null?vmini(v.pos)+' '+Math.round(v.pos*100)+'%':d}</td><td>${v.peg!=null?(+v.peg).toFixed(2):d}</td>`;}
   function mountVal(el,mk,code){if(!el)return;el.innerHTML='';
     vload(mk).then(D=>{const h=vhtml(D,mk,code);if(!h){el.innerHTML='';return;}el.innerHTML=`<div class="sc-val">${h}</div>`;
       const b=el.querySelector('.vbtn');if(b)b.onclick=()=>{const m=el.querySelector('.vmore'),o=m.hidden;m.hidden=!o;b.setAttribute('aria-expanded',o);b.textContent=o?'グラフを閉じる ◂':'グラフで見る ▸';};});}
@@ -146,5 +157,5 @@
     draw();
     if(o.scroll!==false)setTimeout(()=>box.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'nearest'}),30);
   }
-  window.StockCard={open,root:ROOT,mountVal,valData:vload,vlab,vgap,vig,vp,vposTxt,vmini};
+  window.StockCard={open,root:ROOT,mountVal,valData:vload,vlab,vgap,vig,vp,vposTxt,vmini,vtds};
 })();

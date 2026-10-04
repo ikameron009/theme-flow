@@ -74,6 +74,28 @@ def equal_weight_index(close, cols, clip=0.3):
     return (1 + m).cumprod() * 100
 
 
+def spark_small(c, n=60, pts=20):
+    """直近 n 営業日の形を pts 点・0〜99 の整数に縮めたもの(一覧の小さな線グラフ用・ファイルを小さく)"""
+    x = c.iloc[-n:]
+    idx = np.linspace(0, len(x) - 1, pts).round().astype(int)
+    x = x.iloc[idx]
+    lo, hi = x.min(), x.max()
+    out = {}
+    for k in x.columns:
+        v, a, b = x[k].values, lo[k], hi[k]
+        if not np.isfinite(a) or not np.isfinite(b) or np.isnan(v).any():
+            continue
+        out[k] = [int(round((t - a) / (b - a) * 99)) if b > a else 50 for t in v]
+    return out
+
+
+def surge_all(turn):
+    """売買代金の急増率(%) を全銘柄まとめて(直近5日平均 ÷ その前20営業日平均 − 1)"""
+    t = turn.iloc[-25:]
+    a, b = t.iloc[-5:].mean(), t.iloc[:-5].mean()
+    return (a / b.replace(0, np.nan) - 1) * 100
+
+
 def stock_table(close, months):
     """全銘柄の騰落を一括計算(ベクトル化)。戻り値: DataFrame(index=銘柄)"""
     c = close.ffill(limit=3)
@@ -95,6 +117,8 @@ def stock_table(close, months):
     df = pd.DataFrame({
         "chg1": (last / ago(1) - 1) * 100, "w1": (last / ago(5) - 1) * 100, "m0": (last / b0 - 1) * 100,
         "ytd": (last / ybase - 1) * 100, "hi52": (last / hi - 1) * 100,
+        "r1m": (last / ago(21) - 1) * 100, "r2m": (last / ago(42) - 1) * 100, "r3m": (last / ago(63) - 1) * 100,
+        "r6m": (last / ago(126) - 1) * 100, "r12m": (last / ago(252) - 1) * 100,
         "rs": (raw.rank(pct=True) * 99).clip(1, 99).round(), "trend": trend, "last": last,
     })
     df.loc[last.isna()] = np.nan

@@ -95,6 +95,12 @@ table.rx td .more{cursor:help;color:var(--brand);font-weight:600;border-bottom:1
 #vfil .vg small{font-size:11px;color:var(--muted);margin-right:2px}
 .vdot{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--grey-line)}
 .vdot.low{background:var(--brand)}.vdot.high{background:var(--warn-ink)}
+table.rx th.ck,table.rx td.ck{position:sticky;left:0;z-index:2;background:var(--surface)}
+table.rx thead th.ck{z-index:4}
+table.rx thead th:nth-child(2),table.rx tbody td:nth-child(2){position:sticky;left:26px;z-index:2;background:var(--surface);box-shadow:1px 0 0 var(--line)}
+table.rx thead th:nth-child(2){z-index:4}
+table.rx tr.sel td.ck,table.rx tr.sel td:nth-child(2){background:var(--surface-2)}
+#vfil .vop{padding:3px 4px}
 </style>
 </head><body>
 
@@ -197,15 +203,15 @@ const TRENDS=[['up','上昇'],['flat','中立'],['down','下落']];
 const TR=r=>{const s=g(r,'stage');return s==='tt'||s==='vcp'?'up':s;};
 const STAGE_UI=()=>SHOW_TT_VCP?STAGES:TRENDS,stageKey=r=>SHOW_TT_VCP?g(r,'stage'):TR(r);
 const stageName=k=>((SHOW_TT_VCP?STAGES:TRENDS).find(x=>x[0]===k)||STAGES.find(x=>x[0]===k)||[k,k])[1];
-const PCT=new Set(['chg1','w1','m0','m1','m2','m3','r1m','r3m','r6m','ytd','hi52','ma50','ma200','ema21']);
+const PCT=new Set(['chg1','w1','m0','m1','m2','m3','r1m','r2m','r3m','r6m','r12m','ytd','hi52','ma50','ma200','ema21','surge']);
 let mk='jp',D=null,TH=null,S=[],ci={};
 const DATA={},THEMES={},VALS={};
 const st={q:'',themes:new Set(),sectors:new Set(),secBig:new Set(),thBig:new Set(),stages:new Set(),vl:new Set(),vpos:null,vig:null,chk:new Set(),sel:null,conds:[],sort:'rs',dir:-1,view:'table',color:'m0',size:'to20',limit:300};
 try{mk=new URLSearchParams(location.search).get('m')||localStorage.getItem('tf_market')||'jp';}catch(e){}
 
 function fields(){const M=D.months,U=D.units;return [
-  ['chg1','前日比','%'],['w1','1週','%'],['m0','今月（'+M[0]+'）','%'],['m1',M[1],'%'],['m2',M[2],'%'],['m3',M[3],'%'],
-  ['r1m','1か月','%'],['r3m','3か月','%'],['r6m','6か月','%'],['ytd','年初来','%'],['hi52','52週高値から','%'],
+  ['chg1','前日比','%'],['w1','週間%','%'],['m0','今月（'+M[0]+'）','%'],['m1',M[1],'%'],['m2',M[2],'%'],['m3',M[3],'%'],
+  ['r1m','1か月前','%'],['r2m','2か月前','%'],['r3m','3か月前','%'],['r6m','6か月前','%'],['r12m','1年前','%'],['ytd','年初来','%'],['hi52','52週高値から','%'],['surge','資金急増率','%'],
   ['ma50','50日線から','%'],['ma200','200日線から','%'],['ema21','21日EMAから','%'],['rs','RS',''],['volx','出来高倍率','倍'],
   ['adr','ADR%（20日）','%'],['to20','売買代金（20日平均）',U.to],['mcap','時価総額',U.mcap],['price','株価','']];}
 function g(r,k){return VK.has(k)?vv(r,k):r[ci[k]];}
@@ -230,8 +236,8 @@ function filtered(){narrowSets();
   return S.filter(r=>{
     if(st.stages.size&&!st.stages.has(g(r,'stage'))&&!st.stages.has(TR(r)))return false;
     if(st.vl.size){const lb=vlabOf(r);if(!lb||!st.vl.has(lb[1]))return false;}
-    if(st.vpos!=null){const p=vv(r,'vpos');if(p==null||p>st.vpos)return false;}
-    if(st.vig!=null){const x=vv(r,'ig');if(x==null||x>st.vig)return false;}
+    if(st.vpos&&!vcmp(vv(r,'vpos'),st.vpos))return false;
+    if(st.vig&&!vcmp(vv(r,'ig'),st.vig))return false;
     if(ssel.size||st.secBig.size){const sc=g(r,'sector');if(!hit(sc,ssel,st.secBig,secBigOf,secNarrow))return false;}
     if(tsel.length||st.thBig.size){const T=g(r,'themes');if(!T.some(i=>hit(D.themes[i],st.themes,st.thBig,thBigOf,thNarrow)))return false;}
     for(const c of st.conds){const v=g(r,c.k);if(v==null)return false;if(c.op==='ge'?v<c.v:v>c.v)return false;}
@@ -274,14 +280,22 @@ function drawMS(){
 document.addEventListener('click',()=>{if(MS_OPEN){MS_OPEN=null;drawMS();}});
 
 /* ---------- 画面 ---------- */
-const VL=['期待は控えめ','実績並み','期待が先行'],VPOS=[[0.3,'下位30%'],[0.5,'下位50%']],VIG=[[0.1,'10%以下'],[0.2,'20%以下']];
-function drawVfil(){const b=(on,attr,txt)=>`<button class="stbtn" ${attr} aria-pressed="${on}">${txt}</button>`,cls={'期待は控えめ':'low','実績並み':'mid','期待が先行':'high'};
-  $('#vfil').innerHTML=`<span class="vg"><small>判定</small>${VL.map(l=>b(st.vl.has(l),`data-vl="${l}"`,`<span class="vdot ${cls[l]}"></span>${l}`)).join('')}</span>
-    <span class="vg"><small>過去5年PERの位置</small>${VPOS.map(([v,l])=>b(st.vpos===v,`data-vpos="${v}"`,l)).join('')}</span>
-    <span class="vg"><small>株価が織り込む成長率</small>${VIG.map(([v,l])=>b(st.vig===v,`data-vig="${v}"`,l)).join('')}</span>`;
-  $$('#vfil [data-vl]').forEach(x=>x.onclick=()=>{const l=x.dataset.vl;st.vl.has(l)?st.vl.delete(l):st.vl.add(l);st.limit=300;render();});
-  $$('#vfil [data-vpos]').forEach(x=>x.onclick=()=>{const v=+x.dataset.vpos;st.vpos=st.vpos===v?null:v;st.limit=300;render();});
-  $$('#vfil [data-vig]').forEach(x=>x.onclick=()=>{const v=+x.dataset.vig;st.vig=st.vig===v?null:v;st.limit=300;render();});}
+const VL=['期待は控えめ','実績並み','期待が先行'];
+const VNUM=[['vpos','過去5年PERの位置（下から）','例 30'],['vig','株価が織り込む成長率','例 10']];
+function drawVfil(){const box=$('#vfil'),cls={'期待は控えめ':'low','実績並み':'mid','期待が先行':'high'};
+  if(!box.dataset.built){box.dataset.built='1';
+    box.innerHTML=`<span class="vg"><small>判定</small>${VL.map(l=>`<button class="stbtn" data-vl="${l}"><span class="vdot ${cls[l]}"></span>${l}</button>`).join('')}</span>`+
+      VNUM.map(([k,l,ph])=>`<span class="vg"><small>${l}</small><input class="num-in vnum" type="number" step="any" data-k="${k}" placeholder="${ph}" style="width:72px">%<select class="vop" data-k="${k}"><option value="le">以下</option><option value="ge">以上</option></select><button class="btn sm ghost vclr" data-k="${k}" title="外す">✕</button></span>`).join('');
+    $$('#vfil [data-vl]').forEach(x=>x.onclick=()=>{const l=x.dataset.vl;st.vl.has(l)?st.vl.delete(l):st.vl.add(l);st.limit=300;render();});
+    const apply=k=>{const i=box.querySelector(`.vnum[data-k="${k}"]`),o=box.querySelector(`.vop[data-k="${k}"]`),v=parseFloat(i.value);
+      st[k]=isFinite(v)?{op:o.value,v:v/100}:null;st.limit=300;render();};
+    $$('#vfil .vnum').forEach(i=>{i.onchange=()=>apply(i.dataset.k);i.onkeydown=e=>{if(e.key==='Enter')apply(i.dataset.k);};});
+    $$('#vfil .vop').forEach(o=>o.onchange=()=>apply(o.dataset.k));
+    $$('#vfil .vclr').forEach(b=>b.onclick=()=>{st[b.dataset.k]=null;render();});}
+  $$('#vfil [data-vl]').forEach(x=>x.setAttribute('aria-pressed',st.vl.has(x.dataset.vl)));
+  VNUM.forEach(([k])=>{const i=box.querySelector(`.vnum[data-k="${k}"]`),o=box.querySelector(`.vop[data-k="${k}"]`),c=st[k];
+    if(document.activeElement!==i)i.value=c?+(c.v*100).toFixed(1):'';if(c)o.value=c.op;box.querySelector(`.vclr[data-k="${k}"]`).hidden=!c;});}
+const vcmp=(x,c)=>x!=null&&(c.op==='ge'?x>=c.v:x<=c.v);
 function drawFilters(){
   drawMS.sc=null;drawMS.tc=null;MS_OPEN=null;drawMS();
   $('#stages').innerHTML=STAGE_UI().map(([k,l])=>`<button class="stbtn" data-s="${k}" aria-pressed="${st.stages.has(k)}"><span class="dot st-${k}"></span>${l}</button>`).join('');
@@ -301,7 +315,7 @@ function drawPresets(){const M=D.months;
     else if(k==='hi')addCond('hi52','ge',-5);
     else if(k==='vol')addCond('volx','ge',2);
     else if(k==='v1'){st.vl.add('期待は控えめ');st.stages.add('up');}
-    else if(k==='v2'){st.vpos=0.3;addCond('rs','ge',80);}
+    else if(k==='v2'){st.vpos={op:'le',v:0.3};addCond('rs','ge',80);}
     st.limit=300;render();drawMS();});}
 function addCond(k,op,v){st.conds=st.conds.filter(c=>!(c.k===k&&c.op===op));st.conds.push({k,op,v});}
 function drawChips(){
@@ -314,8 +328,8 @@ function drawChips(){
     ...[...st.themes].map(t=>chip('テーマ：'+esc(thBigOf(t))+' ＞ '+esc(t),'themes',t)),
     ...[...st.stages].map(k=>chip('トレンド：'+esc(stageName(k)),'stages',k,SB)),
     ...[...st.vl].map(l=>chip('判定：'+esc(l),'vl',l,SB)),
-    ...(st.vpos!=null?[chip('過去5年PERの位置：下位'+Math.round(st.vpos*100)+'%以内','vpos','',SB)]:[]),
-    ...(st.vig!=null?[chip('織り込み成長：'+Math.round(st.vig*100)+'%以下','vig','',SB)]:[]),
+    ...(st.vpos?[chip('過去5年PERの位置：下から'+(+(st.vpos.v*100).toFixed(1))+'%'+(st.vpos.op==='ge'?'以上':'以下'),'vpos','',SB)]:[]),
+    ...(st.vig?[chip('織り込み成長：'+(+(st.vig.v*100).toFixed(1))+'%'+(st.vig.op==='ge'?'以上':'以下'),'vig','',SB)]:[]),
     ...st.conds.map((c,i)=>chip(esc(F[c.k][1])+' '+(c.op==='ge'?'≧':'≦')+' '+c.v+esc(F[c.k][2]),'conds',i))];
   $('#chips').innerHTML=html.length?html.join('')+(st.secBig.size+st.sectors.size&&st.thBig.size+st.themes.size?'<span class="phint">業種とテーマは両方に当てはまる銘柄</span>':''):'<span class="phint">まだありません</span>';
   $$('#chips button').forEach(b=>b.onclick=()=>{const k=b.dataset.k,v=b.dataset.v;if(k==='conds')st.conds.splice(+v,1);else if(k==='vpos'||k==='vig')st[k]=null;else st[k].delete(v);render();drawMS();});
@@ -339,7 +353,7 @@ function drawSummary(R){
   const th={};R.forEach(r=>g(r,'themes').forEach(i=>th[i]=(th[i]||0)+1));
   bars(Object.fromEntries(Object.entries(th).sort((a,b)=>b[1]-a[1]).slice(0,8).map(([i,v])=>[D.themes[i],v])),$('#topTh'),n=>{st.themes.add(n);render();drawMS();});
 }
-function heat(v,k){if(v==null)return'';const sc={chg1:4,w1:8,m0:12,m1:12,m2:12,m3:12,r1m:15,r3m:30,r6m:50,ytd:60,hi52:30,ma50:15,ma200:30,ema21:10}[k];if(!sc)return'';
+function heat(v,k){if(v==null)return'';const sc={chg1:4,w1:8,m0:12,m1:12,m2:12,m3:12,r1m:15,r2m:20,r3m:30,r6m:50,r12m:80,ytd:60,hi52:30,ma50:15,ma200:30,ema21:10}[k];if(!sc)return'';
   const a=Math.min(1,Math.abs(v)/sc)*0.5;return `background:rgba(${v>=0?cssv('--brandrgb'):cssv('--downrgb')},${a.toFixed(2)})`;}
 function link(code){return mk==='us'?`https://finance.yahoo.com/quote/${code}`:`https://kabutan.jp/stock/?code=${code}`;}
 /* 残りのテーマのふきだし(表のスクロール枠に隠れないよう画面に固定) */
@@ -370,35 +384,35 @@ function openCard(code){const r=S.find(x=>g(x,'code')===code);if(!r)return;st.se
 /* コピー・CSVの対象 = チェックした銘柄(なければ表示中の全銘柄) */
 function targets(){const R=window.__R||[];if(!st.chk.size)return R;return S.filter(r=>st.chk.has(g(r,'code')));}
 function drawCopyBtns(){const n=st.chk.size;$('#copy').textContent=n?`ティッカーをコピー（選択${n}）`:'ティッカーをコピー';$('#csv').textContent=n?`CSV出力（選択${n}）`:'CSV出力';}
-function vcells(r){const v=vrec(r),d='<span class="muted">—</span>';
-  if(!v)return `<td colspan="7" class="l muted" style="font-size:11px">${mk==='jp'?'データ収集中':'—'}</td>`;
-  if(v.status!=='ok')return `<td colspan="7" class="l muted" style="font-size:11px">${v.status==='collecting'?(v.pending?'最新決算の反映待ち':'データ収集中'):v.status==='no_data'?'決算データなし':'株価データなし'}</td>`;
-  if(v.ex)return `<td colspan="7" class="l muted" style="font-size:11px" title="${esc(v.ex)}">対象外（${esc(v.ex)}）</td>`;
-  const lb=StockCard.vlab(v),gp=StockCard.vgap(v),pc=x=>x==null?d:StockCard.vp(x);
-  return `<td style="color:var(--brand);font-weight:600">${StockCard.vig(v.ig)}</td><td>${v.nolabel?d:pc(v.g3)}</td><td>${pc(v.g1)}</td>
-    <td>${gp==null?d:(gp>=0?'+':'−')+Math.abs(gp*100).toFixed(1)+'pt'}</td><td class="l">${lb?`<span class="vpill ${lb[0]}">${lb[1]}</span>`:d}</td>
-    <td>${v.pos!=null?StockCard.vmini(v.pos)+' '+Math.round(v.pos*100)+'%':d}</td><td>${v.peg!=null?(+v.peg).toFixed(2):d}</td>`;}
+function vcells(r){return StockCard.vtds(vrec(r),mk);}
+const TCOLS=['chg1','w1','m0','r1m','r2m','r3m','r6m','r12m','hi52'];
+/* 直近60日の小さな線(20点・0〜99) */
+function sparkS(a){if(!a||a.length<2)return'<span class="muted">–</span>';const w=64,h=16;let p='';a.forEach((v,i)=>p+=(i?'L':'M')+(i/(a.length-1)*w).toFixed(1)+' '+(h-1-v/99*(h-2)).toFixed(1)+' ');
+  return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" style="display:inline-block;vertical-align:middle"><path d="${p}" fill="none" stroke="${a[a.length-1]>=a[0]?'var(--up)':'var(--down)'}" stroke-width="1.3"/></svg>`;}
 function drawTable(R){
-  const F=fields(),M=D.months;
-  const cols=[['ck','',''],['name','銘柄','l'],['stage','トレンド',''],['price','株価',''],['rs','RS',''],['sector','業種','l'],['themes','テーマ','l'],...F.filter(f=>PCT.has(f[0])).map(f=>[f[0],f[1],'']),['to20','売買代金',''],['mcap','時価総額',''],['volx','出来高倍率',''],['adr','ADR%',''],['ig','織り込み成長',''],['g3','実績3年',''],['g1','直近1年',''],['gap','差',''],['vl','判定','l'],['vpos','PER位置',''],['peg','PEG','']];
+  const F=fields(),M=D.months,FL=Object.fromEntries(F.map(f=>[f[0],f[1]]));
+  const cols=[['ck','',''],['name','銘柄','l'],['stage','トレンド',''],['spark','直近60日',''],['sector','業種','l'],['themes','テーマ','l'],['price','現在値',''],['rs','RS',''],
+    ...TCOLS.map(k=>[k,FL[k],'']),['surge','資金急増率%',''],['ig','織り込み成長',''],['g3','実績（3年）',''],['g1','直近1年',''],['gap','差',''],['vl','バリュエーション','l'],['vpos','PER位置（5年）',''],['peg','PEG（実績）',''],
+    ['to20','売買代金',''],['mcap','時価総額',''],['volx','出来高倍率',''],['adr','ADR%','']];
   const allOn=R.length>0&&R.every(r=>st.chk.has(g(r,'code'))),someOn=st.chk.size>0;
   $('#thead').innerHTML=cols.map(([k,l,c])=>k==='ck'?`<th class="ck" data-k="ck" title="${someOn?'選択をすべて解除':'表示中をすべて選択'}"><input type="checkbox" id="ckAll" ${allOn?'checked':''}></th>`
     :`<th class="${c} ${st.sort===k?'on':''}" data-k="${k}">${esc(l)}${st.sort===k?(st.dir>0?' ▲':' ▼'):''}</th>`).join('');
   const ca=$('#ckAll');ca.indeterminate=someOn&&!allOn;
   ca.onclick=e=>{e.stopPropagation();if(someOn)st.chk.clear();else R.forEach(r=>st.chk.add(g(r,'code')));render();};
-  $$('#thead th').forEach(th=>th.onclick=()=>{const k=th.dataset.k;if(k==='themes'||k==='ck')return;if(st.sort===k)st.dir=-st.dir;else{st.sort=k;st.dir=k==='name'?1:-1;}render();});
+  $$('#thead th').forEach(th=>th.onclick=()=>{const k=th.dataset.k;if(k==='themes'||k==='ck'||k==='spark')return;if(st.sort===k)st.dir=-st.dir;else{st.sort=k;st.dir=k==='name'?1:-1;}render();});
   const rows=R.slice(0,st.limit);
   $('#tbody').innerHTML=rows.map(r=>{const T=g(r,'themes');const t0=T.length?D.themes[T[0]]:'';
     const cd=g(r,'code');
     return `<tr class="${st.sel===cd?'sel':''}"><td class="ck"><input type="checkbox" data-c="${esc(cd)}" ${st.chk.has(cd)?'checked':''}></td>
       <td class="l"><button class="nmb" data-c="${esc(cd)}" title="チャートを表示"><b title="${esc(g(r,'name'))}">${esc(g(r,'name'))}</b><small>${esc(cd)}</small></button></td>
-      <td><span class="dot st-${stageKey(r)}" title="${esc(stageName(stageKey(r)))}"></span></td>
-      <td>${fmt(g(r,'price'),g(r,'price')>=1000?0:2)}</td><td style="font-weight:600">${g(r,'rs')??'–'}</td>
+      <td><span class="dot st-${stageKey(r)}" title="${esc(stageName(stageKey(r)))}"></span> <span style="font-size:11px">${esc(stageName(stageKey(r)))}</span></td><td>${sparkS(g(r,'spark'))}</td>
       <td class="l"><span class="secn" title="${esc(secBigOf(g(r,'sector'))+' ＞ '+g(r,'sector'))}">${esc(g(r,'sector')||'–')}</span></td>
       <td class="l">${t0?`<span class="tchip" data-t="${esc(t0)}" title="このテーマで絞り込む">${esc(t0)}</span>${T.length>1?` <span class="more" data-tip="${esc(T.slice(1).map(i=>D.themes[i]).join('\n'))}">+${T.length-1}</span>`:''}`:'<span class="muted">–</span>'}</td>
-      ${F.filter(f=>PCT.has(f[0])).map(([k])=>{const v=g(r,k);return `<td class="${v>=0?'up':'down'}" style="${heat(v,k)}">${pct(v)}</td>`;}).join('')}
+      <td>${fmt(g(r,'price'),g(r,'price')>=1000?0:2)}</td><td style="font-weight:600">${g(r,'rs')??'–'}</td>
+      ${TCOLS.map(k=>{const v=g(r,k);return `<td class="${v>=0?'up':'down'}" style="${heat(v,k)}">${pct(v)}</td>`;}).join('')}
+      <td class="${(g(r,'surge')??0)>=0?'up':'down'}">${g(r,'surge')==null?'–':pct(g(r,'surge'))}</td>${vcells(r)}
       <td>${fmt(g(r,'to20'),g(r,'to20')>=100?0:1)}</td><td>${g(r,'mcap')==null?'–':fmt(g(r,'mcap'),g(r,'mcap')>=100?0:1)}</td>
-      <td>${g(r,'volx')==null?'–':fmt(g(r,'volx'),2)+'倍'}</td><td>${fmt(g(r,'adr'),1)}</td>${vcells(r)}</tr>`;}).join('')
+      <td>${g(r,'volx')==null?'–':fmt(g(r,'volx'),2)+'倍'}</td><td>${fmt(g(r,'adr'),1)}</td></tr>`;}).join('')
     ||'<tr><td colspan="30" class="l muted" style="padding:14px">条件に合う銘柄がありません。</td></tr>';
   $$('#tbody .tchip').forEach(e=>e.onclick=()=>{st.themes.add(e.dataset.t);render();drawMS();});
   $$('#tbody td.ck input').forEach(c=>c.onchange=()=>{c.checked?st.chk.add(c.dataset.c):st.chk.delete(c.dataset.c);const a=$('#ckAll');
@@ -485,7 +499,7 @@ $('#more').onclick=()=>{st.limit+=300;render();};
 $('#copy').onclick=()=>{const R=targets();const txt=R.map(r=>mk==='jp'?g(r,'code')+'.T':g(r,'code')).join(',');
   navigator.clipboard.writeText(txt).then(()=>$('#copied').textContent=`${R.length}銘柄をコピーしました`).catch(()=>{$('#copied').textContent='コピーできませんでした';});};
 $('#csv').onclick=()=>{const R=targets(),F=fields();
-  const head=['コード','銘柄名','業種','テーマ','トレンド',...F.map(f=>f[1]+(f[2]?`(${f[2]})`:'')),'織り込み成長(%)','実績3年(%)','直近1年(%)','差(pt)','判定','過去5年PER位置(下から%)','PEG(実績)','バリュエーション備考'];
+  const head=['コード','銘柄名','業種','テーマ','トレンド',...F.map(f=>f[1]+(f[2]?`(${f[2]})`:'')),'織り込み成長(%)','実績3年(%)','直近1年(%)','差(pt)','バリュエーション','過去5年PER位置(下から%)','PEG(実績)','バリュエーション備考'];
   const lines=[head,...R.map(r=>[g(r,'code'),g(r,'name'),g(r,'sector'),g(r,'themes').map(i=>D.themes[i]).join(' / '),stageName(stageKey(r)),...F.map(f=>g(r,f[0])??''),...['ig','g3','g1','gap'].map(k=>{const x=vv(r,k);return x==null?'':+(x*100).toFixed(1);}),(vlabOf(r)||['',''])[1],vv(r,'vpos')==null?'':Math.round(vv(r,'vpos')*100),vv(r,'peg')??'',(vrec(r)||{}).ex||''])];
   const csv='﻿'+lines.map(l=>l.map(v=>{const s=String(v);return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s;}).join(',')).join('\n');
   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download=`research_${mk}_${D.updated}.csv`;document.body.appendChild(a);a.click();a.remove();};

@@ -30,6 +30,9 @@
     v_label:['判定','実績3年と、株価が織り込む成長率の差で3つに分けています。','期待は控えめ＝差が+5pt超／実績並み＝±5pt以内／期待が先行＝−5pt未満。「割安・割高」の意味ではありません。'],
     v_pos:['過去5年PERの位置','今のPERが、過去5年（毎月末）のPERの中で下から何%の位置か。0%に近いほど、5年の中で低いPERです。','PERが0倍以下・100倍超の月は除き、有効な月が24か月未満なら表示しません。'],
     v_peg:['PEG（実績）','PER ÷ 過去3年の純利益の年率（%）。1に近いほど、利益の伸びに対してPERが低めです。','実績ベースの数字で、noteのデータシート（予想ベース）とは別です。減益なら計算しません。'],
+    v_th_ig:['織り込み成長（中央値）','テーマの構成銘柄それぞれの「株価が織り込む成長率」の中央値。そのテーマ全体に、株価がどれくらいの成長を前提にしているかの目安です。','計算できる銘柄が5銘柄未満のテーマは「—」。全銘柄の決算データがそろってから表示します（今はデータ収集中）。'],
+    v_th_low:['期待は控えめの割合','判定が出ている構成銘柄のうち、「期待は控えめ」の銘柄の割合。資金は入っているのに、期待はまだ控えめなテーマを探す列です。','計算結果の表示であり、売買の推奨ではありません。全銘柄の決算データがそろってから表示します（今はデータ収集中）。'],
+    price_stock:['現在値','最新の株価（終値）です。',''],
     v_fil:['バリュエーションで絞り込む','判定・過去5年PERの位置・株価が織り込む成長率で絞り込みます。計算できない銘柄（赤字・データ収集中など）は外れます。','日本株は決算データを毎日少しずつ集めているため、まだ一部の銘柄だけです。'],
     /* 市場概況 */
     g_market:['市場概況の見方','1. 一番上の「地合い」で、市場全体が買いやすい状況かを確認　2. 強い業種・弱い業種で、お金がどこに向かっているかを見る　3. 市場健全度カレンダーで、最近の流れが良くなっているか悪くなっているかを見る','日本株・米国株はページ上の切り替えで変わります。'],
@@ -118,7 +121,7 @@
   /* ---------- どの項目名に付けるか(文字が一致したら) ---------- */
   const COMMON=[
     ['RS','rs'],['52週高値','hi52'],['52週高値から','hi52'],['資金急増率%','surge'],['資金急増率','surge'],['急増率','surge'],['売買代金の急増率','surge'],
-    ['トレンド','trend'],['バリュエーション','v_head'],['株価が織り込む成長率','v_ig'],['織り込み成長','v_ig'],['実績3年（直近1年）','v_g3'],['実績3年','v_g3'],
+    ['トレンド','trend'],['バリュエーション','v_label','th'],['バリュエーション','v_head'],['実績（3年）','v_g3'],['PER位置（5年）','v_pos'],['織り込み成長（中央値）','v_th_ig'],['期待は控えめの割合','v_th_low'],['株価が織り込む成長率','v_ig'],['織り込み成長','v_ig'],['実績3年（直近1年）','v_g3'],['実績3年','v_g3'],
     ['直近1年','v_g1'],['差','v_gap'],['判定','v_label'],['過去5年PERの位置','v_pos'],['PER位置','v_pos'],['PEG（実績）','v_peg'],['PEG','v_peg'],['週間%','w1'],['直近60日','spark'],[/^今月（/,'month'],['1か月前','ago'],
   ];
   const BYPAGE={
@@ -130,7 +133,7 @@
       ['優先度','prio'],['Buy','buy'],['VCP','vcp'],['ピボット','pivot'],['継続','streak'],['最近の掲載','recent'],['上場','listing']],
     sectors:[['ETF','repetf'],['現在値','price_sec']],
     themes:[['現在値','price_th']],
-    research:[['バリュエーション','v_fil'],['RS','rs_all'],['業種','f_sec'],['テーマ','f_th'],['条件を追加','f_cond'],['よく使う条件','f_preset'],['出来高倍率','volx'],[/^ADR%/,'adr'],
+    research:[['バリュエーション','v_fil','.flabel'],['2か月前','ago'],['3か月前','ago'],['6か月前','ago'],['1年前','ago'],['現在値','price_stock'],['RS','rs_all'],['業種','f_sec'],['テーマ','f_th'],['条件を追加','f_cond'],['よく使う条件','f_preset'],['出来高倍率','volx'],[/^ADR%/,'adr'],
       ['50日線から','ma50x'],['200日線から','ma200x'],['21日EMAから','ema21x'],['トレンドの内訳','trend_mix'],[/^売買代金（20日平均/,'turnover'],['売買代金','turnover'],['時価総額','mcap'],['1か月','ago'],['3か月','ago'],['6か月','ago']],
     note:[['急成長スコア','n_score'],['必須条件','n_must'],['状態ラベル','n_label'],['掲載時の株価','n_entry'],['騰落','n_ret'],['指数との差','n_ex'],
       ['選んだ期間・売り方','n_sel'],['最大上昇','n_mfe'],['最大下落','n_mae'],['経過','n_days'],['今のトレンド','n_trend'],
@@ -184,13 +187,13 @@
 
   /* ---------- 付ける ---------- */
   const norm=s=>s.replace(/[▲▼]/g,'').replace(/\s+/g,' ').trim();
-  function keyFor(t){for(const [m,k] of RULES){if(typeof m==='string'?t===m:m.test(t))return k;}return null;}
+  function keyFor(t,el){for(const [m,k,sel] of RULES){if(sel&&!el.matches(sel))continue;if(typeof m==='string'?t===m:m.test(t))return k;}return null;}
   function firstText(el){for(const n of el.childNodes){if(n.nodeType===3&&n.textContent.trim())return n;if(n.nodeType===1&&!n.matches('.ar,.hq'))return null;}return null;}
   function icon(k){const s=document.createElement('span');s.className='hq';s.textContent='?';s.dataset.hk=k;bind(s);return s;}
   function scan(){
     document.querySelectorAll(SEL).forEach(el=>{if(el.dataset.hqDone===el.textContent||el.closest(SKIP))return;
       const n=firstText(el);if(!n){el.dataset.hqDone=el.textContent;return;}
-      const k=keyFor(norm(n.textContent));
+      const k=keyFor(norm(n.textContent),el);
       if(k&&!el.querySelector(':scope > .hq')){n.after(icon(k));}
       el.dataset.hqDone=el.textContent;});
     (GUIDE[PAGE]||[]).forEach(([t,k])=>{document.querySelectorAll('h2').forEach(h=>{if(h.querySelector('.hq-guide'))return;const n=firstText(h);if(!n||norm(n.textContent)!==t)return;

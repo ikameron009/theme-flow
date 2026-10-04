@@ -529,7 +529,7 @@ function drawStockSearch(){
 const VCP_DATA={us:null,jp:null};
 function loadVcp(mkt){if(VCP_DATA[mkt]!==null)return Promise.resolve(VCP_DATA[mkt]);
   return fetch('vcp_'+mkt+'.json?cb='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.json():{sessions:[]}).catch(()=>({sessions:[]})).then(j=>{VCP_DATA[mkt]=j;return j;});}
-function vcpCols(){return [['prio','優先度','r'],['name','銘柄','l'],['sector','セクター','l'],['mcap','時価総額','r'],['listing','上場','r'],['buy','Buy','c'],['vcp','VCP','r'],['dist','ピボット','r'],['rs','RS','r'],['streak','継続','r'],['tl','最近の掲載','c'],['val','判定','c']];}
+function vcpCols(){return [['prio','優先度','r'],['name','銘柄','l'],['sector','セクター','l'],['mcap','時価総額','r'],['listing','上場','r'],['buy','Buy','c'],['vcp','VCP','r'],['dist','ピボット','r'],['rs','RS','r'],['streak','継続','r'],['tl','最近の掲載','c'],['val','バリュエーション','c']];}
 function numOf(v){if(v==null||v==='')return null;if(typeof v==='number')return v;const n=parseFloat(String(v).replace(/[^0-9.]/g,''));return isFinite(n)?n:null;}
 function vcpTL(sess,idx,code){const s=Math.max(0,idx-19);let g='<span class="vtl">';for(let i=s;i<=idx;i++){const on=sess[i].rows.some(r=>r.code===code);g+=`<i style="background:${on?'var(--brand)':'var(--surface-2)'}"></i>`;}return g+'</span>';}
 const VALD={};

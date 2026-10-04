@@ -63,7 +63,8 @@ def yomi_map(names):
 
 
 COLS = ["code", "name", "sector", "themes", "price", "mcap", "to20", "chg1", "w1", "m0", "m1", "m2", "m3",
-        "r1m", "r3m", "r6m", "ytd", "hi52", "ma50", "ma200", "ema21", "rs", "volx", "adr", "stage"]
+        "r1m", "r3m", "r6m", "ytd", "hi52", "ma50", "ma200", "ema21", "rs", "volx", "adr", "stage",
+        "r2m", "r12m", "surge", "spark"]
 
 
 def rnd(v, d=2):
@@ -136,6 +137,9 @@ def main():
     v = vol[universe]
     volx = v.iloc[-1] / v.iloc[-51:-1].mean()
     adr = ((hi[universe] / lo[universe] - 1) * 100).iloc[-20:].mean()
+    from tool_common import spark_small, surge_all
+    sg = surge_all(turn[universe])
+    spk = spark_small(c)
 
     # ステージ色
     tt = ((last > m50) & (m50 > m150) & (m150 > m200) & (m200 > m200_1m)
@@ -172,7 +176,9 @@ def main():
                      rnd((px / ago(21)[x] - 1) * 100), rnd((px / ago(63)[x] - 1) * 100), rnd((px / ago(126)[x] - 1) * 100),
                      rnd((px / y0[x] - 1) * 100), rnd((px / hi52[x] - 1) * 100), rnd((px / m50[x] - 1) * 100),
                      rnd((px / m200[x] - 1) * 100), rnd((px / ema21[x] - 1) * 100),
-                     None if not np.isfinite(rs[x]) else int(rs[x]), rnd(volx[x], 2), rnd(adr[x], 2), stage[x]])
+                     None if not np.isfinite(rs[x]) else int(rs[x]), rnd(volx[x], 2), rnd(adr[x], 2), stage[x],
+                     rnd((px / ago(42)[x] - 1) * 100), rnd((px / ago(252)[x] - 1) * 100) if len(c) > 252 else None,
+                     rnd(sg.get(x, np.nan), 1), spk.get(x)])
     out = {"market": mk, "updated": c.index[-1].strftime("%Y-%m-%d"), "months": [f"{m.month}月" for m in months],
            "units": {"to": "億円" if mk == "jp" else "百万ドル", "mcap": "億円" if mk == "jp" else "十億ドル"},
            "cols": COLS, "themes": themes, "theme_cat": [tcat.get(t, "") for t in themes], "stocks": rows}
@@ -195,7 +201,7 @@ def main():
     out["yomi"] = yomi_map(set(themes) | set(out["theme_cat"]) | set(out["sec_big"]) | set(out["sec_bigs"]))
     with open(P(f"pro_research_{mk}.json"), "w", encoding="utf-8") as f:
         json.dump(out, f, ensure_ascii=False, separators=(",", ":"))
-    cnt = pd.Series([r[-1] for r in rows]).value_counts().to_dict()
+    cnt = pd.Series([r[COLS.index("stage")] for r in rows]).value_counts().to_dict()
     kb = os.path.getsize(P(f"pro_research_{mk}.json")) / 1024
     print(f"[{mk}] 業種銘柄リサーチ {out['updated']} {len(rows)}銘柄 テーマ{len(themes)} ステージ{cnt} {kb:.0f}KB")
 
