@@ -64,7 +64,7 @@ def yomi_map(names):
 
 COLS = ["code", "name", "sector", "themes", "price", "mcap", "to20", "chg1", "w1", "m0", "m1", "m2", "m3",
         "r1m", "r3m", "r6m", "ytd", "hi52", "ma50", "ma200", "ema21", "rs", "volx", "adr", "stage",
-        "r2m", "r12m", "surge", "spark"]
+        "r2m", "r12m", "surge", "spark", "ma5", "ma25", "ma150"]
 
 
 def rnd(v, d=2):
@@ -128,6 +128,7 @@ def main():
     mret = [(last / bases[0] - 1) * 100] + [(bases[i - 1] / bases[i] - 1) * 100 for i in range(1, len(months))]
     y0 = c[c.index.year < c.index[-1].year].iloc[-1]
     ma50, ma150, ma200 = (c.rolling(n).mean() for n in (50, 150, 200))
+    m5, m25 = c.iloc[-5:].mean(), c.iloc[-25:].mean()
     ema21 = c.ewm(span=21, adjust=False).mean().iloc[-1]
     m50, m150, m200 = ma50.iloc[-1], ma150.iloc[-1], ma200.iloc[-1]
     m200_1m = ma200.iloc[-22]
@@ -178,7 +179,8 @@ def main():
                      rnd((px / m200[x] - 1) * 100), rnd((px / ema21[x] - 1) * 100),
                      None if not np.isfinite(rs[x]) else int(rs[x]), rnd(volx[x], 2), rnd(adr[x], 2), stage[x],
                      rnd((px / ago(42)[x] - 1) * 100), rnd((px / ago(252)[x] - 1) * 100) if len(c) > 252 else None,
-                     rnd(sg.get(x, np.nan), 1), spk.get(x)])
+                     rnd(sg.get(x, np.nan), 1), spk.get(x),
+                     rnd((px / m5[x] - 1) * 100), rnd((px / m25[x] - 1) * 100), rnd((px / m150[x] - 1) * 100)])
     out = {"market": mk, "updated": c.index[-1].strftime("%Y-%m-%d"), "months": [f"{m.month}月" for m in months],
            "units": {"to": "億円" if mk == "jp" else "百万ドル", "mcap": "億円" if mk == "jp" else "十億ドル"},
            "cols": COLS, "themes": themes, "theme_cat": [tcat.get(t, "") for t in themes], "stocks": rows}

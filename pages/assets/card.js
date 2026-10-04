@@ -107,6 +107,10 @@
       <div class="vmore" hidden><p class="vsay">${esc(sentence)}</p>${vaxis(v)}
         ${v.pmin!=null?`<div class="vlbl">過去5年のPERでの位置（今のPER ${(+v.per).toFixed(1)}倍・過去${v.pn}か月）</div>${vgauge(v)}`:''}
         <p class="vs">前提：直近4四半期の純利益を起点に、10年間 年g%で伸びその後は年2%、割引率${r}で今の時価総額と等しくなるgを逆算。判定は（実績3年 − 織り込み）が+5pt超で「期待は控えめ」、±5pt以内で「実績並み」、−5pt未満で「期待が先行」。</p></div>`+foot;}
+  /* 表の上の注記: 決算データを集めている途中(9割未満)なら件数を出す */
+  function valNote(vd,mk){if(!vd||!vd.universe)return '';const st=Object.values(vd.stocks||{}),done=st.filter(v=>v&&v.status&&v.status!=='collecting').length,n=vd.universe;
+    if(done/n>=0.9)return '';const pct=Math.floor(done/n*100);
+    return `<div class="vnote">バリュエーションの列（織り込み成長〜PEG）は、${mk==='jp'?'日本株':'米国株'}の決算データを毎日少しずつ集めている途中です（現在 ${done.toLocaleString()}／${n.toLocaleString()}銘柄・${pct}%）。まだの銘柄は「データ収集中」と表示されます。</div>`;}
   function vtds(v,mk){const d='<span class="muted">—</span>',m=t=>`<td colspan="7" class="l muted" style="font-size:11px">${t}</td>`;
     if(!v)return m(mk==='jp'?'データ収集中':'—');
     if(v.status!=='ok')return m(v.status==='collecting'?(v.pending?'最新決算の反映待ち':'データ収集中'):v.status==='no_data'?'決算データなし':'株価データなし');
@@ -124,6 +128,7 @@
     @media (max-width:640px){.sc-val .vgrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
     .sc-val .vgrid small{display:block;font-size:11px;color:var(--muted)}.sc-val .vgrid b{font:600 17px var(--f-num);margin-right:6px}.sc-val .vgrid b.vb{color:var(--brand)}
     .sc-val .vsub{font-size:11.5px;color:var(--muted);font-family:var(--f-num)}
+    .vnote{font-size:12px;color:var(--ink-2);background:var(--surface-2);border:1px solid var(--line);border-radius:6px;padding:6px 10px;margin:0 0 8px;line-height:1.6}
     .vpill{display:inline-block;font-size:11px;font-weight:700;padding:1px 9px;border-radius:999px;border:1px solid var(--line-strong);color:var(--ink-2);background:var(--surface-2);line-height:1.6;white-space:nowrap;vertical-align:2px}
     .vpill.low{background:var(--brand-soft);color:var(--brand);border-color:transparent}.vpill.high{background:var(--warn-bg);color:var(--warn-ink);border-color:transparent}
     .vpill.none{color:var(--muted);background:transparent}
@@ -157,5 +162,5 @@
     draw();
     if(o.scroll!==false)setTimeout(()=>box.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'nearest'}),30);
   }
-  window.StockCard={open,root:ROOT,mountVal,valData:vload,vlab,vgap,vig,vp,vposTxt,vmini,vtds};
+  window.StockCard={open,root:ROOT,mountVal,valData:vload,vlab,vgap,vig,vp,vposTxt,vmini,vtds,valNote};
 })();

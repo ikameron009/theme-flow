@@ -253,7 +253,7 @@ function stockRow(code,th){const s=D.stocks[code];if(!s)return '';const [n,c1,w1
 function memberHTML(x){const M=D.months||[];
   return `<tr class="mem"><td colspan="30"><div class="memhead"><b>${esc(x.name)}</b><span class="muted">構成銘柄 ${x.members.length}（売買代金の多い順・銘柄名を押すとチャート）</span>
     <button class="btn sm ghost" data-copy="${esc(x.name)}">ティッカーをコピー</button><span class="phint" data-copied></span></div>
-    <div class="memwrap"><table class="mt"><thead><tr>${MCOLS.map(([l,c])=>`<th class="${c}">${l==='__m0'?'今月（'+esc(M[0]||'')+'）':l}</th>`).join('')}</tr></thead>
+    ${VALD?StockCard.valNote(VALD,mk):''}<div class="memwrap"><table class="mt"><thead><tr>${MCOLS.map(([l,c])=>`<th class="${c}">${l==='__m0'?'今月（'+esc(M[0]||'')+'）':l}</th>`).join('')}</tr></thead>
     <tbody>${x.members.map(c=>stockRow(c,x.name)).join('')}</tbody></table></div>${MSEL&&MSEL.t===x.name?cardSlot('mcard'):''}</td></tr>`;}
 function fitMem(){const w=document.querySelector('.sx-wrap');if(!w)return;$$('.memwrap').forEach(el=>el.style.width=Math.max(320,w.clientWidth-28)+'px');}
 addEventListener('resize',fitMem);

@@ -166,7 +166,7 @@ table.rx tr.sel td.ck,table.rx tr.sel td:nth-child(2){background:var(--surface-2
   </div>
 
   <div class="panel">
-    <div id="vTable"><div class="rx-wrap"><table class="rx"><thead><tr id="thead"></tr></thead><tbody id="tbody"></tbody></table></div><button class="btn sm ghost more" id="more" hidden>さらに表示</button><div id="rcard"></div></div>
+    <div id="vTable"><div id="vnote"></div><div class="rx-wrap"><table class="rx"><thead><tr id="thead"></tr></thead><tbody id="tbody"></tbody></table></div><button class="btn sm ghost more" id="more" hidden>さらに表示</button><div id="rcard"></div></div>
     <div class="rtip" id="rtip" hidden></div>
     <div id="vHeat" hidden></div>
     <div id="vTree" hidden><svg id="tmap" viewBox="0 0 1100 640" preserveAspectRatio="xMidYMid meet"></svg><div class="phint" id="treeNote" style="margin-top:6px"></div></div>
@@ -203,7 +203,7 @@ const TRENDS=[['up','上昇'],['flat','中立'],['down','下落']];
 const TR=r=>{const s=g(r,'stage');return s==='tt'||s==='vcp'?'up':s;};
 const STAGE_UI=()=>SHOW_TT_VCP?STAGES:TRENDS,stageKey=r=>SHOW_TT_VCP?g(r,'stage'):TR(r);
 const stageName=k=>((SHOW_TT_VCP?STAGES:TRENDS).find(x=>x[0]===k)||STAGES.find(x=>x[0]===k)||[k,k])[1];
-const PCT=new Set(['chg1','w1','m0','m1','m2','m3','r1m','r2m','r3m','r6m','r12m','ytd','hi52','ma50','ma200','ema21','surge']);
+const PCT=new Set(['chg1','w1','m0','m1','m2','m3','r1m','r2m','r3m','r6m','r12m','ytd','hi52','ma5','ma25','ma50','ma150','ma200','surge']);
 let mk='jp',D=null,TH=null,S=[],ci={};
 const DATA={},THEMES={},VALS={};
 const st={q:'',themes:new Set(),sectors:new Set(),secBig:new Set(),thBig:new Set(),stages:new Set(),vl:new Set(),vpos:null,vig:null,chk:new Set(),sel:null,conds:[],sort:'rs',dir:-1,view:'table',color:'m0',size:'to20',limit:300};
@@ -212,7 +212,7 @@ try{mk=new URLSearchParams(location.search).get('m')||localStorage.getItem('tf_m
 function fields(){const M=D.months,U=D.units;return [
   ['chg1','前日比','%'],['w1','週間%','%'],['m0','今月（'+M[0]+'）','%'],['m1',M[1],'%'],['m2',M[2],'%'],['m3',M[3],'%'],
   ['r1m','1か月前','%'],['r2m','2か月前','%'],['r3m','3か月前','%'],['r6m','6か月前','%'],['r12m','1年前','%'],['ytd','年初来','%'],['hi52','52週高値から','%'],['surge','資金急増率','%'],
-  ['ma50','50日線から','%'],['ma200','200日線から','%'],['ema21','21日EMAから','%'],['rs','RS',''],['volx','出来高倍率','倍'],
+  ['ma5','5日線から','%'],['ma25','25日線から','%'],['ma50','50日線から','%'],['ma150','150日線から','%'],['ma200','200日線から','%'],['rs','RS',''],['volx','出来高倍率','倍'],
   ['adr','ADR%（20日）','%'],['to20','売買代金（20日平均）',U.to],['mcap','時価総額',U.mcap],['price','株価','']];}
 function g(r,k){return VK.has(k)?vv(r,k):r[ci[k]];}
 /* バリュエーション(StockCard.valData=公開側の /valuation_{jp,us}.json)。計算結果の表示で、売買の推奨ではない */
@@ -353,7 +353,7 @@ function drawSummary(R){
   const th={};R.forEach(r=>g(r,'themes').forEach(i=>th[i]=(th[i]||0)+1));
   bars(Object.fromEntries(Object.entries(th).sort((a,b)=>b[1]-a[1]).slice(0,8).map(([i,v])=>[D.themes[i],v])),$('#topTh'),n=>{st.themes.add(n);render();drawMS();});
 }
-function heat(v,k){if(v==null)return'';const sc={chg1:4,w1:8,m0:12,m1:12,m2:12,m3:12,r1m:15,r2m:20,r3m:30,r6m:50,r12m:80,ytd:60,hi52:30,ma50:15,ma200:30,ema21:10}[k];if(!sc)return'';
+function heat(v,k){if(v==null)return'';const sc={chg1:4,w1:8,m0:12,m1:12,m2:12,m3:12,r1m:15,r2m:20,r3m:30,r6m:50,r12m:80,ytd:60,hi52:30,ma5:5,ma25:10,ma50:15,ma150:25,ma200:30}[k];if(!sc)return'';
   const a=Math.min(1,Math.abs(v)/sc)*0.5;return `background:rgba(${v>=0?cssv('--brandrgb'):cssv('--downrgb')},${a.toFixed(2)})`;}
 function link(code){return mk==='us'?`https://finance.yahoo.com/quote/${code}`:`https://kabutan.jp/stock/?code=${code}`;}
 /* 残りのテーマのふきだし(表のスクロール枠に隠れないよう画面に固定) */
@@ -390,6 +390,7 @@ const TCOLS=['chg1','w1','m0','r1m','r2m','r3m','r6m','r12m','hi52'];
 function sparkS(a){if(!a||a.length<2)return'<span class="muted">–</span>';const w=64,h=16;let p='';a.forEach((v,i)=>p+=(i?'L':'M')+(i/(a.length-1)*w).toFixed(1)+' '+(h-1-v/99*(h-2)).toFixed(1)+' ');
   return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" style="display:inline-block;vertical-align:middle"><path d="${p}" fill="none" stroke="${a[a.length-1]>=a[0]?'var(--up)':'var(--down)'}" stroke-width="1.3"/></svg>`;}
 function drawTable(R){
+  $('#vnote').innerHTML=VALS[mk]?StockCard.valNote(VALS[mk],mk):'';
   const F=fields(),M=D.months,FL=Object.fromEntries(F.map(f=>[f[0],f[1]]));
   const cols=[['ck','',''],['name','銘柄','l'],['stage','トレンド',''],['spark','直近60日',''],['sector','業種','l'],['themes','テーマ','l'],['price','現在値',''],['rs','RS',''],
     ...TCOLS.map(k=>[k,FL[k],'']),['surge','資金急増率%',''],['ig','織り込み成長',''],['g3','実績（3年）',''],['g1','直近1年',''],['gap','差',''],['vl','バリュエーション','l'],['vpos','PER位置（5年）',''],['peg','PEG（実績）',''],
@@ -422,7 +423,7 @@ function drawTable(R){
   $('#more').hidden=R.length<=st.limit;$('#more').textContent=`さらに表示（残り${(R.length-st.limit).toLocaleString()}件）`;
 }
 function colorOf(v,k,min){min=min??0.12;if(v==null)return cssv('--surface-2');if(k==='rs'){const a=Math.abs(v-50)/49;return `rgba(${v>=50?cssv('--brandrgb'):cssv('--downrgb')},${(min+a*(0.9-min)).toFixed(2)})`;}
-  const sc={chg1:4,w1:8,m0:12,m1:12,m2:12,m3:12,r1m:15,r3m:30,r6m:50,ytd:60,hi52:30,ma50:15,ma200:30,ema21:10}[k]||10,a=Math.min(1,Math.abs(v)/sc);
+  const sc={chg1:4,w1:8,m0:12,m1:12,m2:12,m3:12,r1m:15,r3m:30,r6m:50,ytd:60,hi52:30,ma5:5,ma25:10,ma50:15,ma150:25,ma200:30}[k]||10,a=Math.min(1,Math.abs(v)/sc);
   return `rgba(${v>=0?cssv('--brandrgb'):cssv('--downrgb')},${(min+a*(0.9-min)).toFixed(2)})`;}
 function vtxt(v,k){return k==='rs'?(v??'–'):pct(v);}
 function drawHeat(R){const k=st.color,L=R.slice().sort((a,b)=>(g(b,k)??-1e9)-(g(a,k)??-1e9)).slice(0,600);
