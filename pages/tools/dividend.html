@@ -1,0 +1,543 @@
+<!doctype html>
+<html lang="ja"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<link rel="icon" href="../assets/icon-64.png">
+<title>高配当・増配銘柄リサーチ｜投資家ハシビロコウの株式ダッシュボード</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@600;800&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="../assets/site.css">
+<style>
+/* 高配当・増配銘柄リサーチ(試作 dividend_proto/list_proto.html をサイトの作りに合わせたもの)。データは ../dividend_jp.json(無料)と ../pro/dividend_jp.json(会員)を読む */
+:root{--dot-vs:#0B7A55;--dot-s:#0D5B5E;--dot-a:#C8813A;--dot-w:#C23B3F;--dot-x:#B9C5C3;--zone:rgba(13,91,94,.07)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--dot-vs:#4CC08E;--dot-s:#5FB5B1;--dot-a:#E0A060;--dot-w:#EE7A7D;--dot-x:#3E5654;--zone:rgba(95,181,177,.10)}}
+:root[data-theme="dark"]{--dot-vs:#4CC08E;--dot-s:#5FB5B1;--dot-a:#E0A060;--dot-w:#EE7A7D;--dot-x:#3E5654;--zone:rgba(95,181,177,.10)}
+[hidden]{display:none!important}
+.member{display:inline-block;font-size:11px;font-weight:700;color:var(--brand);background:var(--brand-soft);border-radius:999px;padding:1px 9px;margin-left:8px;vertical-align:3px}
+.tagline{display:inline-block;font:500 11px var(--f-body);color:var(--ink);margin-left:10px;vertical-align:3px;letter-spacing:0}
+.jpbadge{font-size:12px;font-weight:700;color:var(--brand);background:var(--brand-soft);border-radius:999px;padding:3px 11px;white-space:nowrap}
+.muted{color:var(--faint)}
+.lead{margin:0 0 4px;color:var(--ink-2);max-width:80ch;font-size:13.5px}
+.dstats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:14px}
+@media (max-width:760px){.dstats{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px;min-width:0}
+.stat .k{font-size:12px;color:var(--muted);font-weight:500}
+.stat .v{font-family:var(--f-num);font-size:26px;font-weight:600;line-height:1.25}
+.stat .v small{display:inline;font-size:13px;color:var(--ink-2);font-weight:500;margin-left:2px}
+.stat .s{font-size:11.5px;color:var(--faint)}
+.stat.main{border-color:var(--brand);background:var(--brand-soft)}
+.presets{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0 18px}
+.pre{appearance:none;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);border-radius:999px;padding:5px 14px;cursor:pointer;font:700 13px var(--f-body);display:inline-flex;align-items:center;gap:6px}
+.pre:hover{border-color:var(--brand)}
+.pre[aria-pressed="true"]{background:var(--brand);border-color:var(--brand);color:var(--brand-ink)}
+.mem{font-size:10.5px;font-weight:700;padding:0 6px;border-radius:4px;background:var(--warn-bg);color:var(--warn-ink)}
+.pre[aria-pressed="true"] .mem{background:var(--brand-ink);color:var(--brand)}
+.panel h3.pt{font-family:var(--f-display);font-weight:800;font-size:18px}
+.panel .sub{font-size:12.5px;color:var(--muted);margin:2px 0 12px}
+.top2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,330px);gap:18px;align-items:start;margin-bottom:18px}
+@media (max-width:900px){.top2{grid-template-columns:minmax(0,1fr)}}
+.top2>.panel+.panel{margin-top:0}
+.plot{position:relative}
+.plot canvas{display:block;width:100%;height:auto;aspect-ratio:16/10;max-width:100%;cursor:crosshair}
+.legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:12px;color:var(--ink-2);margin-top:8px}
+.legend i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px;vertical-align:0}
+.tip{position:absolute;pointer-events:none;background:var(--surface);border:1px solid var(--line-strong);border-radius:8px;padding:7px 10px;font-size:12px;line-height:1.5;box-shadow:0 4px 14px rgba(0,0,0,.12);z-index:5;white-space:nowrap}
+/* 絞り込み */
+.filters{display:grid;gap:11px}
+.fhead{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.fgrp{font-size:11px;font-weight:700;letter-spacing:.08em;color:var(--faint);border-top:1px solid var(--line);padding-top:8px;margin-top:2px}
+.f .lab2{display:flex;justify-content:space-between;align-items:baseline;font-size:12px;color:var(--muted);font-weight:500;margin-bottom:3px}
+.f .lab2 .val{font-family:var(--f-num);color:var(--ink);font-weight:600}
+.f input[type=search],.f select{width:100%;font:13px var(--f-body);color:var(--ink);padding:5px 10px;border:1px solid var(--line-strong);border-radius:8px;background:var(--surface)}
+.f input[type=range]{width:100%;accent-color:var(--brand);margin:0}
+.chks{display:flex;flex-wrap:wrap;gap:3px 12px;font-size:13px}
+.chks label{display:flex;align-items:center;gap:5px;cursor:pointer;color:var(--ink-2)}
+.chks input{accent-color:var(--brand)}
+.count{font-size:13px;color:var(--ink-2)} .count b{font-family:var(--f-num);font-size:18px;color:var(--ink)}
+.reset{appearance:none;border:1px solid var(--line-strong);background:var(--surface);color:var(--brand);font:700 12px var(--f-body);border-radius:999px;padding:3px 11px;cursor:pointer;white-space:nowrap}
+.reset:hover{border-color:var(--brand)}
+.reset.bottom{justify-self:end}
+.ms2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:6px}
+.ms{position:relative}
+.ms>button.ms-btn{width:100%;font:12.5px var(--f-body);color:var(--ink);background:var(--surface);border:1px solid var(--line-strong);border-radius:8px;padding:5px 24px 5px 8px;cursor:pointer;text-align:left;position:relative;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ms>button.ms-btn::after{content:"";position:absolute;right:9px;top:50%;margin-top:-5px;width:6px;height:6px;border-right:1.5px solid var(--muted);border-bottom:1.5px solid var(--muted);transform:rotate(45deg)}
+.ms>button.ms-btn .n{display:inline-block;margin-left:4px;font-size:11px;font-weight:700;color:var(--brand-ink);background:var(--brand);border-radius:999px;padding:0 6px}
+.ms-pop{position:absolute;right:0;top:calc(100% + 4px);z-index:25;background:var(--surface);border:1px solid var(--line-strong);border-radius:10px;box-shadow:0 10px 28px rgba(10,40,40,.16);width:290px;max-width:86vw;padding:8px}
+.ms:first-child .ms-pop{left:0;right:auto}
+.ms-pop>input{width:100%;box-sizing:border-box;font:13px var(--f-body);border:1px solid var(--line-strong);border-radius:7px;padding:5px 8px;margin-bottom:6px;background:var(--surface);color:var(--ink)}
+.ms-list{max-height:280px;overflow:auto}
+.ms-list label{display:flex;align-items:center;gap:7px;font-size:12.5px;padding:3px 6px;border-radius:6px;cursor:pointer}
+.ms-list label:hover{background:var(--surface-2)}
+.ms-list label small{margin-left:auto;color:var(--faint);font-size:10.5px}
+.ms-list .gh{font-size:10.5px;color:var(--faint);font-weight:700;padding:6px 6px 2px}
+.ms-foot{display:flex;justify-content:space-between;border-top:1px solid var(--line);margin-top:6px;padding-top:6px}
+.ms-foot button{appearance:none;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);border-radius:6px;padding:2px 10px;cursor:pointer;font-size:12px}
+.chips{display:flex;flex-wrap:wrap;gap:5px}
+.chips:empty{display:none}
+.fchip{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;border-radius:999px;padding:1px 9px;background:var(--brand-soft);color:var(--brand)}
+.fchip button{border:0;background:none;color:inherit;cursor:pointer;padding:0;font-size:11px}
+/* 表: 枠の中で上下左右にスクロール。見出し行は上に、銘柄の列は左に固定。表の上にも横スクロールの帯 */
+.tscroll{overflow-x:auto;overflow-y:hidden;height:14px;margin-bottom:2px}
+.tscroll>div{height:1px}
+.tw{overflow:auto;position:relative;max-height:min(76vh,820px);border:1px solid var(--line);border-radius:10px}
+table.dv{border-collapse:separate;border-spacing:0;width:100%;font-size:13.5px}
+table.dv th,table.dv td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap;vertical-align:middle;background:var(--surface)}
+table.dv th{font-size:12px;color:var(--muted);font-weight:500;background:var(--surface-2);cursor:pointer;user-select:none;position:sticky;top:0;z-index:3;border-bottom-color:var(--line-strong)}
+table.dv th.nos{cursor:default}
+table.dv th[aria-sort="descending"]::after{content:" ▼";font-size:9px} table.dv th[aria-sort="ascending"]::after{content:" ▲";font-size:9px}
+table.dv th:first-child,table.dv td:first-child,table.dv th[data-k="policy"]{text-align:left}
+table.dv tr.r td:first-child,table.dv thead th:first-child{position:sticky;left:0;z-index:2;box-shadow:1px 0 0 var(--line),6px 0 8px -6px rgba(0,0,0,.18)}
+table.dv thead th:first-child{z-index:4}
+table.dv tbody tr.r{cursor:pointer}
+table.dv tbody tr.r:hover td{background:var(--surface-2)}
+table.dv tr.open td{background:var(--brand-soft)!important}
+.dnm b{font-weight:700} .dnm .cd{font-family:var(--f-num);color:var(--muted);font-weight:500;margin-left:6px} .dnm small{display:block;color:var(--faint);font-size:11.5px}
+.lab{display:inline-block;font-size:11.5px;font-weight:700;padding:1px 9px;border-radius:999px;white-space:nowrap}
+.l-vs{background:var(--up);color:var(--surface)} .l-s{background:var(--up-soft);color:var(--up)} .l-a{background:var(--warn-bg);color:var(--warn-ink)}
+.l-w{background:var(--down-soft);color:var(--down)} .l-x{background:var(--surface-2);color:var(--muted);border:1px solid var(--line-strong)}
+.sc{display:flex;align-items:center;gap:8px;justify-content:flex-end}
+.sc .bar{width:64px;height:6px;background:var(--surface-2);border-radius:3px;position:relative}
+.sc .bar span{position:absolute;inset:0 auto 0 0;border-radius:3px}
+.sc b{font-family:var(--f-num);font-size:15px;width:26px;text-align:right}
+.yd small{display:block;font-size:11px;color:var(--faint)} .yd .hi{color:var(--up)}
+.stars{color:var(--c2);letter-spacing:1px} .stars .off{color:var(--line-strong)}
+td.pol{text-align:left!important;font-size:12.5px;line-height:1.35} td.pol small{display:block;color:var(--muted);font-size:11.5px;font-family:var(--f-num)}
+.cy{font-size:11px;color:var(--warn-ink);background:var(--warn-bg);padding:0 5px;border-radius:4px;margin-left:4px}
+.ck{font-size:11px;color:var(--down);background:var(--down-soft);padding:0 5px;border-radius:4px;margin-left:4px}
+td.spk svg{display:block;margin-left:auto}
+table.dv tr.detail td{white-space:normal;text-align:left;background:var(--surface-2);padding:14px 0}
+.dg{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;position:sticky;left:16px;width:min(1080px,calc(var(--tww,100%) - 32px));box-sizing:border-box}
+@media (max-width:760px){.dg{grid-template-columns:minmax(0,1fr)}}
+.dg h4{margin:0 0 6px;font-size:12.5px;color:var(--muted);font-weight:700;display:flex;gap:6px;align-items:center}
+.blk{display:grid;grid-template-columns:110px minmax(0,1fr) 54px;gap:8px;align-items:center;font-size:12.5px;margin-bottom:4px}
+.blk .bar{height:6px;background:var(--surface);border-radius:3px;position:relative}
+.blk .bar span{position:absolute;inset:0 auto 0 0;border-radius:3px}
+.fails{margin:0;padding-left:1.1em;font-size:12.5px;color:var(--down)}
+.quote{font-size:12.5px;color:var(--ink-2);border-left:3px solid var(--line-strong);padding-left:10px;margin:0}
+.tags{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px}
+.tags span{font-size:11.5px;font-weight:700;padding:0 7px;border-radius:4px;background:var(--brand-soft);color:var(--brand)}
+.dkv{font-size:12.5px;display:grid;grid-template-columns:auto 1fr;gap:2px 12px}
+.dkv span:nth-child(odd){color:var(--muted)}
+.soon{color:var(--faint);font-size:12px}
+.dlink{display:inline-block;margin-top:8px;font-weight:700;color:var(--brand);font-size:12.5px;cursor:default;opacity:.8}
+.dlink small{font-weight:500;color:var(--faint)}
+.pager{display:flex;gap:6px;align-items:center;justify-content:flex-end;margin-top:10px;flex-wrap:wrap}
+.pager button{appearance:none;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);border-radius:6px;padding:4px 10px;cursor:pointer}
+.pager button:disabled{opacity:.4;cursor:default}
+.notes p{margin:0}
+.loading{padding:40px 0;text-align:center;color:var(--muted)}
+</style>
+</head><body>
+
+<header class="top">
+  <div class="wrap hbar">
+    <a class="logo" href="../index.html" aria-label="投資家ハシビロコウの株式ダッシュボード トップ">
+      <img src="../assets/icon-64.png" width="32" height="32" alt="" style="border-radius:50%;flex:none">
+      <span class="lg"><small>投資家ハシビロコウの</small><b>株式ダッシュボード</b></span>
+    </a>
+    <span class="jpbadge">日本株</span>
+    <span style="flex:1"></span>
+    <a class="btn" href="../join.html">ログイン</a>
+  </div>
+</header>
+<nav class="jump" aria-label="メニュー">
+  <div class="wrap">
+    <a href="../index.html#market">市場概況</a>
+    <a href="../index.html#themes">テーマ別資金フロー</a>
+    <a href="../index.html#stocks">銘柄を探す</a>
+    <a href="../index.html#screening">スクリーニング</a>
+    <span class="sep" aria-hidden="true">|</span>
+    <a href="../tools/sectors.html" data-page="1">セクター状況</a>
+    <a href="../tools/themes.html" data-page="1">業種状況</a>
+    <a href="../tools/research.html" data-page="1">業種銘柄リサーチ</a>
+    <a href="../tools/dividend.html" data-page="1" class="on">高配当・増配銘柄リサーチ</a>
+    <a href="../note.html" data-page="1">note紹介記事検証</a>
+    <span class="upd" id="upd">有報は毎日・株価は毎日更新</span>
+  </div>
+</nav>
+
+<main class="wrap">
+<section class="sec">
+  <div class="sec-head">
+    <div><div class="eyebrow">Tools · Dividend research</div><h2>高配当・増配銘柄リサーチ<span class="tagline">減配しにくさ(安心スコア)×利回りで探す日本株の高配当スクリーナー</span></h2></div>
+    <div class="meta num" id="meta"></div>
+  </div>
+  <p class="lead">配当を出している上場企業を「安心スコア」(減配しにくさと配当を続ける力・100点満点)と利回りで並べています。安心スコアは株価を使わず、有価証券報告書が出たときだけ変わります。今の株価が割安かどうかは「割安度★」で別に示します。</p>
+  <div class="dstats" id="stats"></div>
+  <div class="presets" id="presets" role="group" aria-label="よく使う条件"></div>
+
+  <div id="app" hidden>
+  <div class="top2">
+    <div class="panel">
+      <h3 class="pt">安心スコア × 利回り</h3>
+      <p class="sub">点1つが1社。右上の網かけ(安心75点以上・利回り3.5%以上)が「安心して高配当」。点をクリックすると表の行を開きます</p>
+      <div class="plot" id="plot"><canvas id="cv" width="1200" height="750" aria-label="安心スコアと利回りの散布図"></canvas></div>
+      <div class="legend" id="legend"></div>
+    </div>
+    <div class="panel filters" id="filters">
+      <div class="fhead"><div class="count" id="count"></div><button class="reset" id="reset" type="button">条件をすべて外す</button></div>
+      <div class="chips" id="chips"></div>
+      <div class="f"><label class="lab2" for="q">銘柄名・コード</label><input id="q" type="search" placeholder="例: 花王、8591" autocomplete="off"></div>
+      <div class="f"><span class="lab2">業種 <small class="muted">大分類＝東証17業種・小分類＝33業種</small></span><div class="ms2"><div class="ms" id="msSecBig"></div><div class="ms" id="msSecSmall"></div></div></div>
+      <div class="f"><span class="lab2">テーマ</span><div class="ms2"><div class="ms" id="msThBig"></div><div class="ms" id="msThSmall"></div></div></div>
+      <div class="f"><label class="lab2" for="mkt">市場</label><select id="mkt"><option value="">すべて</option><option value="プ">プライム</option><option value="ス">スタンダード</option><option value="グ">グロース</option></select></div>
+      <div class="fgrp">一覧の項目で絞る</div>
+      <div class="f"><span class="lab2">判定</span><div class="chks" id="labs"></div></div>
+      <div class="f"><label class="lab2" for="minS">安心スコア <span class="val" id="minSv"></span></label><input id="minS" type="range" min="0" max="95" step="5" value="0"></div>
+      <div class="f"><label class="lab2" for="minY">利回り(実績) <span class="val" id="minYv"></span></label><input id="minY" type="range" min="0" max="6" step="0.5" value="0"></div>
+      <div class="f"><label class="lab2" for="minI">連続増配 <span class="val" id="minIv"></span></label><input id="minI" type="range" min="0" max="15" step="1" value="0"></div>
+      <div class="f"><label class="lab2" for="minN">連続非減配 <span class="val" id="minNv"></span></label><input id="minN" type="range" min="0" max="15" step="1" value="0"></div>
+      <div class="f"><label class="lab2" for="minG">配当5年成長(年率) <span class="val" id="minGv"></span></label><input id="minG" type="range" min="0" max="20" step="1" value="0"></div>
+      <div class="f"><label class="lab2" for="maxP">配当性向 <span class="val" id="maxPv"></span></label><input id="maxP" type="range" min="20" max="100" step="5" value="100"></div>
+      <div class="f"><label class="lab2" for="pol">配当方針</label><select id="pol"><option value="">すべて</option><option value="累進">累進配当</option><option value="DOE">DOE(株主資本配当率)の目標</option><option value="性向">配当性向の目標</option><option value="総還元">総還元性向の目標</option><option value="下限">配当の下限(○円以上)</option><option value="none">目標の記載なし</option></select></div>
+      <div class="f"><label class="lab2" for="minV">割安度 <span class="val" id="minVv"></span></label><input id="minV" type="range" min="0" max="5" step="1" value="0"></div>
+      <div class="f chks"><label><input type="checkbox" id="noCyc">景気敏感を除く</label></div>
+      <button class="reset bottom" id="reset2" type="button">条件をすべて外す</button>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h3 class="pt">銘柄の一覧</h3>
+    <p class="sub">見出しをクリックで並べ替え。行をクリックで内訳(A〜Dの点数・必須条件・配当方針の根拠)を表示。表は枠の中で上下左右にスクロールでき、見出しの行と銘柄の列は固定</p>
+    <div class="tscroll" id="tsTop" aria-hidden="true"><div></div></div>
+    <div class="tw" id="tw"><table class="dv">
+      <thead><tr id="thr"></tr></thead>
+      <tbody id="tb"></tbody>
+    </table></div>
+    <div class="pager" id="pager"></div>
+    <div class="foot notes">
+      <p>※ 判定 = 安心スコアの区分(とても安心85点以上・安心75点以上・あと一歩60点以上・不安60点未満)。必須条件(過去10年の減配1回以下・10年連続配当・配当性向100%未満・自己資本比率30%以上・営業CFの安定)を一つでも満たさないと点数にかかわらず「必須条件×」。金融は別の物差し。</p>
+      <p>※ 安心スコア = A 配当の安定35・B 財務の安全25・C 稼ぐ力の安定20・D 配当の伸び20。</p>
+      <p>※ 連続増配・連続非減配・配当5年成長は通常配当(記念・特別配当を除く)で計算。利回りは直近の決算期の年間の通常配当÷株価(サイトの日次終値。会社予想ではありません)。5年平均は各月末の実績利回りの平均。</p>
+      <p>※ 配当方針は有価証券報告書の「配当政策」の文章から自動で読み取った目標です。</p>
+      <p>※ 割安度★ = 利回り3.5%以上・利回りが5年平均より高い・PER15倍未満・PBR1.5倍以下・ミックス係数22.5以下 の当てはまる数。「数値確認中」は株価と配当のデータに食い違いがあり確認中の銘柄です(安心スコアには影響しません)。</p>
+      <p>※ 開示データを決まった計算式で点数化したものです。売買をすすめるものではありません。投資の判断はご自身でお願いします。</p>
+      <p id="src"></p>
+    </div>
+  </div>
+  </div>
+  <div class="loading" id="loading">データを読み込んでいます…</div>
+</section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div><b style="font-family:var(--f-display);color:var(--ink);font-size:14px">投資家ハシビロコウの株式ダッシュボード</b><br>運営：投資家ハシビロコウ ・ 当サイトの情報は投資助言ではありません。投資判断はご自身の責任でお願いします。</div>
+    <nav><a href="../learn.html">学ぶ</a><a href="../join.html">会員案内・ログイン</a><a href="../about.html">運営者情報・免責</a></nav>
+  </div>
+</footer>
+
+<script>
+const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
+const fmt = (v, d = 0) => v == null || isNaN(v) ? '—' : Number(v).toLocaleString('ja-JP', {minimumFractionDigits: d, maximumFractionDigits: d});
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'}[c]));
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const nz = s => String(s || '').normalize('NFKC').toLowerCase();
+const hira = s => nz(s).replace(/[ァ-ヶ]/g, c => String.fromCharCode(c.charCodeAt(0) - 0x60));
+const LABELS = ['とても安心', '安心', 'あと一歩', '不安', '必須条件×'];
+const LCLS = {'とても安心': 'l-vs', '安心': 'l-s', 'あと一歩': 'l-a', '不安': 'l-w', '必須条件×': 'l-x'};
+const DOT = {'とても安心': '--dot-vs', '安心': '--dot-s', 'あと一歩': '--dot-a', '不安': '--dot-w', '必須条件×': '--dot-x'};
+const TGN = {'累進': '累進配当', 'DOE': 'DOE', '性向': '性向', '総還元': '総還元', '下限': '下限'};
+const lbl = t => `<span class="lab ${LCLS[t]}">${t}</span>`;
+const tone = r => r >= .7 ? 'var(--up)' : r >= .4 ? 'var(--c2)' : 'var(--down)';
+let D = null, R = [], PRO = null;
+const get = u => fetch(u + '?cb=' + Date.now(), {cache: 'no-store'}).then(r => r.ok ? r.json() : null).catch(() => null);
+Promise.all([get('../dividend_jp.json'), get('../pro/dividend_jp.json')]).then(([d, p]) => {
+  if (!d) { $('#loading').textContent = 'データを読み込めませんでした。時間をおいて再読み込みしてください。'; return; }
+  D = d; R = D.rows.map(r => Object.fromEntries(D.cols.map((c, i) => [c, r[i]])));
+  if (p && p.stocks) PRO = p.stocks;
+  $('#loading').hidden = true; $('#app').hidden = false;
+  init();
+});
+const pro = r => PRO && PRO[r.code] ? {blocks: PRO[r.code][0], fails: PRO[r.code][1], quote: PRO[r.code][2]} : null;
+const md = s => s ? `${+s.slice(5, 7)}/${+s.slice(8, 10)}` : '';
+/* 読みの「語の頭」から一致(業種銘柄リサーチと同じ)。名前そのものは途中一致も可 */
+const yomiHit = (name, q) => { q = hira(q).replace(/\s/g, ''); if (!q) return true; if (hira(name).includes(q)) return true;
+  return [hira(name), ...String((D.yomi || {})[name] || '').split('|')].some(y => { const w = hira(y).split(/[\s・（）()、\/\-]+/).filter(Boolean);
+    for (let i = 0; i < w.length; i++) if (w.slice(i).join('').startsWith(q)) return true; return false; }); };
+const secBigOf = s => (D.sec_big || {})[s] || '', thBigOf = t => D.theme_cat[D.themes.indexOf(t)] || '';
+
+/* ---------- 状態と絞り込み ---------- */
+const BASE = () => ({q: '', secBig: new Set(), sectors: new Set(), thBig: new Set(), themes: new Set(), mkt: '', labs: new Set(LABELS),
+  minS: 0, minY: 0, minI: 0, minN: 0, minG: 0, maxP: 100, pol: '', minV: 0, noCyc: false});
+const st = Object.assign(BASE(), {sort: 'score', dir: -1, page: 0, open: null, preset: 'all'});
+const PRESETS = [
+  ['all', 'すべて', false, {}, ['score', -1]],
+  ['sweet', '安心して高配当', true, {minS: 75, minY: 3.5, labs: ['とても安心', '安心']}, ['score', -1]],
+  ['streak', '連続増配の優等生', true, {minI: 10, minS: 75, labs: ['とても安心', '安心']}, ['inc', -1]],
+  ['cheap', '割安な安心株', true, {minS: 75, minV: 3, labs: ['とても安心', '安心']}, ['val', -1]],
+  ['prog', '累進配当を宣言', true, {pol: '累進', labs: ['とても安心', '安心', 'あと一歩']}, ['score', -1]],
+  ['highy', '利回り4%以上(注意も含む)', true, {minY: 4}, ['yld', -1]],
+];
+const RANGES = {
+  minS: v => v ? `${v}点以上` : '指定なし', minY: v => v ? `${v}%以上` : '指定なし',
+  minI: v => v ? (v >= 15 ? '15年以上' : `${v}年以上`) : '指定なし', minN: v => v ? (v >= 15 ? '15年以上' : `${v}年以上`) : '指定なし',
+  minG: v => v ? `+${v}%以上` : '指定なし', maxP: v => v >= 100 ? '指定なし' : `${v}%以下`, minV: v => v ? '★'.repeat(v) + '以上' : '指定なし',
+};
+function syncInputs() {
+  $('#q').value = st.q; $('#mkt').value = st.mkt; $('#pol').value = st.pol; $('#noCyc').checked = st.noCyc;
+  for (const k of Object.keys(RANGES)) { $('#' + k).value = st[k]; $('#' + k + 'v').textContent = RANGES[k](st[k]); }
+  $$('#labs input').forEach(i => i.checked = st.labs.has(i.value));
+  $$('.pre').forEach(b => b.setAttribute('aria-pressed', b.dataset.k === st.preset));
+  drawMS(); drawChips();
+}
+function applyPreset(k) {
+  const p = PRESETS.find(x => x[0] === k);
+  Object.assign(st, BASE(), {page: 0, open: null, preset: k, sort: p[4][0], dir: p[4][1]});
+  for (const [a, b] of Object.entries(p[3])) st[a] = a === 'labs' ? new Set(b) : b;
+  syncInputs(); render(true);
+}
+/* 業種・テーマ: 大分類の中で小分類も選ばれていれば、その大分類はその小分類だけに絞る(業種銘柄リサーチと同じ) */
+function hitCls(v, small, big, bigOf) { if (small.has(v)) return true; const b = bigOf(v); return big.has(b) && ![...small].some(s => bigOf(s) === b); }
+function filtered() {
+  const q = nz(st.q);
+  return R.filter(r => {
+    if (!st.labs.has(r.label) || r.score < st.minS) return false;
+    if (st.minY && (r.yld || 0) < st.minY) return false;
+    if (r.inc < st.minI || r.nd < st.minN) return false;
+    if (st.minG && (r.dg5 == null || r.dg5 < st.minG)) return false;
+    if (st.maxP < 100 && (r.payout == null || r.payout > st.maxP)) return false;
+    if (st.pol === 'none' ? r.targets.length : st.pol && !r.targets.some(t => t[0] === st.pol)) return false;
+    if (r.stars < st.minV || (st.noCyc && r.cyc) || (st.mkt && r.mkt !== st.mkt)) return false;
+    if ((st.sectors.size || st.secBig.size) && !hitCls(r.sector, st.sectors, st.secBig, secBigOf)) return false;
+    if ((st.themes.size || st.thBig.size) && !r.themes.some(i => hitCls(D.themes[i], st.themes, st.thBig, thBigOf))) return false;
+    if (q && !(nz(r.code).includes(q) || nz(r.name).includes(q))) return false;
+    return true;
+  });
+}
+
+/* 複数選択のドロップダウン(入力で検索) */
+let MS_OPEN = null;
+function msBox(id, ph, items, sel, grouped) {
+  const el = document.getElementById(id), open = MS_OPEN === id;
+  el.innerHTML = `<button class="ms-btn" type="button">${ph}${sel.size ? `<span class="n">${sel.size}</span>` : ''}</button>` + (open ? `<div class="ms-pop"><input placeholder="名前の一部・読みで検索" autocomplete="off"><div class="ms-list"></div>
+    <div class="ms-foot"><button type="button" data-clr>選択を解除</button><button type="button" data-ok>閉じる</button></div></div>` : '');
+  el.querySelector('.ms-btn').onclick = e => { e.stopPropagation(); MS_OPEN = open ? null : id; drawMS(); if (!open) { const i = el.querySelector('.ms-pop input'); i && i.focus(); } };
+  if (!open) return;
+  const pop = el.querySelector('.ms-pop'); pop.onclick = e => e.stopPropagation();
+  const fill = q => {
+    let html = '', last = null;
+    items.filter(x => yomiHit(x.v, q) || (x.g && yomiHit(x.g, q))).forEach(x => {
+      if (grouped && x.g !== last) { last = x.g; html += `<div class="gh">${esc(x.g)}</div>`; }
+      html += `<label><input type="checkbox" value="${esc(x.v)}" ${sel.has(x.v) ? 'checked' : ''}>${esc(x.v)}<small>${x.n}</small></label>`;
+    });
+    pop.querySelector('.ms-list').innerHTML = html || '<div class="soon" style="padding:6px">該当がありません</div>';
+    pop.querySelectorAll('.ms-list input').forEach(c => c.onchange = () => { c.checked ? sel.add(c.value) : sel.delete(c.value); st.page = 0; st.preset = ''; render(true); drawChips(); el.querySelector('.ms-btn').innerHTML = ph + (sel.size ? `<span class="n">${sel.size}</span>` : ''); $$('.pre').forEach(b => b.setAttribute('aria-pressed', false)); });
+  };
+  const qi = pop.querySelector('input'); qi.oninput = () => fill(qi.value); fill('');
+  pop.querySelector('[data-clr]').onclick = () => { sel.clear(); st.page = 0; render(true); drawMS(); drawChips(); };
+  pop.querySelector('[data-ok]').onclick = () => { MS_OPEN = null; drawMS(); };
+}
+const SC = {}, TC = {};
+function drawMS() {
+  const bigs = D.sec_bigs || [], smalls = Object.keys(D.sec_big || {});
+  msBox('msSecBig', '大分類', bigs.map(b => ({v: b, n: smalls.filter(s => secBigOf(s) === b).reduce((a, s) => a + (SC[s] || 0), 0)})), st.secBig, false);
+  msBox('msSecSmall', '小分類', smalls.filter(s => !st.secBig.size || st.secBig.has(secBigOf(s))).map(s => ({v: s, g: secBigOf(s), n: SC[s] || 0}))
+    .sort((a, b) => bigs.indexOf(a.g) - bigs.indexOf(b.g) || a.v.localeCompare(b.v, 'ja')), st.sectors, true);
+  const cats = [...new Set(D.theme_cat)].filter(Boolean);
+  msBox('msThBig', '大分類', cats.map(c => ({v: c, n: D.themes.filter((t, i) => D.theme_cat[i] === c).length + 'テーマ'})), st.thBig, false);
+  msBox('msThSmall', '小分類', D.themes.map((t, i) => ({v: t, g: D.theme_cat[i] || 'その他', n: TC[t] || 0})).filter(x => x.n && (!st.thBig.size || st.thBig.has(x.g)))
+    .sort((a, b) => cats.indexOf(a.g) - cats.indexOf(b.g) || b.n - a.n), st.themes, true);
+}
+document.addEventListener('click', () => { if (MS_OPEN) { MS_OPEN = null; drawMS(); } });
+function drawChips() {
+  const ch = (t, k, v) => `<span class="fchip">${esc(t)}<button type="button" data-k="${k}" data-v="${esc(v)}" aria-label="外す">✕</button></span>`;
+  $('#chips').innerHTML = [...[...st.secBig].map(b => ch('業種: ' + b, 'secBig', b)), ...[...st.sectors].map(s => ch('業種: ' + s, 'sectors', s)),
+    ...[...st.thBig].map(c => ch('テーマ: ' + c, 'thBig', c)), ...[...st.themes].map(t => ch('テーマ: ' + t, 'themes', t))].join('');
+  $$('#chips button').forEach(b => b.onclick = () => { st[b.dataset.k].delete(b.dataset.v); st.page = 0; drawMS(); drawChips(); render(true); });
+}
+
+/* ---------- 散布図 ---------- */
+const PW = 1200, PH = 750, PL = 70, PR = 24, PT = 22, PB = 62, XMAX = 7;
+const px = y => PL + (PW - PL - PR) * Math.min(y, XMAX) / XMAX, py = s => PT + (PH - PT - PB) * (1 - s / 100);
+let shown = [], cv, ctx, tip;
+function drawPlot(rows) {
+  ctx.clearRect(0, 0, PW, PH);
+  ctx.font = '22px IBM Plex Sans, sans-serif';
+  ctx.fillStyle = css('--zone'); ctx.fillRect(px(3.5), py(100), px(XMAX) - px(3.5), py(75) - py(100));
+  ctx.strokeStyle = css('--line'); ctx.lineWidth = 1.5; ctx.fillStyle = css('--muted');
+  for (let s = 0; s <= 100; s += 20) { ctx.beginPath(); ctx.moveTo(PL, py(s)); ctx.lineTo(PW - PR, py(s)); ctx.stroke(); ctx.textAlign = 'right'; ctx.fillText(s, PL - 10, py(s) + 7); }
+  for (let y = 0; y <= XMAX; y++) { ctx.beginPath(); ctx.moveTo(px(y), PT); ctx.lineTo(px(y), PH - PB); ctx.stroke(); ctx.textAlign = 'center'; ctx.fillText(y + (y === XMAX ? '%+' : '%'), px(y), PH - PB + 30); }
+  ctx.strokeStyle = css('--ink-2'); ctx.setLineDash([8, 6]);
+  ctx.beginPath(); ctx.moveTo(px(3.5), PT); ctx.lineTo(px(3.5), PH - PB); ctx.moveTo(PL, py(75)); ctx.lineTo(PW - PR, py(75)); ctx.stroke(); ctx.setLineDash([]);
+  ctx.fillStyle = css('--brand'); ctx.font = 'bold 22px Zen Kaku Gothic New, sans-serif'; ctx.textAlign = 'right'; ctx.fillText('安心して高配当', PW - PR - 10, py(100) + 28);
+  ctx.fillStyle = css('--muted'); ctx.font = '21px Zen Kaku Gothic New, sans-serif'; ctx.textAlign = 'center';
+  ctx.fillText('利回り(実績)', (PL + PW - PR) / 2, PH - 10);
+  ctx.save(); ctx.translate(18, (PT + PH - PB) / 2); ctx.rotate(-Math.PI / 2); ctx.fillText('安心スコア', 0, 0); ctx.restore();
+  shown = [];
+  ['必須条件×', '不安', 'あと一歩', '安心', 'とても安心'].forEach(l => {
+    ctx.fillStyle = css(DOT[l]); ctx.globalAlpha = l === '必須条件×' ? .55 : .8;
+    rows.filter(r => r.label === l && r.yld != null && !r.chk).forEach(r => {
+      const x = px(r.yld), y = py(r.score) + ((r.code.charCodeAt(0) * 7 + r.code.charCodeAt(3) * 13) % 9 - 4) * .9;
+      ctx.beginPath(); ctx.arc(x, y, 4.6, 0, Math.PI * 2); ctx.fill(); shown.push([x, y, r]);
+    });
+  });
+  ctx.globalAlpha = 1;
+  const o = st.open && shown.find(s => s[2].code === st.open);
+  if (o) { ctx.strokeStyle = css('--ink'); ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(o[0], o[1], 11, 0, Math.PI * 2); ctx.stroke(); }
+}
+function hitPt(e) {
+  const b = cv.getBoundingClientRect(), x = (e.clientX - b.left) * PW / b.width, y = (e.clientY - b.top) * PH / b.height;
+  let best = null, bd = 196;
+  for (const s of shown) { const d = (s[0] - x) ** 2 + (s[1] - y) ** 2; if (d < bd) { bd = d; best = s; } }
+  return best;
+}
+
+/* ---------- 表 ---------- */
+const PER = 50;
+const polRank = r => r.targets.length ? Math.max(...r.targets.map(t => ({'累進': 5, 'DOE': 4, '下限': 3, '性向': 2, '総還元': 1}[t[0]] || 0))) : 0;
+const COLS = [
+  ['name', '銘柄', r => r.name], ['label', '判定', r => LABELS.length - LABELS.indexOf(r.label)], ['score', '安心スコア', r => r.score],
+  ['yld', '利回り(5年平均)', r => r.chk ? -1 : (r.yld ?? -1)], ['inc', '連続増配', r => r.inc], ['nd', '連続非減配', r => r.nd],
+  ['dg5', '配当5年成長', r => r.dg5 ?? -99], ['payout', '配当性向', r => r.payout ?? 999], ['policy', '配当方針', polRank],
+  ['val', '割安度', r => r.stars], ['spk', '配当の推移(通常配当)', null],
+];
+function sorted(rows) {
+  const f = COLS.find(x => x[0] === st.sort)[2];
+  return rows.slice().sort((a, b) => { const x = f(a), y = f(b); return (typeof x === 'string' ? x.localeCompare(y, 'ja') : (x < y ? -1 : x > y ? 1 : 0)) * st.dir || b.score - a.score; });
+}
+function spark(r) {
+  const v = r.divs, W = 110, H = 28, mx = Math.max(...v, 0.0001), bw = W / v.length;
+  return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="配当の推移(${r.div0}年〜)">${v.map((d, i) => {
+    const h = Math.max(1, d / mx * (H - 2)), cut = i > 0 && d < v[i - 1] * 0.99;
+    return `<rect x="${i * bw + 1}" y="${H - h}" width="${bw - 2}" height="${h}" rx="1" fill="${cut ? 'var(--down)' : 'var(--brand)'}" opacity="${i === v.length - 1 ? 1 : .55}"/>`;
+  }).join('')}</svg>`;
+}
+function polCell(r) {
+  if (!r.targets.length) return '<span class="muted">—</span>';
+  const prog = r.targets.find(t => t[0] === '累進'), nums = r.targets.filter(t => t[0] !== '累進');
+  const HN = {'性向': '性向目標', '総還元': '総還元目標', '下限': '下限配当', 'DOE': 'DOE'};
+  const head = prog ? '累進配当' : HN[nums[0][0]];
+  // 見出しと同じ種類の目標は数値だけ、ほかの種類は名前付きで
+  const sub = nums.map((t, i) => (!prog && i === 0) ? t[1] : `${TGN[t[0]]} ${t[1]}`).join('・');
+  return `${head}${sub ? `<small>${esc(sub)}</small>` : ''}`;
+}
+const BL = [['A 配当の安定', 35], ['B 財務の安全', 25], ['C 稼ぐ力の安定', 20], ['D 配当の伸び', 20]];
+const MKT = {'プ': 'プライム', 'ス': 'スタンダード', 'グ': 'グロース'};
+function detail(r) {
+  const p = pro(r);
+  const yNote = r.yld5 != null ? (r.yld > r.yld5 ? '5年平均より高い' : '5年平均より低い') : '';
+  const th = r.themes.slice(0, 6).map(i => D.themes[i]).join('・');
+  const blocks = p ? p.blocks.map((v, i) => `<div class="blk"><span>${BL[i][0]}</span><span class="bar"><span style="width:${v / BL[i][1] * 100}%;background:${tone(v / BL[i][1])}"></span></span><span class="num">${fmt(v, 1)}/${BL[i][1]}</span></div>`).join('')
+    + (p.fails.length ? `<h4 style="margin-top:10px">満たしていない必須条件</h4><ul class="fails">${p.fails.map(f => `<li>${esc(f)}</li>`).join('')}</ul>` : '')
+    : '<p class="soon">会員向けの内訳です。</p>';
+  return `<tr class="detail"><td colspan="${COLS.length}"><div class="dg">
+    <div><h4>安心スコアの内訳 <span class="mem">会員</span></h4>${blocks}</div>
+    <div><h4>配当方針(有報の「配当政策」から自動で読み取り)</h4>
+      ${r.targets.length ? `<div class="tags">${r.targets.map(t => `<span>${t[0] === '累進' ? '累進配当' : esc(TGN[t[0]] + ' ' + t[1])}</span>`).join('')}</div>` : ''}
+      ${p ? `<p class="quote">${esc(p.quote) || '配当政策の文章から目標は読み取れませんでした'}</p>` : '<p class="soon">配当政策の根拠文は会員向けです。</p>'}
+      ${r.cyc ? `<p style="margin:8px 0 0;font-size:12.5px"><span class="cy">景気敏感</span> ${esc(r.cycwhy)}</p>` : ''}
+      ${th ? `<p style="margin:8px 0 0;font-size:12px;color:var(--muted)">テーマ: ${esc(th)}${r.themes.length > 6 ? ' ほか' : ''}</p>` : ''}</div>
+    <div><h4>数字</h4><div class="dkv"><span>株価(${md(D.price_asof)}終値)</span><span class="num">${fmt(r.price)}円</span>
+      <span>利回り(実績)</span><span class="num">${fmt(r.yld, 2)}%${yNote ? `(${yNote})` : ''}</span>
+      <span>予想配当・予想利回り</span><span class="soon">決算短信の会社予想から表示予定</span>
+      <span>PER</span><span class="num">${r.per ? fmt(r.per, 1) + '倍' : '—'}</span><span>PBR</span><span class="num">${r.pbr ? fmt(r.pbr, 2) + '倍' : '—'}</span>
+      <span>配当性向(3年)</span><span class="num">${fmt(r.payout, 0)}%</span><span>直近の決算期</span><span class="num">${r.fy}</span>
+      <span>権利確定月</span><span class="soon">表示予定</span></div>
+      ${r.chk ? '<p style="margin:6px 0 0;font-size:12px"><span class="ck">数値確認中</span> 株価と配当のデータに食い違いがあり、利回り・PER・PBRを確認中です</p>' : ''}
+      <span class="dlink" aria-disabled="true">銘柄の詳細ページへ → <small>(第2弾で実装予定)</small></span></div>
+  </div></td></tr>`;
+}
+function syncBar() {
+  const tw = $('#tw'), ts = $('#tsTop');
+  ts.style.width = tw.clientWidth + 'px'; ts.firstElementChild.style.width = tw.scrollWidth + 'px';
+  ts.style.visibility = tw.scrollWidth > tw.clientWidth + 1 ? 'visible' : 'hidden';
+  tw.style.setProperty('--tww', tw.clientWidth + 'px');
+  ts.scrollLeft = tw.scrollLeft;
+}
+function render(resetScroll) {
+  const rows = sorted(filtered());
+  $('#count').innerHTML = `<b>${rows.length.toLocaleString()}</b> 社が当てはまります`;
+  drawPlot(rows);
+  $$('#thr th').forEach(th => th.setAttribute('aria-sort', th.dataset.k === st.sort ? (st.dir < 0 ? 'descending' : 'ascending') : 'none'));
+  const pages = Math.max(1, Math.ceil(rows.length / PER)); st.page = Math.min(st.page, pages - 1);
+  $('#tb').innerHTML = rows.slice(st.page * PER, st.page * PER + PER).map(r => {
+    const yd = r.yld5 != null ? `<small class="${r.yld > r.yld5 ? 'hi' : ''}">(${fmt(r.yld5, 2)}%)</small>` : '';
+    const row = `<tr class="r ${r.code === st.open ? 'open' : ''}" data-c="${r.code}" tabindex="0">
+      <td class="dnm"><b>${esc(r.name)}</b><span class="cd">${r.code}</span><small>${esc(r.sector)}・${MKT[r.mkt] || ''}${r.cyc ? '<span class="cy">景気敏感</span>' : ''}${r.chk ? '<span class="ck">数値確認中</span>' : ''}</small></td>
+      <td>${lbl(r.label)}</td>
+      <td><div class="sc"><span class="bar"><span style="width:${r.score}%;background:${tone(r.score / 100)}"></span></span><b>${r.score}</b></div></td>
+      <td class="num yd">${fmt(r.yld, 2)}%${yd}</td>
+      <td class="num">${r.inc}年${r.inccap ? '+' : ''}</td>
+      <td class="num">${r.nd}年${r.ndcap ? '+' : ''}</td>
+      <td class="num">${r.dg5 == null ? '—' : (r.dg5 > 0 ? '+' : '') + fmt(r.dg5, 1) + '%'}</td>
+      <td class="num">${fmt(r.payout, 0)}%</td>
+      <td class="pol">${polCell(r)}</td>
+      <td class="stars">${'★'.repeat(r.stars)}<span class="off">${'★'.repeat(5 - r.stars)}</span></td>
+      <td class="spk">${spark(r)}</td></tr>`;
+    return r.code === st.open ? row + detail(r) : row;
+  }).join('') || `<tr><td colspan="${COLS.length}" style="text-align:center;color:var(--muted);padding:24px">当てはまる銘柄がありません。条件を緩めてください。</td></tr>`;
+  $$('tr.r').forEach(tr => {
+    const tog = () => { st.open = st.open === tr.dataset.c ? null : tr.dataset.c; render(); };
+    tr.addEventListener('click', tog); tr.addEventListener('keydown', e => { if (e.key === 'Enter') tog(); });
+  });
+  $('#pager').innerHTML = `<span class="num muted">${rows.length ? (st.page * PER + 1).toLocaleString() : 0}〜${Math.min(rows.length, st.page * PER + PER).toLocaleString()} / ${rows.length.toLocaleString()}</span>
+    <button type="button" id="pv" ${st.page === 0 ? 'disabled' : ''}>前へ</button><button type="button" id="nx" ${st.page >= pages - 1 ? 'disabled' : ''}>次へ</button>`;
+  $('#pv').onclick = () => { st.page--; render(true); }; $('#nx').onclick = () => { st.page++; render(true); };
+  if (resetScroll) $('#tw').scrollTop = 0;
+  syncBar();
+}
+
+function init() {
+  R.forEach(r => { SC[r.sector] = (SC[r.sector] || 0) + 1; r.themes.forEach(i => TC[D.themes[i]] = (TC[D.themes[i]] || 0) + 1); });
+  $('#meta').textContent = `有報 ${md(D.updated)}更新・株価 ${md(D.price_asof)}終値`;
+  $('#src').textContent = `データ: 有価証券報告書(EDINET API)・古い年の配当と5年平均利回りの株価は Yahoo Finance・株価はサイトの日次終値(${D.price_asof})・業種とテーマは業種銘柄リサーチと同じ分類。全${R.length.toLocaleString()}社。`;
+  /* 上の数字 */
+  const n = l => R.filter(r => r.label === l).length;
+  const sweet = R.filter(r => r.ok && r.score >= 75 && (r.yld || 0) >= 3.5).length;
+  $('#stats').innerHTML = [
+    ['対象', R.length.toLocaleString(), '社', '配当を出している上場企業', ''],
+    ['とても安心(85点以上)', n('とても安心'), '社', `安心(75〜84点)は ${n('安心')}社`, ''],
+    ['安心して高配当', sweet, '社', '安心75点以上 × 利回り3.5%以上', 'main'],
+    ['必須条件×', n('必須条件×').toLocaleString(), '社', '減配の多さ・払いすぎ・財務の弱さなど', ''],
+  ].map(([k, v, u, s, c]) => `<div class="stat ${c}"><div class="k">${k}</div><div class="v">${v}<small>${u}</small></div><div class="s">${s}</div></div>`).join('');
+  $('#presets').innerHTML = PRESETS.map(([k, t, m]) => `<button class="pre" type="button" data-k="${k}" aria-pressed="${k === 'all'}">${t}${m ? '<span class="mem">会員</span>' : ''}</button>`).join('');
+  $('#labs').innerHTML = LABELS.map(l => `<label><input type="checkbox" value="${l}" checked>${l}</label>`).join('');
+  $$('.pre').forEach(b => b.addEventListener('click', () => applyPreset(b.dataset.k)));
+  const changed = () => { st.page = 0; st.preset = ''; syncInputs(); render(true); };
+  $('#q').addEventListener('input', e => { st.q = e.target.value.trim(); changed(); });
+  $('#mkt').addEventListener('input', e => { st.mkt = e.target.value; changed(); });
+  $('#pol').addEventListener('input', e => { st.pol = e.target.value; changed(); });
+  $('#noCyc').addEventListener('input', e => { st.noCyc = e.target.checked; changed(); });
+  for (const k of Object.keys(RANGES)) $('#' + k).addEventListener('input', e => { st[k] = +e.target.value; changed(); });
+  $('#labs').addEventListener('change', () => { st.labs = new Set($$('#labs input:checked').map(i => i.value)); changed(); });
+  $('#reset').addEventListener('click', () => applyPreset('all'));
+  $('#reset2').addEventListener('click', () => applyPreset('all'));
+  /* 散布図 */
+  cv = $('#cv'); ctx = cv.getContext('2d');
+  $('#legend').innerHTML = LABELS.map(l => `<span><i style="background:var(${DOT[l]})"></i>${l}</span>`).join('') + '<span class="muted">「数値確認中」の銘柄は図に出していません</span>';
+  tip = document.createElement('div'); tip.className = 'tip'; tip.hidden = true; $('#plot').appendChild(tip);
+  cv.addEventListener('pointermove', e => {
+    const h = hitPt(e); if (!h) { tip.hidden = true; return; }
+    const r = h[2], b = $('#plot').getBoundingClientRect();
+    tip.innerHTML = `<b>${esc(r.name)} ${r.code}</b><br>安心 ${r.score}点・${r.label}<br>利回り ${fmt(r.yld, 2)}%`;
+    tip.hidden = false;
+    tip.style.left = Math.min(e.clientX - b.left + 12, b.width - tip.offsetWidth - 4) + 'px';
+    tip.style.top = Math.max(0, e.clientY - b.top - tip.offsetHeight - 8) + 'px';
+  });
+  cv.addEventListener('pointerleave', () => tip.hidden = true);
+  cv.addEventListener('click', e => {
+    const h = hitPt(e); if (!h) return;
+    const rows = sorted(filtered()), i = rows.findIndex(r => r.code === h[2].code);
+    st.open = h[2].code; st.page = Math.floor(i / PER); render();
+    const tr = document.querySelector(`tr[data-c="${h[2].code}"]`), tw = $('#tw');
+    if (tr) { tw.scrollTo({top: tr.offsetTop - 44, behavior: 'smooth'}); tw.closest('.panel').scrollIntoView({block: 'start', behavior: 'smooth'}); }
+  });
+  /* 表の見出しと、上下の横スクロールの同期 */
+  $('#thr').innerHTML = COLS.map(([k, t, f]) => `<th data-k="${k}" class="${f ? '' : 'nos'}" scope="col">${t}</th>`).join('');
+  $$('#thr th').forEach(th => th.addEventListener('click', () => {
+    const c = COLS.find(x => x[0] === th.dataset.k); if (!c[2]) return;
+    if (st.sort === c[0]) st.dir *= -1; else { st.sort = c[0]; st.dir = c[0] === 'name' || c[0] === 'payout' ? 1 : -1; }
+    st.page = 0; render(true);
+  }));
+  const tw = $('#tw'), ts = $('#tsTop');
+  ts.addEventListener('scroll', () => { if (tw.scrollLeft !== ts.scrollLeft) tw.scrollLeft = ts.scrollLeft; });
+  tw.addEventListener('scroll', () => { if (ts.scrollLeft !== tw.scrollLeft) ts.scrollLeft = tw.scrollLeft; });
+  if (window.ResizeObserver) new ResizeObserver(syncBar).observe(tw); else addEventListener('resize', syncBar);
+  syncInputs(); render();
+  matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change', () => render());
+  new MutationObserver(() => render()).observe(document.documentElement, {attributes: true, attributeFilter: ['data-theme']});
+}
+</script>
+<script src="../assets/help.js"></script>
+</body></html>

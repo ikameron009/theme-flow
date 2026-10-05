@@ -99,11 +99,17 @@ for mk in ("jp", "us"):
     if os.path.exists(old):
         os.remove(old)
 
+# 高配当・増配銘柄リサーチ(dividend/run_daily.py が毎日 push する anshin_pub/)
+#   無料 = 一覧の行データ → site/dividend_jp.json / 会員 = A〜D内訳・必須条件・方針の根拠文 → site/pro/dividend_jp.json
+for _src, _dst in (("dividend_jp.json", "dividend_jp.json"), ("dividend_jp_pro.json", os.path.join("pro", "dividend_jp.json"))):
+    if os.path.exists(os.path.join(BASE, "anshin_pub", _src)):
+        shutil.copyfile(os.path.join(BASE, "anshin_pub", _src), os.path.join(SITE, _dst))
+
 
 # キャッシュ設定(Cloudflareの静的配信が読む _headers)
 HEADERS = [
     ("/", "no-cache"), ("/index.html", "no-cache"), ("/version.json", "no-store"),
-    ("/vcp_*.json", "no-cache"), ("/note_track.json", "no-cache"), ("/valuation_*.json", "no-cache"), ("/pro/*", "no-cache"), ("/ohlc/*", "public, max-age=3600"), ("/us_ohlc/*", "public, max-age=3600"),
+    ("/vcp_*.json", "no-cache"), ("/note_track.json", "no-cache"), ("/valuation_*.json", "no-cache"), ("/dividend_*.json", "no-cache"), ("/pro/*", "no-cache"), ("/ohlc/*", "public, max-age=3600"), ("/us_ohlc/*", "public, max-age=3600"),
 ]
 with open(os.path.join(SITE, "_headers"), "w", encoding="utf-8") as f:
     for path, cc in HEADERS:
