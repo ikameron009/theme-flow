@@ -119,8 +119,8 @@ table.dv tr.detail td{white-space:normal;text-align:left;background:var(--surfac
 .dkv{font-size:12.5px;display:grid;grid-template-columns:auto 1fr;gap:2px 12px}
 .dkv span:nth-child(odd){color:var(--muted)}
 .soon{color:var(--faint);font-size:12px}
-.dlink{display:inline-block;margin-top:8px;font-weight:700;color:var(--brand);font-size:12.5px;cursor:default;opacity:.8}
-.dlink small{font-weight:500;color:var(--faint)}
+.dlink{display:inline-block;margin-top:8px;font-weight:700;color:var(--brand);font-size:12.5px}
+.dlink:hover{text-decoration:underline}
 .pager{display:flex;gap:6px;align-items:center;justify-content:flex-end;margin-top:10px;flex-wrap:wrap}
 .pager button{appearance:none;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);border-radius:6px;padding:4px 10px;cursor:pointer}
 .pager button:disabled{opacity:.4;cursor:default}
@@ -435,7 +435,7 @@ function detail(r) {
       <span>配当性向(3年)</span><span class="num">${fmt(r.payout, 0)}%</span><span>直近の決算期</span><span class="num">${r.fy}</span>
       <span>権利確定月</span><span class="soon">表示予定</span></div>
       ${r.chk ? '<p style="margin:6px 0 0;font-size:12px"><span class="ck">数値確認中</span> 株価と配当のデータに食い違いがあり、利回り・PER・PBRを確認中です</p>' : ''}
-      <span class="dlink" aria-disabled="true">銘柄の詳細ページへ → <small>(第2弾で実装予定)</small></span></div>
+      <a class="dlink" href="dividend_stock.html?code=${r.code}">銘柄の詳細ページへ →</a></div>
   </div></td></tr>`;
 }
 function syncBar() {
@@ -445,7 +445,15 @@ function syncBar() {
   tw.style.setProperty('--tww', tw.clientWidth + 'px');
   ts.scrollLeft = tw.scrollLeft;
 }
+const SKEY = 'dv_list_state';
+function saveState() {
+  try { sessionStorage.setItem(SKEY, JSON.stringify(Object.fromEntries(Object.entries(st).map(([k, v]) => [k, v instanceof Set ? {set: [...v]} : v])))); } catch (e) {}
+}
+function loadState() {
+  try { const o = JSON.parse(sessionStorage.getItem(SKEY) || 'null'); if (o) for (const [k, v] of Object.entries(o)) if (k in st) st[k] = v && v.set ? new Set(v.set) : v; } catch (e) {}
+}
 function render(resetScroll) {
+  saveState();
   const rows = sorted(filtered());
   $('#count').innerHTML = `<b>${rows.length.toLocaleString()}</b> 社が当てはまります`;
   drawPlot(rows);
@@ -540,7 +548,7 @@ function init() {
   addEventListener('load', syncBar);
   /* 用語説明(help.js)が見出しに「?」をあとから足すと表の幅が広がる→見出しの変化でも合わせ直す */
   new MutationObserver(syncBar).observe($('#thr'), {childList: true, subtree: true});
-  syncInputs(); render();
+  loadState(); syncInputs(); render();
   matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change', () => render());
   new MutationObserver(() => render()).observe(document.documentElement, {attributes: true, attributeFilter: ['data-theme']});
 }

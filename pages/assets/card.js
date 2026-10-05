@@ -119,8 +119,13 @@
     return `<td style="color:var(--brand);font-weight:600">${vig(v.ig)}</td><td>${v.nolabel?d:pc(v.g3)}</td><td>${pc(v.g1)}</td>
       <td>${gp==null?d:(gp>=0?'+':'−')+Math.abs(gp*100).toFixed(1)+'pt'}</td><td class="l">${lb?`<span class="vpill ${lb[0]}">${lb[1]}</span>`:d}</td>
       <td>${v.pos!=null?vmini(v.pos)+' '+Math.round(v.pos*100)+'%':d}</td><td>${v.peg!=null?(+v.peg).toFixed(2):d}</td>`;}
+  /* 高配当・増配の詳細へのボタン: 日本株で高配当データ(dividend_codes.json={コード:[判定,安心スコア]})に載っている銘柄だけ */
+  const DIV_URL=ROOT+'dividend_codes.json';
+  const DLAB={'とても安心':'low','安心':'low','あと一歩':'none','不安':'high','必須条件×':'none'};
+  function divhtml(C,mk,code){const x=mk==='jp'&&C&&C[code];if(!x)return '';
+    return `<div class="sc-div"><a class="btn sm ghost" href="${ROOT}tools/dividend_stock.html?code=${encodeURIComponent(code)}">高配当の詳細 →</a><span class="vpill ${DLAB[x[0]]||'none'}">${esc(x[0])}</span><span class="dvs">安心スコア <b>${x[1]}</b>点</span></div>`;}
   function mountVal(el,mk,code){if(!el)return;el.innerHTML='';
-    vload(mk).then(D=>{const h=vhtml(D,mk,code);if(!h){el.innerHTML='';return;}el.innerHTML=`<div class="sc-val">${h}</div>`;
+    Promise.all([vload(mk),mk==='jp'?load(DIV_URL):null]).then(([D,C])=>{const h=vhtml(D,mk,code),dv=divhtml(C,mk,code);if(!h&&!dv){el.innerHTML='';return;}el.innerHTML=(h?`<div class="sc-val">${h}</div>`:'')+dv;
       const b=el.querySelector('.vbtn');if(b)b.onclick=()=>{const m=el.querySelector('.vmore'),o=m.hidden;m.hidden=!o;b.setAttribute('aria-expanded',o);b.textContent=o?'グラフを閉じる ◂':'グラフで見る ▸';};});}
   const vcss=document.createElement('style');vcss.textContent=`.sc-val{border-top:1px solid var(--line);border-bottom:1px solid var(--line);margin:4px 0 10px;padding:10px 0 8px}
     .sc-val .vh{display:flex;align-items:baseline;gap:10px;margin-bottom:6px}.sc-val .vt{font-weight:700;font-size:13px;color:var(--ink)}
@@ -137,7 +142,8 @@
     .sc-val .vmore{margin-top:6px}.sc-val .vsay{margin:4px 0;font-size:13px;color:var(--ink-2)}.sc-val .vlbl{font-size:11.5px;color:var(--muted);margin-top:8px}
     .sc-val .vnote{font-size:13px;color:var(--ink-2);background:var(--surface-2);border-radius:6px;padding:8px 12px}
     .sc-val .vpend{font-size:11.5px;color:var(--warn-ink);background:var(--warn-bg);border-radius:4px;padding:2px 8px;display:inline-block;margin-bottom:6px}
-    .sc-val .vsrc{font-size:10.5px;color:var(--faint);margin-top:6px}`;document.head.appendChild(vcss);
+    .sc-val .vsrc{font-size:10.5px;color:var(--faint);margin-top:6px}
+    .sc-div{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:-2px 0 10px}.sc-div .dvs{font-size:12px;color:var(--muted)}.sc-div .dvs b{font:600 14px var(--f-num);color:var(--ink)}`;document.head.appendChild(vcss);
   const PER=[['21','1か月'],['63','3か月'],['126','6か月'],['252','1年'],['520','2年']];
   const st={per:126,freq:'day'};
   function open(box,o){
