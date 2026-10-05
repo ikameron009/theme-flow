@@ -533,7 +533,13 @@ function init() {
   const tw = $('#tw'), ts = $('#tsTop');
   ts.addEventListener('scroll', () => { if (tw.scrollLeft !== ts.scrollLeft) tw.scrollLeft = ts.scrollLeft; });
   tw.addEventListener('scroll', () => { if (ts.scrollLeft !== tw.scrollLeft) ts.scrollLeft = tw.scrollLeft; });
-  if (window.ResizeObserver) new ResizeObserver(syncBar).observe(tw); else addEventListener('resize', syncBar);
+  /* 枠(#tw)だけでなく表そのものの幅の変化(Webフォントの読み込み・行の開閉)でも上のバーの中身の幅を合わせ直す */
+  if (window.ResizeObserver) { const ro = new ResizeObserver(syncBar); ro.observe(tw); ro.observe(tw.querySelector('table')); } else addEventListener('resize', syncBar);
+  /* 表の文字のフォントは表を描いたあとに読み込みが始まる(fonts.ready だけでは早すぎる)→読み込みが終わるたびに合わせ直す */
+  if (document.fonts) { document.fonts.ready.then(syncBar); document.fonts.addEventListener?.('loadingdone', syncBar); }
+  addEventListener('load', syncBar);
+  /* 用語説明(help.js)が見出しに「?」をあとから足すと表の幅が広がる→見出しの変化でも合わせ直す */
+  new MutationObserver(syncBar).observe($('#thr'), {childList: true, subtree: true});
   syncInputs(); render();
   matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change', () => render());
   new MutationObserver(() => render()).observe(document.documentElement, {attributes: true, attributeFilter: ['data-theme']});
