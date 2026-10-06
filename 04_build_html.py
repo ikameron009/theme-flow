@@ -62,7 +62,8 @@ with open(dst, "w", encoding="utf-8") as f:
     f.write(out)
 
 # VCPスクリーナーの履歴(ページが表示時に読み込む)
-for fn in ("vcp_us.json", "vcp_jp.json", "note_track.json"):
+# 決算・経済カレンダー(15_calendar.py が作る calendar.json)も同じく表示時に読み込む
+for fn in ("vcp_us.json", "vcp_jp.json", "note_track.json", "calendar.json"):
     if os.path.exists(P(fn)):
         shutil.copyfile(P(fn), os.path.join(SITE, fn))
 
@@ -118,7 +119,7 @@ if os.path.exists(os.path.join(BASE, "anshin_pub", "dividend_codes.json")):
 # キャッシュ設定(Cloudflareの静的配信が読む _headers)
 HEADERS = [
     ("/", "no-cache"), ("/index.html", "no-cache"), ("/version.json", "no-store"),
-    ("/vcp_*.json", "no-cache"), ("/note_track.json", "no-cache"), ("/valuation_*.json", "no-cache"), ("/dividend_*.json", "no-cache"), ("/dividend_detail/*", "no-cache"), ("/pro/*", "no-cache"), ("/ohlc/*", "public, max-age=3600"), ("/us_ohlc/*", "public, max-age=3600"),
+    ("/vcp_*.json", "no-cache"), ("/note_track.json", "no-cache"), ("/calendar.json", "no-cache"), ("/valuation_*.json", "no-cache"), ("/dividend_*.json", "no-cache"), ("/dividend_detail/*", "no-cache"), ("/pro/*", "no-cache"), ("/ohlc/*", "public, max-age=3600"), ("/us_ohlc/*", "public, max-age=3600"),
 ]
 with open(os.path.join(SITE, "_headers"), "w", encoding="utf-8") as f:
     for path, cc in HEADERS:

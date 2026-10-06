@@ -77,6 +77,8 @@ jobs:
             ./market_us.json
             ./pro_*.json
             ./note_track.json
+            ./calendar.json
+            ./cal_shares.csv
             ./site/ohlc
             ./site/us_ohlc
           key: data-${{ github.run_id }}
@@ -174,6 +176,11 @@ jobs:
       - name: 14 note紹介記事検証(配当込み・TOPIX/S&P500ほか)
         if: steps.mkt.outputs.market != 'skip'
         run: python 14_note_track.py || echo "note紹介記事検証スキップ; 前回分を維持"
+
+      # 決算・経済カレンダー(今日から2週間)。軽いので毎回(push時も)作り直す。失敗したら前回分(キャッシュ)のまま
+      - name: 15 決算・経済カレンダー
+        timeout-minutes: 8
+        run: python 15_calendar.py || echo "カレンダー取得スキップ; 前回分を維持"
 
       - name: 04 index.html 生成
         run: python 04_build_html.py

@@ -301,6 +301,94 @@ input[type=range]{accent-color:var(--brand)}
 .lockcard p{margin:0 0 12px;font-size:12.5px;color:var(--muted)}
 .lockcard .row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
 
+/* ---------- 決算・経済カレンダー(assets/cal.js。ダッシュボードの「今後3日の予定」と tools/calendar.html) ---------- */
+.ek-head{display:flex;align-items:flex-end;justify-content:space-between;gap:8px 14px;flex-wrap:wrap;margin-bottom:12px}
+.ek-h{font-family:var(--f-display);font-weight:800;font-size:20px}
+.ek-hr{display:flex;gap:6px 14px;align-items:center;flex-wrap:wrap}
+.ek-lnk{font-size:12.5px;font-weight:700;color:var(--brand)}
+.ek-lnk:hover{text-decoration:underline}
+.ek-tabs{display:none;gap:4px;margin-bottom:10px}
+.ek-tabs button{flex:1;border:1px solid var(--line);background:var(--surface);color:var(--muted);font:500 12.5px var(--f-body);padding:5px 4px;border-radius:999px;cursor:pointer}
+.ek-tabs button[aria-pressed="true"]{border-color:var(--brand);color:var(--brand);background:var(--brand-soft)}
+.ek-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.ek-col{min-width:0;border-left:1px solid var(--line);display:flex;flex-direction:column}
+.ek-col:first-child{border-left:0}
+.ek-chd{display:flex;align-items:center;gap:8px;padding:9px 14px;background:var(--surface-2);border-bottom:1px solid var(--line)}
+.ek-chd b{font-size:13.5px}
+.ek-chd .meta{margin-left:auto}
+.ek-mk{display:inline-block;font:700 10px var(--f-num);letter-spacing:.04em;border-radius:4px;padding:0 5px;line-height:16px;color:var(--surface)}
+.ek-mk.ec{background:var(--brand)} .ek-mk.jp{background:var(--c6)} .ek-mk.us{background:var(--c3)}
+.ek-day{padding:8px 14px 10px;border-top:1px solid var(--line)}
+.ek-day:first-of-type{border-top:0}
+.ek-dlab{display:flex;align-items:baseline;gap:8px;margin-bottom:2px}
+.ek-rel{font-weight:700;font-size:12.5px}
+.ek-rel.today{color:var(--brand)}
+.ek-dt{font:500 12px var(--f-num);color:var(--faint)}
+.ek-dt.we,.ek-dbtn.we small:first-child{color:var(--c2);font-weight:700}
+.ek-cnt{margin-left:auto;font-size:11px;color:var(--faint)}
+.ek-row{display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:8px;align-items:baseline;padding:3px 0;font-size:12.5px;width:100%;text-align:left;border:0;background:transparent;color:var(--ink);font-family:var(--f-body);line-height:1.6}
+button.ek-row{cursor:pointer;border-radius:6px}
+button.ek-row:hover .n{color:var(--brand)}
+.ek-row .t{font:500 11.5px var(--f-num);color:var(--muted)}
+.ek-row .n{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500}
+.ek-row .n small{font:400 10.5px var(--f-num);color:var(--faint);margin-left:5px}
+.ek-row .v{font:500 11px var(--f-num);color:var(--faint);white-space:nowrap}
+.ek-row .v b{color:var(--ink);font-weight:600}
+.ek-row.done .n{color:var(--muted)}
+.ek-cc{font:700 9.5px var(--f-num);border:1px solid currentColor;border-radius:3px;padding:0 3px;margin-right:5px;vertical-align:1px}
+.ek-cc.jp{color:var(--c6)} .ek-cc.us{color:var(--c3)}
+.ek-imp{display:inline-flex;gap:1px;margin-right:4px;vertical-align:1px}
+.ek-imp i{width:5px;height:5px;border-radius:50%;background:var(--line-strong)}
+.ek-imp i.on{background:var(--brand)}
+.ek-imp.hi i.on{background:var(--down)}
+.ek-flag{font-size:9.5px;font-weight:700;border-radius:3px;padding:0 4px;margin-left:5px;vertical-align:1px;white-space:nowrap}
+.ek-flag.vcp{background:var(--up-soft);color:var(--up)}
+.ek-flag.note{background:var(--brand-soft);color:var(--brand)}
+.ek-more{display:inline-flex;align-items:center;gap:4px;margin-top:3px;border:0;background:transparent;color:var(--brand);font:700 12px var(--f-body);padding:2px 0;cursor:pointer}
+.ek-more:hover{text-decoration:underline}
+.ek-more .ar{font-size:9px;transition:transform .15s}
+.ek-more[aria-expanded="true"] .ar{transform:rotate(180deg)}
+.ek-none{font-size:12px;color:var(--faint);padding:3px 0}
+.ek-note{font-size:11.5px;color:var(--faint);margin-top:10px;line-height:1.75}
+.ek-note .ek-flag{margin-left:0}
+.ek-drawer{margin-top:12px;border:1px solid var(--line-strong);border-radius:12px;background:var(--surface);padding:14px 16px}
+.ek-drhead{display:flex;align-items:center;gap:8px 14px;flex-wrap:wrap;margin-bottom:10px}
+.ek-drhead h4{margin:0;font-size:15px}
+.ek-x{margin-left:auto;border:1px solid var(--line);background:var(--surface);color:var(--muted);border-radius:999px;width:28px;height:28px;cursor:pointer}
+.ek-foot{margin-top:8px;text-align:right}
+.ek-tbl{overflow:auto;max-height:440px;margin-inline:-4px}
+.ek-tbl.ek-tall{max-height:none;overflow-y:visible}
+table.ek-t{min-width:560px}
+table.ek-t th{text-align:right}
+table.ek-t td{white-space:nowrap}
+table.ek-t td.wrapc{white-space:normal;min-width:180px}
+table.ek-t tr.nc{cursor:default}
+table.ek-t tr.nc:hover td{background:transparent}
+table.ek-t tr.ek-dsep td{background:var(--surface-2);font-weight:700;font-size:12px;color:var(--ink-2);cursor:default}
+.ek-nm{font-weight:500}
+.ek-sc{font:400 10.5px var(--f-num);color:var(--faint);margin-left:6px}
+.ek-kind{font-size:10.5px;border:1px solid var(--line-strong);border-radius:999px;padding:0 7px;color:var(--muted)}
+.ek-kind.fy{border-color:var(--brand);color:var(--brand)}
+.ek-morebox{text-align:center;padding:12px 0 4px}
+.ek-t mark{background:var(--warn-bg);color:var(--warn-ink);border-radius:2px;padding:0 1px}
+.ek-ltabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:14px;overflow-x:auto}
+.ek-ltabs button{border:0;background:transparent;font:500 14px var(--f-body);color:var(--muted);padding:9px 14px;border-bottom:2px solid transparent;cursor:pointer;white-space:nowrap}
+.ek-ltabs button[aria-pressed="true"]{color:var(--ink);border-bottom-color:var(--brand)}
+.ek-ltabs .c{font-size:11px;color:var(--faint);margin-left:4px}
+.ek-days{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:12px}
+.ek-dbtn{flex:none;border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:5px 9px 6px;min-width:58px;cursor:pointer;text-align:center;color:var(--ink);font-family:var(--f-body)}
+.ek-dbtn small{display:block;font-size:10.5px;color:var(--faint);line-height:1.3}
+.ek-dbtn b{display:block;font-size:13px;font-weight:600}
+.ek-bar{display:block;height:4px;border-radius:2px;background:var(--surface-2);margin:4px 0 2px;overflow:hidden}
+.ek-bar i{display:block;height:100%;background:var(--brand)}
+.ek-dbtn[aria-pressed="true"]{border-color:var(--brand);background:var(--brand-soft)}
+.ek-filters{display:flex;gap:10px 14px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+.ek-filters .search input,.ek-drhead .search input{width:200px}
+.ek-chk{display:inline-flex;gap:6px;align-items:center;font-size:12.5px;color:var(--muted);cursor:pointer}
+.ek-chk input{accent-color:var(--brand)}
+@media (max-width:860px){.ek-tabs{display:flex}.ek-grid{grid-template-columns:minmax(0,1fr)}.ek-col{border-left:0;display:none}.ek-col.show{display:flex}}
+@media (max-width:520px){.ek-filters .search,.ek-drhead .search{flex:1 1 100%}.ek-filters .search input,.ek-drhead .search input{width:100%}}
+
 footer{margin-top:56px;border-top:1px solid var(--line);background:var(--surface)}
 footer .wrap{display:flex;justify-content:space-between;gap:24px;flex-wrap:wrap;padding-block:26px;font-size:12.5px;color:var(--muted);line-height:1.8}
 footer nav{display:flex;gap:20px;flex-wrap:wrap}
@@ -328,6 +416,7 @@ footer a:hover{color:var(--brand)}
 <nav class="jump" aria-label="セクション">
   <div class="wrap">
     <a href="#market" class="on">市場概況</a>
+    <a href="#schedule">今後の予定</a>
     <a href="#themes">テーマ別資金フロー</a>
     <a href="#stocks">銘柄を探す</a>
     <a href="#screening">スクリーニング</a>
@@ -336,6 +425,7 @@ footer a:hover{color:var(--brand)}
     <a href="tools/themes.html" data-page="1">業種状況</a>
     <a href="tools/research.html" data-page="1">業種銘柄リサーチ</a>
     <a href="tools/dividend.html" data-page="1">高配当・増配銘柄リサーチ</a>
+    <a href="tools/calendar.html" data-page="1">決算・経済カレンダー</a>
     <a href="note.html" data-page="1">note紹介記事検証</a>
     <span class="upd">データ <b class="num" id="u-date">–</b> ・ <span id="u-sched"></span><a id="upd-btn" href="https://github.com/ikameron009/theme-flow/actions/workflows/update.yml" target="_blank" rel="noopener">更新</a></span>
   </div>
@@ -407,6 +497,11 @@ footer a:hover{color:var(--brand)}
     <div class="chartbox"><svg id="rtchart" viewBox="0 0 720 300" preserveAspectRatio="xMidYMid meet"></svg><div class="tip" id="rttip"></div></div>
     <div id="rtdesc" style="margin-top:10px;font-size:12px;color:var(--muted);line-height:1.8"></div>
   </div>
+</section>
+
+<!-- ================= 今後の予定(決算・経済カレンダー。描画は assets/cal.js) ================= -->
+<section class="sec" id="schedule">
+  <div class="panel" id="ek-block"></div>
 </section>
 
 <!-- ================= テーマ別資金フロー ================= -->
@@ -548,4 +643,6 @@ const GATE=__GATE__;
 const BUILT="__BUILT__";
 /*__SCRIPT__*/
 </script>
+<script src="assets/cal.js"></script>
+<script>EarnCal.mountBlock('ek-block',{root:'',list:'tools/calendar.html'});</script>
 <script src="assets/help.js"></script>

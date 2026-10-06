@@ -37,3 +37,6 @@ dividend/yf_div_cache/
 dividend/out/
 dividend/logs/
 dividend/policy_cache.json
+
+# 決算・経済カレンダー(15_calendar.py が毎回作る)
+calendar.json
