@@ -12,6 +12,13 @@ binding = "ASSETS"
 # いまは全部そのまま配信。会員限定を入れる時に /pro/* だけ Worker を先に通す
 run_worker_first = false
 
+# 本人専用の売買記録(/api/journal/*)の保存先。表は migrations/ で作る
+#   npx wrangler@4 d1 migrations apply trade-journal --remote
+[[d1_databases]]
+binding = "JOURNAL_DB"
+database_name = "trade-journal"
+database_id = "9ebbb9bd-51e6-4495-b1ab-d34dd0c3cbfd"
+
 # 定時実行は持たない(定時起動は cron_worker/ の theme-flow-cron が担当)
 [triggers]
 crons = []

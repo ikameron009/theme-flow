@@ -27,7 +27,7 @@
 .dverdict{margin-top:16px;background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--brand);padding:12px 16px;border-radius:0 8px 8px 0}
 .dverdict .k{font-size:11.5px;font-weight:700;letter-spacing:.08em;color:var(--brand)}
 .dverdict p{margin:2px 0 0;font-size:15px;font-weight:500}
-.tabs{display:flex;gap:4px;margin-top:20px;border-bottom:1px solid var(--line-strong);position:sticky;top:calc(env(safe-area-inset-top,0px) + 108px);background:var(--bg);z-index:20;overflow-x:auto;scrollbar-width:none}
+.tabs{display:flex;gap:4px;margin-top:20px;border-bottom:1px solid var(--line-strong);position:sticky;top:calc(env(safe-area-inset-top,0px) + 150px);background:var(--bg);z-index:20;overflow-x:auto;scrollbar-width:none}
 .tab{appearance:none;background:none;border:0;padding:10px 18px 9px;font:700 14.5px var(--f-body);color:var(--muted);cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-1px;white-space:nowrap}
 .tab[aria-selected="true"]{color:var(--brand);border-bottom-color:var(--brand)}
 .tab:hover{color:var(--ink)}
@@ -153,18 +153,22 @@ ul.must li em{margin-left:auto;font-style:normal;color:var(--muted);font-size:12
   </div>
 </header>
 <nav class="jump" aria-label="メニュー">
-  <div class="wrap">
+  <div class="wrap jrows">
+    <div class="jrow">
     <a href="../index.html#market">市場概況</a>
     <a href="../index.html#themes">テーマ別資金フロー</a>
     <a href="../index.html#stocks">銘柄を探す</a>
     <a href="../index.html#screening">スクリーニング</a>
-    <span class="sep" aria-hidden="true">|</span>
+    </div>
+    <div class="jrow">
     <a href="../tools/sectors.html" data-page="1">セクター状況</a>
     <a href="../tools/themes.html" data-page="1">業種状況</a>
     <a href="../tools/research.html" data-page="1">業種銘柄リサーチ</a>
     <a href="../tools/dividend.html" data-page="1" class="on">高配当・増配銘柄リサーチ</a>
     <a href="../tools/calendar.html" data-page="1">決算・経済カレンダー</a>
+    <a href="../tools/journal.html" data-page="1">売買記録</a>
     <a href="../note.html" data-page="1">note紹介記事検証</a>
+    </div>
   </div>
 </nav>
 

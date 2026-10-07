@@ -117,10 +117,19 @@ if os.path.exists(os.path.join(BASE, "anshin_pub", "dividend_codes.json")):
     shutil.copyfile(os.path.join(BASE, "anshin_pub", "dividend_codes.json"), os.path.join(SITE, "dividend_codes.json"))
 
 
+# 売買記録(tools/journal.html)の参考データ: ドル円・今日の地合い・銘柄の候補一覧(読みがな付き)。記録そのものは D1
+try:
+    import journal_ref
+    with open(os.path.join(SITE, "journal_ref.json"), "w", encoding="utf-8") as f:
+        f.write(dumps(journal_ref.build(BASE)))
+except Exception as e:
+    print("journal_ref: skipped", e)
+
+
 # キャッシュ設定(Cloudflareの静的配信が読む _headers)
 HEADERS = [
     ("/", "no-cache"), ("/index.html", "no-cache"), ("/version.json", "no-store"),
-    ("/vcp_*.json", "no-cache"), ("/note_track.json", "no-cache"), ("/calendar.json", "no-cache"), ("/card_*.json", "no-cache"), ("/valuation_*.json", "no-cache"), ("/dividend_*.json", "no-cache"), ("/dividend_detail/*", "no-cache"), ("/pro/*", "no-cache"), ("/ohlc/*", "public, max-age=3600"), ("/us_ohlc/*", "public, max-age=3600"),
+    ("/vcp_*.json", "no-cache"), ("/note_track.json", "no-cache"), ("/calendar.json", "no-cache"), ("/card_*.json", "no-cache"), ("/journal_ref.json", "no-cache"), ("/valuation_*.json", "no-cache"), ("/dividend_*.json", "no-cache"), ("/dividend_detail/*", "no-cache"), ("/pro/*", "no-cache"), ("/ohlc/*", "public, max-age=3600"), ("/us_ohlc/*", "public, max-age=3600"),
 ]
 with open(os.path.join(SITE, "_headers"), "w", encoding="utf-8") as f:
     for path, cc in HEADERS:
