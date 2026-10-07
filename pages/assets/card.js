@@ -4,7 +4,9 @@
    1段目「株価・勢い」= 3行(いま/過去から今日まで/勢い・規模)。個別銘柄は card_{jp,us}.json を自動で読む。テーマ・業種・ETFは m で渡す。
    kv(旧4列) は card_*.json に無い銘柄の予備。extra = ページ固有の補足(note掲載時の株価など)
    val:false でバリュエーション欄を出さない(ETF・指数)。StockCard.mountVal(箱, 市場, コード) は単独でも使える
-   src を省くと 銘柄を探す と同じ ohlc/<code>.json(米国は us_ohlc/)を読む。o/h/l の無いデータは折れ線で描く。 */
+   src を省くと 銘柄を探す と同じ ohlc/<code>.json(米国は us_ohlc/)を読む。o/h/l の無いデータは折れ線で描く。
+   ★2026-10-07〜 個別銘柄のカードには共通で「監視銘柄に登録する」「保有銘柄に登録する」を付ける(acts:false で消す。ETF・指数=val:false・コード無しには出さない)。
+   押すとカードの中身が入力画面に切り替わる。入力画面と保存は window.StockCardActs = {state(o), watch(箱,o,戻る), hold(箱,o,戻る)}(assets/jr.js。本人のときだけ用意される)が受け持つ */
 (function(){
   const ROOT=(document.currentScript&&document.currentScript.src||'').replace(/assets\/card\.js.*$/,'');
   const cssv=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
@@ -191,6 +193,21 @@
     .sc-row .sc-slot{position:sticky;left:0;padding:0 6px;box-sizing:border-box}.sc-row .sc-slot>.panel{margin-top:6px!important}
     .sc-anchor>td{background:var(--brand-soft)!important}.sc-anchor>td:first-child{box-shadow:inset 3px 0 0 var(--brand)}`;document.head.appendChild(kcss);
 
+  /* ---------- 監視銘柄・保有銘柄に登録するボタン(全ページ共通) ---------- */
+  function mountActs(box,o){const el=box.querySelector('.sc-actbox'),A=window.StockCardActs;
+    if(!el||o.acts===false||!o.code||o.val===false||!A){if(el)el.remove();return;}
+    const paint=()=>{const s=(A.state&&A.state(o))||{},u=o.market==='us'?'ドル':'円';
+      const pf=v=>o.market==='us'?'$'+fmt(v,2):fmt(v,v>=1000?0:1)+'円';
+      el.innerHTML=`<div class="sc-acts"><button type="button" class="btn sm" data-sc-act="watch">☆ 監視銘柄に登録する</button><button type="button" class="btn sm ghost" data-sc-act="hold">＋ 保有銘柄に登録する</button>
+        ${s.inWatch?`<span class="sc-ast w">監視中${s.watch!=null?'・エントリー予定 '+pf(s.watch):'・予定株価は未入力'}</span>`:''}${s.hold?'<span class="sc-ast h">保有中</span>':''}</div>`;
+      el.querySelectorAll('[data-sc-act]').forEach(b=>b.onclick=()=>{const main=box.querySelector('.sc-main'),form=box.querySelector('.sc-form');
+        const back=()=>{if(!box.isConnected)return;form.hidden=true;form.innerHTML='';main.hidden=false;el.hidden=false;paint();};
+        main.hidden=true;el.hidden=true;form.hidden=false;A[b.dataset.scAct](form,o,back);});};
+    paint();}
+  const acss=document.createElement('style');acss.textContent=`.sc-acts{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:10px 0 2px}
+    .sc-ast{font-size:11.5px;font-weight:700;border-radius:999px;padding:2px 10px;white-space:nowrap}.sc-ast.w{background:var(--brand-soft);color:var(--brand)}.sc-ast.h{background:var(--warn-bg);color:var(--warn-ink)}
+    .sc-form{margin-top:12px}`;document.head.appendChild(acss);
+
   const PER=[['21','1か月'],['63','3か月'],['126','6か月'],['252','1年'],['520','2年']];
   const st={per:126,freq:'day'};
   function open(box,o){
@@ -199,19 +216,21 @@
     const tok=Symbol();box._sc=tok;
     box.innerHTML=`<div class="panel sc-card" style="margin-top:14px;position:relative"><div class="shead" style="padding-right:76px"><b>${esc(o.name)}</b>${o.code&&o.showCode!==false?`<span class="num muted">${esc(o.code)}</span>`:''}${o.sub?`<span class="tag">${esc(o.sub)}</span>`:''}${o.links===false?'':links(o.market,o.code)}
         <button class="btn sm ghost" data-close style="position:absolute;top:12px;right:12px">閉じる</button></div>
+      <div class="sc-actbox"></div><div class="sc-form" hidden></div><div class="sc-main">
       <div class="sc-kvbox"></div>
       ${o.extra&&o.extra.length?`<div class="sc-extra">${o.extraTitle?`<span class="t">${esc(o.extraTitle)}</span>`:''}${o.extra.map(k=>`<span>${k.l}<b class="${k.cls||''}">${k.v}</b></span>`).join('')}</div>`:''}
       <div class="sc-valbox"></div>
       <div class="ctlrow" style="margin:6px 0 4px"><div class="seg" data-g="per">${PER.map(p=>`<button data-v="${p[0]}" aria-pressed="${+p[0]===per}">${p[1]}</button>`).join('')}</div>
         <div class="seg" data-g="freq"><button data-v="day" aria-pressed="${st.freq==='day'}">日足</button><button data-v="week" aria-pressed="${st.freq==='week'}">週足</button></div>
         <span class="legend" style="margin:0"><span><i style="background:var(--c2)"></i>5日線</span><span><i style="background:var(--brand)"></i>20日線</span><span><i style="background:var(--c4)"></i>50日線</span>${o.mark?`<span><i style="background:var(--warn-ink,var(--brand));height:2px"></i>${esc(o.mark.label)}</span>`:''}</span></div>
-      <div class="sc-chart"><div class="phint">読み込み中…</div></div>${o.foot?`<div class="phint" style="margin-top:6px">${o.foot}</div>`:''}</div>`;
+      <div class="sc-chart"><div class="phint">読み込み中…</div></div>${o.foot?`<div class="phint" style="margin-top:6px">${o.foot}</div>`:''}</div></div>`;
     let cur={per,freq:st.freq};
     const draw=()=>load(src).then(oh=>{if(box._sc!==tok)return;const el=box.querySelector('.sc-chart');if(!el)return;
       el.innerHTML=chart(oh,cur.per,cur.freq,Math.max(320,Math.round(el.clientWidth||700)),o.mark,o.line);});
     box.querySelectorAll('.seg').forEach(sg=>sg.onclick=e=>{const b=e.target.closest('button');if(!b)return;sg.querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b));
       if(sg.dataset.g==='per'){cur.per=+b.dataset.v;st.per=cur.per;}else{cur.freq=b.dataset.v;st.freq=cur.freq;}draw();});
     box.querySelector('[data-close]').onclick=()=>{box._sc=null;box.innerHTML='';o.onClose&&o.onClose();};
+    mountActs(box,o);
     mountKv(box.querySelector('.sc-kvbox'),o);
     if(o.val!==false&&o.code)mountVal(box.querySelector('.sc-valbox'),o.market,o.code);
     draw();

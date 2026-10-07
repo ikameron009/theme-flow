@@ -1,5 +1,5 @@
 // テーマ別資金フロー: 公開サイトの入口。静的ファイルはそのまま返す。
-// /api/journal/* = 本人専用の売買記録(保存先 D1: trade-journal)。パスワードは Worker の秘密の値 JOURNAL_PASSWORD
+// /api/journal/* = 本人専用の監視銘柄・売買記録(保存先 D1: trade-journal。表 positions=建玉、watchlist=監視銘柄)。パスワードは Worker の秘密の値 JOURNAL_PASSWORD
 //   (登録: cd site_worker && npx wrangler@4 secret put JOURNAL_PASSWORD)。ログインすると署名つき Cookie を30日渡す。
 // ★いまはログインを省略中(wrangler.toml の [vars] JOURNAL_AUTH = "off")。戻すときは "on" にして push する。
 // ③C で /pro/* の会員確認(Cookie)もここに追加する。
@@ -95,6 +95,31 @@ async function journal(req, env, path) {
   }
   if (m && method === "DELETE") {
     await db.prepare("DELETE FROM positions WHERE id = ?").bind(Number(m[1])).run();
+    return json({ ok: true });
+  }
+  // 監視銘柄。POST は同じ銘柄(市場＋コード)があれば上書き(エントリー予定株価の変更もこれ)
+  if (path === "/api/journal/watch" && method === "GET") {
+    const { results } = await db.prepare("SELECT * FROM watchlist ORDER BY id").all();
+    return json({ watch: results });
+  }
+  if (path === "/api/journal/watch" && method === "POST") {
+    const b = await req.json().catch(() => null);
+    const mk = b && (b.mk === "jp" || b.mk === "us") ? b.mk : null;
+    const code = b && typeof b.code === "string" ? b.code.trim().slice(0, 16) : "";
+    if (!mk || !code) return json({ error: "銘柄の形が正しくありません" }, 400);
+    const name = String((b && b.name) || "").slice(0, 120);
+    const e = b && b.entry != null && b.entry !== "" ? Number(b.entry) : null;
+    const entry = e != null && isFinite(e) && e > 0 ? e : null;
+    const now = new Date().toISOString();
+    const r = await db
+      .prepare("INSERT INTO watchlist (mk, code, name, entry, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT (mk, code) DO UPDATE SET name = excluded.name, entry = excluded.entry, updated_at = excluded.updated_at RETURNING *")
+      .bind(mk, code, name, entry, now, now)
+      .first();
+    return json({ item: r });
+  }
+  const w = path.match(/^\/api\/journal\/watch\/(\d+)$/);
+  if (w && method === "DELETE") {
+    await db.prepare("DELETE FROM watchlist WHERE id = ?").bind(Number(w[1])).run();
     return json({ ok: true });
   }
   return json({ error: "not found" }, 404);
