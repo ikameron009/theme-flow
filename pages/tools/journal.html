@@ -366,8 +366,9 @@ document.getElementById('loginform').onsubmit=async e=>{e.preventDefault();const
 document.getElementById('logout').onclick=async()=>{try{await api('logout',{method:'POST'});}catch(e){}showLogin();};
 
 async function boot(){
-  try{await api('me');}catch(e){return;}
-  document.getElementById('login').hidden=true;document.getElementById('app').hidden=false;document.getElementById('me').hidden=false;document.getElementById('logout').hidden=false;
+  let me;try{me=await api('me');}catch(e){return;}
+  // ログイン省略中(auth:false)はログイン中の印とログアウトを出さない
+  document.getElementById('login').hidden=true;document.getElementById('app').hidden=false;document.getElementById('me').hidden=me.auth===false;document.getElementById('logout').hidden=me.auth===false;
   document.getElementById('loading').hidden=false;
   const [ps,ref,cj,cu,cal,i1,i2]=await Promise.all([api('positions'),getJSON(ROOT+'journal_ref.json'),getJSON(ROOT+'card_jp.json'),getJSON(ROOT+'card_us.json'),
     getJSON(ROOT+'calendar.json'),getJSON(ROOT+'ohlc/sec_1306.json'),getJSON(ROOT+'us_ohlc/sec_SPY.json')]);

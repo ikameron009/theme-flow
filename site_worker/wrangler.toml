@@ -19,6 +19,10 @@ binding = "JOURNAL_DB"
 database_name = "trade-journal"
 database_id = "9ebbb9bd-51e6-4495-b1ab-d34dd0c3cbfd"
 
+# 売買記録のログイン。"off" = ログインを省略(URLを知っていれば誰でも見られる・書ける)、"on" = パスワードが必要
+[vars]
+JOURNAL_AUTH = "off"
+
 # 定時実行は持たない(定時起動は cron_worker/ の theme-flow-cron が担当)
 [triggers]
 crons = []

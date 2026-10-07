@@ -1,6 +1,7 @@
 // テーマ別資金フロー: 公開サイトの入口。静的ファイルはそのまま返す。
 // /api/journal/* = 本人専用の売買記録(保存先 D1: trade-journal)。パスワードは Worker の秘密の値 JOURNAL_PASSWORD
 //   (登録: cd site_worker && npx wrangler@4 secret put JOURNAL_PASSWORD)。ログインすると署名つき Cookie を30日渡す。
+// ★いまはログインを省略中(wrangler.toml の [vars] JOURNAL_AUTH = "off")。戻すときは "on" にして push する。
 // ③C で /pro/* の会員確認(Cookie)もここに追加する。
 
 const COOKIE = "jr_s";
@@ -23,7 +24,9 @@ function cookieOf(req, name) {
   const m = (req.headers.get("Cookie") || "").match(new RegExp("(?:^|;\\s*)" + name + "=([^;]+)"));
   return m ? m[1] : null;
 }
+const authOff = (env) => String(env.JOURNAL_AUTH || "on").toLowerCase() === "off";
 async function signedIn(req, env) {
+  if (authOff(env)) return true; // ログイン省略中
   if (!env.JOURNAL_PASSWORD) return false;
   const v = cookieOf(req, COOKIE);
   if (!v) return false;
@@ -71,7 +74,7 @@ async function journal(req, env, path) {
     if (origin && origin !== new URL(req.url).origin) return json({ error: "forbidden" }, 403);
   }
   const db = env.JOURNAL_DB;
-  if (path === "/api/journal/me") return json({ ok: true });
+  if (path === "/api/journal/me") return json({ ok: true, auth: !authOff(env) });
   if (path === "/api/journal/positions" && method === "GET") {
     const { results } = await db.prepare("SELECT * FROM positions ORDER BY id").all();
     return json({ positions: results.map(rowOut) });
