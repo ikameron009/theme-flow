@@ -55,11 +55,23 @@ tr.j-done td{background:var(--up-soft)}
 /* 表: 上下左右にスクロールしても見出し行と銘柄名は固定 */
 .j-tblbox{max-height:72vh;overflow:auto}
 .j-tbl th{z-index:2}
-.j-tbl th:first-child{position:sticky;left:0;z-index:3}
-.j-tbl tr.row td:first-child{position:sticky;left:0;z-index:1;background:var(--surface);box-shadow:1px 0 0 var(--line)}
-.j-tbl tr.row:hover td:first-child,.j-tbl tr.sel td:first-child{background:var(--surface-2)}
-.j-tbl tr.sel td:first-child{background:var(--brand-soft)}
-.j-tbl tr.j-done td:first-child{background:var(--up-soft)}
+.j-tbl th.ck{position:sticky;left:0;z-index:4}.j-tbl th.ck+th{position:sticky;left:32px;z-index:3}
+.j-tbl tr.row td.ck{position:sticky;left:0;z-index:1;background:var(--surface)}
+.j-tbl tr.row td.ck+td{position:sticky;left:32px;z-index:1;background:var(--surface);box-shadow:1px 0 0 var(--line)}
+.j-tbl tr.row:hover td.ck,.j-tbl tr.row:hover td.ck+td{background:var(--surface-2)}
+.j-tbl tr.sel td.ck,.j-tbl tr.sel td.ck+td{background:var(--brand-soft)}
+.j-tbl tr.j-done td.ck,.j-tbl tr.j-done td.ck+td{background:var(--up-soft)}
+/* 選択削除・削除 */
+.j-tbl th.ck,.j-tbl td.ck,.w-tbl th.ck,.w-tbl td.ck{width:32px;min-width:32px;max-width:32px;text-align:center;padding-left:4px;padding-right:2px;cursor:default}
+.j-tbl td.ck input,.j-tbl th.ck input,.w-tbl td.ck input,.w-tbl th.ck input{cursor:pointer;accent-color:var(--brand);margin:0;vertical-align:middle;width:15px;height:15px}
+.j-selbar{display:flex;align-items:center;gap:8px 12px;flex-wrap:wrap;background:var(--brand-soft);border:1px solid var(--brand);border-radius:10px;padding:6px 12px;margin-bottom:8px;font-size:12.5px}
+.j-del{border:1px solid var(--line-strong);background:var(--surface);color:var(--muted);font:500 11px var(--f-body);border-radius:6px;padding:2px 9px;cursor:pointer;white-space:nowrap}
+.j-del:hover{color:var(--down);border-color:var(--down)}
+dialog.j-dlg{border:1px solid var(--line-strong);border-radius:14px;padding:18px 20px;max-width:min(440px,calc(100vw - 32px));background:var(--surface);color:var(--ink);box-shadow:0 16px 40px rgba(10,40,40,.22)}
+dialog.j-dlg::backdrop{background:rgba(10,25,25,.35)}
+dialog.j-dlg h4{margin:0 0 8px;font:700 15px var(--f-body)}dialog.j-dlg p{margin:0;font-size:12.5px;color:var(--ink-2);line-height:1.7}
+.j-dlist{display:block;margin-bottom:6px;color:var(--ink);font-weight:500}
+.j-toast.u{display:flex;align-items:center;gap:14px}.j-toast.u button{background:transparent;border:1px solid currentColor;color:inherit;border-radius:999px;padding:2px 12px;font:700 12px var(--f-body);cursor:pointer}
 .j-tbl tfoot td{position:sticky;bottom:0}
 .j-dhead{grid-column:1/-1;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
 .j-dbtns{display:flex;gap:8px}
@@ -198,11 +210,13 @@ table.w-tbl th.on{color:var(--brand)}
 table.w-tbl th.w-entth{color:var(--j-hold);font-weight:700}
 table.w-tbl td{padding:5px 6px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap;font-family:var(--f-num);font-variant-numeric:tabular-nums}
 table.w-tbl td.l{text-align:left;font-family:var(--f-body)}
-table.w-tbl thead th:first-child{position:sticky;left:0;z-index:4}
-table.w-tbl tr.w-row td:first-child{position:sticky;left:0;z-index:1;background:var(--surface);box-shadow:1px 0 0 var(--line)}
+table.w-tbl thead th.ck{position:sticky;left:0;z-index:5}table.w-tbl thead th.ck+th{position:sticky;left:32px;z-index:4}
+table.w-tbl tr.w-row td.ck{position:sticky;left:0;z-index:1;background:var(--surface)}
+table.w-tbl tr.w-row td.ck+td{position:sticky;left:32px;z-index:1;background:var(--surface);box-shadow:1px 0 0 var(--line)}
 table.w-tbl tr.w-row{cursor:pointer}
 table.w-tbl tr.w-row:hover td{background:var(--surface-2)}
-table.w-tbl tr.sel td,table.w-tbl tr.sel td:first-child{background:var(--brand-soft)}
+table.w-tbl tr.sel td,table.w-tbl tr.sel td.ck,table.w-tbl tr.sel td.ck+td{background:var(--brand-soft)}
+table.w-tbl tr.w-row:hover td.ck,table.w-tbl tr.w-row:hover td.ck+td{background:var(--surface-2)}
 @keyframes wflash{from{background:var(--warn-bg)}to{background:var(--surface)}}
 table.w-tbl tr.w-flash td{animation:wflash 2.4s ease-out}
 .w-nm{background:none;border:0;padding:0;font:inherit;cursor:pointer;text-align:left;display:flex;align-items:center;white-space:nowrap;color:inherit}
@@ -221,8 +235,7 @@ table.w-tbl td.w-ent{background:var(--j-hold-soft)}
 .w-diff{font-weight:600}
 .w-dp{display:inline-block;min-width:52px;margin-left:6px;font-weight:500;font-size:11.5px}
 .w-u{font-size:10px;color:var(--faint);margin-left:2px}
-.w-del{border:1px solid var(--line-strong);background:var(--surface);color:var(--muted);font:500 11px var(--f-body);border-radius:6px;padding:2px 8px;cursor:pointer}
-.w-del:hover{color:var(--down);border-color:var(--down)}
+
 </style>
 </head><body>
 
@@ -292,11 +305,12 @@ table.w-tbl td.w-ent{background:var(--j-hold-soft)}
   <div id="t-watch">
     <div class="w-add" id="w-add">
       <div class="f"><label for="w-q">銘柄を検索</label><div class="j-ac"><input id="w-q" type="text" autocomplete="off" placeholder="銘柄名・コード・ティッカー（例：と、7203、PLTR）"><ul class="j-acl" id="w-acl" role="listbox" hidden></ul></div></div>
-      <div class="f"><label for="w-entry">エントリー予定株価（あとで入れても可）</label><div class="j-unit"><input id="w-entry" type="number" step="any" min="0"><span class="u" id="w-unit">円</span></div></div>
+      <div class="f"><label for="w-entry">エントリー予定株価（あとで入れても可）</label><div class="j-unit"><input id="w-entry" type="text" inputmode="decimal" class="j-num" autocomplete="off"><span class="u" id="w-unit">円</span></div></div>
       <button class="btn" type="button" id="w-addbtn" disabled>＋ 監視銘柄に追加</button>
       <div class="w-picked" id="w-picked">候補から銘柄を選ぶと、ここに現在値が出ます。</div>
     </div>
     <div class="j-bar1"><div class="j-filters" id="f-watch"></div><span class="phint" id="w-count"></span></div>
+    <div class="j-selbar" id="sb-watch" hidden></div>
     <div class="j-tblbox w-box"><table class="rx w-tbl" id="tbl-watch"></table></div>
     <div class="foot"><b>エントリー予定株価</b>：表の欄に直接入力できます（Enterか欄の外を押すと確定）。<b>予定との差</b>：現在値 − エントリー予定株価（円またはドル）と、予定株価に対する％。マイナス＝現在値が予定より下。<b>行を押す</b>と、その行の下に銘柄カードが開きます。カードの「監視銘柄に登録する」で予定株価の変更、「保有銘柄に登録する」で保有中への追加ができます。ほかの列（トレンド〜ADR%）は業種銘柄リサーチと同じです。</div>
   </div>
@@ -310,6 +324,7 @@ table.w-tbl td.w-ent{background:var(--j-hold-soft)}
         <div class="j-btnrow"><button class="btn" type="submit" id="pos-save">保有中に追加する</button><button class="btn ghost" type="button" id="new-cancel">やめる</button><span style="flex:1"></span><button class="btn j-danger" type="button" id="pos-del" hidden>この記録を削除</button></div>
       </form>
     </div>
+    <div class="j-selbar" id="sb-hold" hidden></div>
     <div class="j-tblbox"><table class="j-tbl" id="tbl-hold"></table></div>
     <div class="foot"><b>記録のしかた</b>：新規は「＋ 新しく建てる」。銘柄の行を押すと、右上に「決済を記録」（利確・損切りの反対売買。一部だけでも可）と「編集」が出ます。損切ライン・利確ライン・株数・平均取得単価の変更は「編集」から。全株を決済すると「取引完了」のボタンが出て、押すと売買履歴へ移ります。<br>
       <b>利確ライン</b>：自分で決めた利確の価格と、現在値からの距離。<b>到達した段</b>：平均取得単価から +5〜+30%（ショートは −5〜−30%）のうち、保有中に一度でも届いた段が緑。<b>損切まで</b>：現在値から損切ラインまでの距離。<b>損切り幅の何倍</b>：いまの損益が、建てたときに決めた損切り幅（取得単価と損切ラインの差×株数）の何倍か。−1.0倍＝損切ラインどおりの負け、+2.0倍＝損切り幅の2倍の利益。<b>最大含み益／損</b>：保有中の高値・安値で見た最大値。<b>信用期日</b>：残り30日以内は赤。</div>
@@ -319,6 +334,7 @@ table.w-tbl td.w-ent{background:var(--j-hold-soft)}
   <div id="t-hist" hidden>
     <div class="j-filters" id="f-hist"></div>
     <div class="j-sum" id="hist-sum"></div>
+    <div class="j-selbar" id="sb-hist" hidden></div>
     <div class="j-tblbox"><table class="j-tbl" id="tbl-hist"></table></div>
     <div class="foot"><b>損益</b>：株価の差による損益（円）。手数料・金利・配当は含みません。米国株は、建てた日と決済した日のドル円で円に換算し、「うち為替」に為替による分を表示。<b>損切り幅の何倍</b>：損益÷建てたときの損切り幅。<b>取り逃がし</b>：保有中の最大含み益から、実際に決済した損益率を引いた差。<b>指数との差</b>：同じ期間のTOPIX（米国株はS&amp;P500）の騰落率との差。</div>
   </div>
@@ -354,6 +370,8 @@ table.w-tbl td.w-ent{background:var(--j-hold-soft)}
   </div>
   </div>
 </section>
+<dialog class="j-dlg" id="jdlg"><form method="dialog"><h4 id="jdlg-t"></h4><p id="jdlg-m"></p>
+  <div class="j-btnrow" style="justify-content:flex-end;margin-top:14px"><button class="btn ghost" value="cancel">やめる</button><button class="btn j-danger" value="ok">削除</button></div></form></dialog>
 </main>
 
 <footer>
@@ -364,7 +382,7 @@ table.w-tbl td.w-ent{background:var(--j-hold-soft)}
 </footer>
 
 <script src="../assets/card.js?v=20261008"></script>
-<script src="../assets/jr.js?v=20261008"></script>
+<script src="../assets/jr.js?v=20261009"></script>
 <script>
 (function(){
 'use strict';
@@ -534,50 +552,50 @@ function renderHold(){
   // 全株決済したが「取引完了」を押していない建玉は、いちばん上に出す
   const rows=sortRows('hold',POS.filter(P=>!P.done&&pass(P,FILT.hold)),G).sort((a,b)=>(a.c.open?1:0)-(b.c.open?1:0));
   const th=(k,t,l,tip)=>`<th${l?' class="l"':''}${k?` data-s="${k}"`:''}${tip?` title="${tip}"`:''}>${t}${SORT.hold.k===k?(SORT.hold.dir>0?' ▲':' ▼'):''}</th>`;
-  let h=`<thead><tr>${th('code','銘柄',1)}${th('','区分',1)}${th('d0','購入日')}${th('','株数')}${th('','平均取得単価')}${th('notional','建玉合計')}${th('','現在値')}${th('unreal','含み損益')}${th('ret','損益率')}${th('dist','損切ライン（まで）')}${th('tdist','利確ライン（まで）')}${th('','到達した段 +5〜+30%',1)}${th('hold','保有日数')}${th('R','損切り幅の何倍',0,'いまの損益÷建てたときの損切り幅（取得単価と損切ラインの差×株数）。−1.0倍＝損切ラインどおりの負け')}${th('','最大含み益／損')}${th('earn','次の決算')}${th('due','信用期日')}${th('','手法',1)}</tr></thead><tbody>`;
+  let h=`<thead><tr>${ckTh('hold')}${th('code','銘柄',1)}${th('','区分',1)}${th('d0','購入日')}${th('','株数')}${th('','平均取得単価')}${th('notional','建玉合計')}${th('','現在値')}${th('unreal','含み損益')}${th('ret','損益率')}${th('dist','損切ライン（まで）')}${th('tdist','利確ライン（まで）')}${th('','到達した段 +5〜+30%',1)}${th('hold','保有日数')}${th('R','損切り幅の何倍',0,'いまの損益÷建てたときの損切り幅（取得単価と損切ラインの差×株数）。−1.0倍＝損切ラインどおりの負け')}${th('','最大含み益／損')}${th('earn','次の決算')}${th('due','信用期日')}${th('','手法',1)}<th></th></tr></thead><tbody>`;
   let tn=0,tu=0;
   rows.forEach(P=>{const c=P.c;
     const sel=OPENED.hold===P.id?' sel':'';
     if(!c.open){ // 全株決済ずみ・完了待ち
-      h+=`<tr class="row j-done${sel}" data-id="${P.id}"><td class="l">${nameHTML(P)} <span class="j-st">取引完了待ち</span></td><td class="l">${tagsHTML(P)}</td><td>${c.d0.slice(2).replace(/-/g,'/')}</td><td>0（全株決済）</td><td>${px(P,c.avg)}</td><td>–</td><td>${px(P,c.exitAvg)}</td>
-        <td class="${cls(c.realized)}">確定 ${yen(c.realized)}</td><td>${pct(c.retPct)}</td><td>–</td><td>–</td><td class="l">行を押して「取引完了」へ</td><td>${c.hold}日</td><td class="${cls(c.R)}">${sgn(c.R,2)}倍</td><td>${c.mfe==null?'–':`<span class="up">${sgn(c.mfe)}%</span> / <span class="down">${sgn(c.mae)}%</span>`}</td><td>–</td><td>–</td><td class="l"><span class="j-tg tag">${P.tag}</span></td></tr>`;
-      if(OPENED.hold===P.id)h+=detailRow(P,18,true);return;}
+      h+=`<tr class="row j-done${sel}" data-id="${P.id}">${ckTd('hold',P.id)}<td class="l">${nameHTML(P)} <span class="j-st">取引完了待ち</span></td><td class="l">${tagsHTML(P)}</td><td>${c.d0.slice(2).replace(/-/g,'/')}</td><td>0（全株決済）</td><td>${px(P,c.avg)}</td><td>–</td><td>${px(P,c.exitAvg)}</td>
+        <td class="${cls(c.realized)}">確定 ${yen(c.realized)}</td><td>${pct(c.retPct)}</td><td>–</td><td>–</td><td class="l">行を押して「取引完了」へ</td><td>${c.hold}日</td><td class="${cls(c.R)}">${sgn(c.R,2)}倍</td><td>${c.mfe==null?'–':`<span class="up">${sgn(c.mfe)}%</span> / <span class="down">${sgn(c.mae)}%</span>`}</td><td>–</td><td>–</td><td class="l"><span class="j-tg tag">${P.tag}</span></td>${delTd('hold',P.id,P.name)}</tr>`;
+      if(OPENED.hold===P.id)h+=detailRow(P,20,true);return;}
     tn+=c.notional;tu+=c.unreal;
     const dueDays=P.due?days(TODAY,P.due):null;const earnDays=P.nextEarn?days(TODAY,P.nextEarn):null;
     const tg=[5,10,15,20,25,30].map((t,k)=>`<i class="${c.hits[k]?'hit':''}" title="${P.dir==='S'?'−':'+'}${t}% = ${px(P,c.avg*(1+c.sh*t/100))}${c.hits[k]?'（'+c.hits[k]+' 到達）':''}">${t}</i>`).join('');
     const near=c.distStop<3;
-    h+=`<tr class="row${sel}" data-id="${P.id}"><td class="l">${nameHTML(P)}</td><td class="l">${tagsHTML(P)}</td><td>${c.d0.slice(2).replace(/-/g,'/')}</td><td>${fmt(c.q)}</td><td>${px(P,c.avg)}</td><td>${yenAbs(c.notional)}</td><td>${px(P,c.last)}</td>
+    h+=`<tr class="row${sel}" data-id="${P.id}">${ckTd('hold',P.id)}<td class="l">${nameHTML(P)}</td><td class="l">${tagsHTML(P)}</td><td>${c.d0.slice(2).replace(/-/g,'/')}</td><td>${fmt(c.q)}</td><td>${px(P,c.avg)}</td><td>${yenAbs(c.notional)}</td><td>${px(P,c.last)}</td>
       <td class="${cls(c.unreal)}">${yen(c.unreal)}</td><td>${pct(c.retPct)}</td><td>${px(P,c.stopNow)}<span class="j-dist">${near?'<span class="j-warn">':''}${sgn(-c.distStop)}%${near?'</span>':''}</span></td>
       <td>${P.target?px(P,P.target)+`<span class="j-dist">${sgn(c.distTgt)}%</span>`:'–'}</td>
       <td class="l"><span class="j-tgt">${tg}</span></td><td>${c.hold}日</td><td class="${cls(c.R)}">${sgn(c.R,2)}倍</td><td>${c.mfe==null?'–':`<span class="up">${sgn(c.mfe)}%</span> / <span class="down">${sgn(c.mae)}%</span>`}</td>
       <td>${P.nextEarn?`${P.nextEarn.slice(5).replace('-','/')}${earnDays<=7?' <span class="j-warn">あと'+earnDays+'日</span>':''}`:'–'}</td>
-      <td>${P.due?`<span class="${dueDays<=30?'j-warn':''}">${P.due.slice(2).replace(/-/g,'/')}</span>`:'–'}</td><td class="l"><span class="j-tg tag">${P.tag}</span></td></tr>`;
-    if(OPENED.hold===P.id)h+=detailRow(P,18,true);
+      <td>${P.due?`<span class="${dueDays<=30?'j-warn':''}">${P.due.slice(2).replace(/-/g,'/')}</span>`:'–'}</td><td class="l"><span class="j-tg tag">${P.tag}</span></td>${delTd('hold',P.id,P.name)}</tr>`;
+    if(OPENED.hold===P.id)h+=detailRow(P,20,true);
   });
-  if(!rows.length)h+=`<tr><td colspan="18" class="j-empty">${POS.some(P=>!P.done)?'絞り込みに合う銘柄がありません。':'保有中の銘柄はありません。「＋ 新しく建てる」から記録します。'}</td></tr>`;
-  h+=`</tbody><tfoot><tr><td class="l" colspan="5">合計 ${rows.filter(P=>P.c.open).length}銘柄</td><td>${yenAbs(tn)}</td><td></td><td class="${cls(tu)}">${yen(tu)}</td><td colspan="10"></td></tr></tfoot>`;
-  tbl.innerHTML=h;bindSort('hold',tbl);bindRows('hold',tbl);bindAct(tbl);
+  if(!rows.length)h+=`<tr><td colspan="20" class="j-empty">${POS.some(P=>!P.done)?'絞り込みに合う銘柄がありません。':'保有中の銘柄はありません。「＋ 新しく建てる」から記録します。'}</td></tr>`;
+  h+=`</tbody><tfoot><tr><td class="ck"></td><td class="l" colspan="5">合計 ${rows.filter(P=>P.c.open).length}銘柄</td><td>${yenAbs(tn)}</td><td></td><td class="${cls(tu)}">${yen(tu)}</td><td colspan="11"></td></tr></tfoot>`;
+  tbl.innerHTML=h;bindSort('hold',tbl);bindRows('hold',tbl);bindAct(tbl);bindSel('hold',tbl,rows.map(P=>P.id));
 }
 function renderHist(){
   const tbl=document.getElementById('tbl-hist');
   const G={d0:P=>P.c.d0,d1:P=>P.c.d1,code:P=>P.code,pnl:P=>P.c.realized,ret:P=>P.c.retPct,R:P=>P.c.R,hold:P=>P.c.hold,give:P=>P.c.giveback,vs:P=>P.c.vsIdx};
   const rows=sortRows('hist',POS.filter(P=>P.done&&pass(P,FILT.hist)),G);
   const th=(k,t,l)=>`<th${l?' class="l"':''}${k?` data-s="${k}"`:''}>${t}${SORT.hist.k===k?(SORT.hist.dir>0?' ▲':' ▼'):''}</th>`;
-  let h=`<thead><tr>${th('code','銘柄',1)}${th('','区分',1)}${th('d0','購入日')}${th('d1','決済日')}${th('hold','保有日数')}${th('','株数')}${th('','平均取得単価')}${th('','決済単価')}${th('pnl','損益')}${th('ret','損益率')}${th('R','損切り幅の何倍')}${th('','うち為替')}${th('give','取り逃がし')}${th('vs','指数との差')}${th('','決済理由',1)}${th('','ルール',1)}${th('','手法',1)}</tr></thead><tbody>`;
+  let h=`<thead><tr>${ckTh('hist')}${th('code','銘柄',1)}${th('','区分',1)}${th('d0','購入日')}${th('d1','決済日')}${th('hold','保有日数')}${th('','株数')}${th('','平均取得単価')}${th('','決済単価')}${th('pnl','損益')}${th('ret','損益率')}${th('R','損切り幅の何倍')}${th('','うち為替')}${th('give','取り逃がし')}${th('vs','指数との差')}${th('','決済理由',1)}${th('','ルール',1)}${th('','手法',1)}<th></th></tr></thead><tbody>`;
   let tp=0,w=0;
   rows.forEach(P=>{const c=P.c;tp+=c.realized;if(c.realized>0)w++;
-    h+=`<tr class="row${OPENED.hist===P.id?' sel':''}" data-id="${P.id}"><td class="l">${nameHTML(P)}</td><td class="l">${tagsHTML(P)}</td><td>${c.d0.slice(2).replace(/-/g,'/')}</td><td>${c.d1.slice(2).replace(/-/g,'/')}${c.real.length>1?' <span class="j-dist">'+c.real.length+'回</span>':''}</td><td>${c.hold}日</td><td>${fmt(c.q)}</td><td>${px(P,c.avg)}</td><td>${px(P,c.exitAvg)}</td>
+    h+=`<tr class="row${OPENED.hist===P.id?' sel':''}" data-id="${P.id}">${ckTd('hist',P.id)}<td class="l">${nameHTML(P)}</td><td class="l">${tagsHTML(P)}</td><td>${c.d0.slice(2).replace(/-/g,'/')}</td><td>${c.d1.slice(2).replace(/-/g,'/')}${c.real.length>1?' <span class="j-dist">'+c.real.length+'回</span>':''}</td><td>${c.hold}日</td><td>${fmt(c.q)}</td><td>${px(P,c.avg)}</td><td>${px(P,c.exitAvg)}</td>
       <td class="${cls(c.realized)}">${yen(c.realized)}</td><td>${pct(c.retPct)}</td><td class="${cls(c.R)}">${sgn(c.R,2)}倍</td><td>${P.mk==='us'?`<span class="${cls(c.fxPnl)}">${yen(c.fxPnl)}</span>`:'–'}</td>
-      <td>${c.giveback>0.05?sgn(-c.giveback)+'%':'–'}</td><td>${pct(c.vsIdx)}</td><td class="l">${P.exitReason==='ルール違反'?'<span class="j-ng">'+P.exitReason+'</span>':P.exitReason}</td><td class="l">${P.rule?'<span class="j-ok">○</span>':'<span class="j-ng">×</span>'}</td><td class="l"><span class="j-tg tag">${P.tag}</span></td></tr>`;
-    if(OPENED.hist===P.id)h+=detailRow(P,17,false);
+      <td>${c.giveback>0.05?sgn(-c.giveback)+'%':'–'}</td><td>${pct(c.vsIdx)}</td><td class="l">${P.exitReason==='ルール違反'?'<span class="j-ng">'+P.exitReason+'</span>':P.exitReason}</td><td class="l">${P.rule?'<span class="j-ok">○</span>':'<span class="j-ng">×</span>'}</td><td class="l"><span class="j-tg tag">${P.tag}</span></td>${delTd('hist',P.id,P.name)}</tr>`;
+    if(OPENED.hist===P.id)h+=detailRow(P,19,false);
   });
-  if(!rows.length)h+=`<tr><td colspan="17" class="j-empty">${POS.some(P=>P.done)?'絞り込みに合う取引がありません。':'まだ売買履歴はありません。保有中の銘柄を全株決済して「取引完了」を押すと、ここに移ります。'}</td></tr>`;
-  tbl.innerHTML=h+'</tbody>';bindSort('hist',tbl);bindRows('hist',tbl);
+  if(!rows.length)h+=`<tr><td colspan="19" class="j-empty">${POS.some(P=>P.done)?'絞り込みに合う取引がありません。':'まだ売買履歴はありません。保有中の銘柄を全株決済して「取引完了」を押すと、ここに移ります。'}</td></tr>`;
+  tbl.innerHTML=h+'</tbody>';bindSort('hist',tbl);bindRows('hist',tbl);bindSel('hist',tbl,rows.map(P=>P.id));
   // 合計は一覧の上に(絞り込みに連動)
   const avgR=rows.length?rows.reduce((s,P)=>s+P.c.R,0)/rows.length:null;
   document.getElementById('hist-sum').innerHTML=`<span>取引数<b>${rows.length}</b></span><span>勝率<b>${rows.length?(w/rows.length*100).toFixed(0)+'%':'–'}</b>（${w}勝${rows.length-w}敗）</span><span>損益の合計<b class="${cls(tp)}">${yen(tp)}</b></span><span>1取引の平均<b class="${cls(avgR)}">${sgn(avgR,2)}倍</b>（損切り幅に対して）</span>`;
 }
-function bindRows(key,tbl){tbl.querySelectorAll('tr.row').forEach(tr=>tr.onclick=e=>{if(e.target.closest('a'))return;const id=+tr.dataset.id;OPENED[key]=OPENED[key]===id?null:id;if(key==='hold')ACT=null;RENDER[key]();});}
+function bindRows(key,tbl){tbl.querySelectorAll('tr.row').forEach(tr=>tr.onclick=e=>{if(e.target.closest('a,input,.j-del,td.ck'))return;const id=+tr.dataset.id;OPENED[key]=OPENED[key]===id?null:id;if(key==='hold')ACT=null;RENDER[key]();});}
 
 /* ---------- 詳細(行の下) ---------- */
 // ライン(損切・利確)で決済したときの損益。米国株はドルと円(建てたときのドル円)
@@ -828,21 +846,21 @@ function actForm(P){
   if(!ACT||ACT.id!==P.id)return '';
   const btns=lab=>`<div class="j-btnrow"><button class="btn" type="submit">${lab}</button><button class="btn ghost" type="button" data-act="cancel">やめる</button></div></form>`;
   if(ACT.act==='close')return `<form class="j-act" data-id="${P.id}" data-act="close"><h4>決済を記録（利確・損切りの反対売買）</h4><div class="j-form">
-    ${fld('x-date','約定日',finp('x-date',TODAY,'date'))}${fld('x-qty','株数（保有 '+fmt(c.q)+'株）',finp('x-qty',c.q,'number'))}${fld('x-px','決済単価',unitInp('x-px',us?c.last.toFixed(2):Math.round(c.last),P.mk))}
+    ${fld('x-date','約定日',finp('x-date',TODAY,'date'))}${fld('x-qty','株数（保有 '+fmt(c.q)+'株）',JR.qtyInp('x-qty',c.q,P.mk))}${fld('x-px','決済単価',unitInp('x-px',us?c.last.toFixed(2):Math.round(c.last),P.mk))}
     ${fld('x-pv','この決済の損益（自動）','<div class="auto" id="x-pv"></div>','w2')}</div>`+btns('決済を記録');
   return '';
 }
 function bindAct(tbl){
   tbl.querySelectorAll('button[data-act]').forEach(bt=>bt.onclick=e=>{e.stopPropagation();const a=bt.dataset.act;const id=+bt.closest('[data-pid]').dataset.pid;if(a==='edit'){ACT=null;openPosPanel(POS.find(x=>x.id===id));return;}ACT=a==='cancel'||(ACT&&ACT.id===id&&ACT.act===a)?null:{id,act:a};renderHold();
     const f=tbl.querySelector('form.j-act');if(f)f.scrollIntoView({block:'nearest'});});
-  tbl.querySelectorAll('form.j-act').forEach(f=>{const P=POS.find(x=>x.id===+f.dataset.id);const v=n=>(f.querySelector('[name="'+n+'"]')||{}).value;
+  tbl.querySelectorAll('form.j-act').forEach(f=>{const P=POS.find(x=>x.id===+f.dataset.id);const v=n=>(f.querySelector('[name="'+n+'"]')||{}).value,vn=n=>JR.num(f.querySelector('[name="'+n+'"]'));
     f.onclick=e=>e.stopPropagation();
-    if(f.dataset.act==='close'){const pv=()=>{const q=+v('x-qty'),p=+v('x-px');const r=P.mk==='us'?P.c.sh*q*(p*(FXNOW||P.c.avgFx)-P.c.avg*P.c.avgFx):P.c.sh*(p-P.c.avg)*q;
+    if(f.dataset.act==='close'){const pv=()=>{const q=vn('x-qty'),p=vn('x-px');const r=P.mk==='us'?P.c.sh*q*(p*(FXNOW||P.c.avgFx)-P.c.avg*P.c.avgFx):P.c.sh*(p-P.c.avg)*q;
       f.querySelector('#x-pv').innerHTML=`<span class="${cls(r)}">${yen(r)}</span>（${sgn(P.c.sh*(p/P.c.avg-1)*100)}%・残り ${fmt(Math.max(0,P.c.q-q))}株${q>=P.c.q?' → 全株決済。続けて「取引完了」を押せます':''}）`;};
       f.querySelectorAll('input').forEach(i=>i.oninput=pv);pv();}
     f.onsubmit=e=>{e.preventDefault();busy(f.querySelector('button[type=submit]'),async()=>{const a=f.dataset.act;const us=P.mk==='us';const before=JSON.stringify(pack(P));
-      if(a==='close'){const q=Math.min(+v('x-qty'),P.c.q);if(!q){toast('株数を入れてください');return;}
-        P.fills.push({d:v('x-date'),t:P.dir==='L'?'sell':'buy',q,p:+v('x-px'),fx:us?FXNOW:null});
+      if(a==='close'){const q=Math.min(vn('x-qty'),P.c.q);if(!q){toast('株数を入れてください');return;}
+        P.fills.push({d:v('x-date'),t:P.dir==='L'?'sell':'buy',q,p:vn('x-px'),fx:us?FXNOW:null});
         try{await savePos(P);}catch(x){Object.assign(P,JSON.parse(before));throw x;}toast('決済を記録しました');}
       else if(a==='done'){P.exitReason=v('x-er');P.rule=v('x-rule').startsWith('○');P.memo=v('x-memo');P.done=true;
         try{await savePos(P);}catch(x){Object.assign(P,JSON.parse(before));throw x;}
@@ -896,32 +914,32 @@ function renderWatch(){
   const getv=(x,k)=>{const v=G[k]?G[k](x):x.R[k];return v==null?-1e9:v;};
   const rows=L.filter(w=>!WST.mk||w.mk===WST.mk).map(w=>({w,R:wrow(w)}));
   rows.sort((a,b)=>{const x=getv(a,WST.sort),y=getv(b,WST.sort);return (x>y?1:x<y?-1:0)*WST.dir;});
-  let h=`<thead><tr>${cols.map(([k,l,c])=>`<th class="${c} ${k==='entry'?'w-entth':''} ${WST.sort===k?'on':''}" data-k="${k}"${NOS.has(k)?' data-nosort="1"':''}${k==='diff'?' title="現在値 − エントリー予定株価（円・ドル）と、予定株価に対する％"':''}>${esc(l)}${WST.sort===k?(WST.dir>0?' ▲':' ▼'):''}</th>`).join('')}</tr></thead><tbody>`;
+  let h=`<thead><tr>${ckTh('watch')}${cols.map(([k,l,c])=>`<th class="${c} ${k==='entry'?'w-entth':''} ${WST.sort===k?'on':''}" data-k="${k}"${NOS.has(k)?' data-nosort="1"':''}${k==='diff'?' title="現在値 − エントリー予定株価（円・ドル）と、予定株価に対する％"':''}>${esc(l)}${WST.sort===k?(WST.dir>0?' ▲':' ▼'):''}</th>`).join('')}</tr></thead><tbody>`;
   rows.forEach(({w,R})=>{const k=wkey(w),T=R.themes,us=w.mk==='us',U=R.units;
-    h+=`<tr class="w-row${WST.sel===k?' sel':''}" data-k="${k}">
+    h+=`<tr class="w-row${WST.sel===k?' sel':''}" data-k="${k}">${ckTd('watch',w.id)}
       <td class="l"><button class="w-nm" type="button" title="銘柄カードを開く"><span class="j-flag ${w.mk}">${us?'US':'JP'}</span><span class="j-code">${esc(w.code)}</span><b>${esc(R.name)}</b>${isHeld(w.mk,w.code)?'<span class="w-held">保有中</span>':''}</button></td>
       <td>${R.stage?`<span class="dot st-${R.stage}"></span> <span style="font-size:11px">${STN[R.stage]||R.stage}</span>`:'<span class="muted">–</span>'}</td><td>${sparkS(R.spark)}</td>
       <td class="l"><span class="secn" title="${esc(R.sector||'')}">${esc(R.sector||'–')}</span></td>
       <td class="l">${T.length?`<span class="tchip">${esc(T[0])}</span>${T.length>1?` <span class="more" title="${esc(T.slice(1).join('、'))}">+${T.length-1}</span>`:''}`:'<span class="muted">–</span>'}</td>
       <td>${R.price==null?'–':fmt(R.price,us?2:R.price>=1000?0:1)}</td>
-      <td class="w-ent"><div class="w-ein"><input type="number" step="any" min="0" value="${w.entry??''}" placeholder="入力" aria-label="${esc(R.name)}のエントリー予定株価"><span>${us?'ドル':'円'}</span></div></td>
+      <td class="w-ent"><div class="w-ein"><input type="text" inputmode="decimal" class="j-num" value="${JR.commas(w.entry??'')}" placeholder="入力" aria-label="${esc(R.name)}のエントリー予定株価"><span>${us?'ドル':'円'}</span></div></td>
       <td style="font-weight:600">${R.rs??'–'}</td><td class="w-diff">${JR.diffHTML(w.mk,R.price,w.entry)}</td>
       ${TC.map(([c])=>{const v=R[c];return v==null?'<td class="muted">–</td>':`<td class="${v>=0?'up':'down'}" style="${heat(v,c)}">${pcW(v)}</td>`;}).join('')}
       <td class="${(R.surge??0)>=0?'up':'down'}">${pcW(R.surge,0)}</td>${StockCard.vtds(R.val,w.mk)}
       <td>${R.to20==null?'–':fmt(R.to20,R.to20>=100?0:1)+`<span class="w-u">${U.to}</span>`}</td><td>${R.mcap==null?'–':fmt(R.mcap,R.mcap>=100?0:1)+`<span class="w-u">${U.mcap}</span>`}</td>
       <td>${R.volx==null?'–':fmt(R.volx,2)+'倍'}</td><td>${R.adr==null?'–':fmt(R.adr,1)}</td>
-      <td><button class="w-del" type="button" title="監視銘柄から外す" aria-label="${esc(R.name)}を監視銘柄から外す">外す</button></td></tr>`;});
-  if(!rows.length)h+=`<tr><td colspan="${cols.length}" class="l muted" style="padding:14px">${L.length?'この市場の監視銘柄はありません。':'監視銘柄はまだありません。上の検索窓から追加するか、各ページの銘柄カードで「監視銘柄に登録する」を押してください。'}</td></tr>`;
+      ${delTd('watch',w.id,R.name)}</tr>`;});
+  if(!rows.length)h+=`<tr><td colspan="${cols.length+1}" class="l muted" style="padding:14px">${L.length?'この市場の監視銘柄はありません。':'監視銘柄はまだありません。上の検索窓から追加するか、各ページの銘柄カードで「監視銘柄に登録する」を押してください。'}</td></tr>`;
   tbl.innerHTML=h+'</tbody>';
   tbl.querySelectorAll('th[data-k]').forEach(th=>th.onclick=()=>{if(th.dataset.nosort)return;const k=th.dataset.k;if(WST.sort===k)WST.dir=-WST.dir;else{WST.sort=k;WST.dir=k==='name'||k==='sector'?1:-1;}renderWatch();});
   tbl.querySelectorAll('tr.w-row').forEach(tr=>{const k=tr.dataset.k,w=L.find(x=>wkey(x)===k);
-    tr.onclick=e=>{if(e.target.closest('input,.w-del,a'))return;if(WST.sel===k){WST.sel=null;StockCard.closeBelow('w');tr.classList.remove('sel');}else openWatchCard(k,true);};
+    tr.onclick=e=>{if(e.target.closest('input,.j-del,a,td.ck'))return;if(WST.sel===k){WST.sel=null;StockCard.closeBelow('w');tr.classList.remove('sel');}else openWatchCard(k,true);};
     const inp=tr.querySelector('.w-ein input');
     inp.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();inp.blur();}};
-    inp.onchange=async()=>{const v=+inp.value,entry=inp.value===''||!(v>0)?null:v;
+    inp.onchange=async()=>{const v=JR.num(inp),entry=inp.value.trim()===''||!(v>0)?null:v;
       try{await JR.watchSet(w.mk,w.code,w.name,entry);toast(`${w.name}のエントリー予定株価を${entry==null?'消しました':JR.pxTxt(w.mk,entry)+'にしました'}`);}catch(x){toast(x.message);}renderWatch();};
-    tr.querySelector('.w-del').onclick=async e=>{e.stopPropagation();const b=e.currentTarget;b.disabled=true;
-      try{await JR.watchDel(w.id);if(WST.sel===k){WST.sel=null;StockCard.closeBelow('w');}renderWatch();toast(`${w.name}を監視銘柄から外しました`);}catch(x){b.disabled=false;toast(x.message);}};});
+  });
+  bindSel('watch',tbl,rows.map(x=>x.w.id));
   document.getElementById('w-count').textContent=`${rows.length}銘柄`+(rows.length<L.length?`（全${L.length}銘柄）`:'');
   if(WST.sel&&rows.some(x=>wkey(x.w)===WST.sel))openWatchCard(WST.sel,false);else{WST.sel=null;StockCard.closeBelow('w');}
 }
@@ -948,7 +966,7 @@ function openWatchCard(k,scroll){const tr=document.querySelector(`#tbl-watch tr.
   q.onkeydown=e=>{if(list.hidden||!items.length)return;if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();hi=(hi+(e.key==='ArrowDown'?1:items.length-1))%items.length;list.querySelectorAll('li').forEach((li,i)=>li.classList.toggle('on',i===hi));}
     else if(e.key==='Enter'){e.preventDefault();pick(items[hi]);}else if(e.key==='Escape')list.hidden=true;};
   ent.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();if(!btn.disabled)btn.click();}};
-  btn.onclick=()=>busy(btn,async()=>{if(!cur)return;const v=+ent.value;const it=await JR.watchSet(cur[0],cur[1],cur[2],v>0?v:null);
+  btn.onclick=()=>busy(btn,async()=>{if(!cur)return;const v=JR.num(ent);const it=await JR.watchSet(cur[0],cur[1],cur[2],v>0?v:null);
     WST.sort='added';WST.dir=-1;WST.mk='';const fs=document.querySelector('#f-watch select');if(fs)fs.value='';renderWatch();
     const tr=document.querySelector(`#tbl-watch tr.w-row[data-k="${CSS.escape(wkey(it))}"]`);if(tr){tr.classList.add('w-flash');tr.scrollIntoView({block:'nearest'});}
     toast(`${cur[2]}を監視銘柄に追加しました`);q.value='';ent.value='';cur=null;pk.textContent=HINT;}).then(()=>{btn.disabled=!cur;});
@@ -960,6 +978,58 @@ function openWatchCard(k,scroll){const tr=document.querySelector(`#tbl-watch tr.
 document.addEventListener('jr:change',async e=>{const d=e.detail||{};
   if(d.pos){const P=d.pos;await refresh(P);if(!POS.includes(P))POS.push(P);OPENED.hold=P.id;}
   renderAll();});
+
+/* ---------- 選択削除・1件の削除(監視銘柄・保有中・売買履歴。振り返りは売買履歴の集計なので置かない) ---------- */
+// 左端のチェック欄で選ぶ→表の上に「選択した○件を削除」。見出しのチェック=表示中(絞り込み後)をすべて選択。
+// 各行の右端の「削除」→確認→削除。消したあと10秒は「元に戻す」で戻せる(戻すと新しい記録として保存し直す)
+const SEL={watch:new Set(),hold:new Set(),hist:new Set()};
+const SHOWN={watch:[],hold:[],hist:[]};
+const ckTh=key=>`<th class="ck" data-nosort="1"><input type="checkbox" data-all="${key}" aria-label="表示中をすべて選択" title="表示中をすべて選択"></th>`;
+const ckTd=(key,id)=>`<td class="ck"><input type="checkbox" data-sel="${key}" value="${id}" ${SEL[key].has(id)?'checked':''} aria-label="選択"></td>`;
+const delTd=(key,id,name)=>`<td class="dl"><button class="j-del" type="button" data-del="${key}" value="${id}" aria-label="${esc(name)}を削除">削除</button></td>`;
+const itemsOf=(key,ids)=>key==='watch'?(JR.st.watch||[]).filter(w=>ids.includes(w.id)):POS.filter(P=>ids.includes(P.id));
+// 表を描いたあとに呼ぶ。ids=表示中の行(見えなくなった行の選択は外す=絞り込みで隠れた行は消さない)
+function bindSel(key,tbl,ids){SHOWN[key]=ids;[...SEL[key]].forEach(i=>{if(!ids.includes(i))SEL[key].delete(i);});
+  const all=tbl.querySelector('input[data-all]');
+  const paint=()=>{const n=SEL[key].size;if(all){all.checked=ids.length>0&&n===ids.length;all.indeterminate=n>0&&n<ids.length;}
+    const bar=document.getElementById('sb-'+key);bar.hidden=!n;
+    if(n)bar.innerHTML=`<b>${n}件</b>を選択中<button class="btn sm j-danger" type="button" data-bulk>選択した${n}件を削除</button><button class="btn sm ghost" type="button" data-clr>選択を解除</button>`;
+    if(n){bar.querySelector('[data-bulk]').onclick=()=>askDelete(key,[...SEL[key]]);bar.querySelector('[data-clr]').onclick=()=>{SEL[key].clear();tbl.querySelectorAll('input[data-sel]').forEach(c=>c.checked=false);paint();};}};
+  if(all)all.onclick=e=>{e.stopPropagation();const on=ids.length>0&&SEL[key].size===ids.length;SEL[key].clear();if(!on)ids.forEach(i=>SEL[key].add(i));
+    tbl.querySelectorAll('input[data-sel]').forEach(c=>c.checked=SEL[key].has(+c.value));paint();};
+  tbl.querySelectorAll('input[data-sel]').forEach(c=>{c.onclick=e=>e.stopPropagation();c.onchange=()=>{const id=+c.value;c.checked?SEL[key].add(id):SEL[key].delete(id);paint();};});
+  tbl.querySelectorAll('td.ck').forEach(td=>td.onclick=e=>{e.stopPropagation();if(e.target===td){const c=td.querySelector('input');if(c)c.click();}});
+  tbl.querySelectorAll('button[data-del]').forEach(b=>b.onclick=e=>{e.stopPropagation();askDelete(key,[+b.value]);});
+  paint();}
+// 確認(本当に削除していいですか)
+const DELNOTE={watch:'監視銘柄から外します。',hold:'記録ごと消えます。売買履歴には移りません（売った・損切りした場合は「決済を記録」を使います）。',hist:'振り返りの成績も計算し直されます。'};
+function askDelete(key,ids){const items=itemsOf(key,ids);if(!items.length)return;
+  const dlg=document.getElementById('jdlg'),nm=x=>esc(x.name||x.code);
+  document.getElementById('jdlg-t').textContent=items.length===1?`「${items[0].name||items[0].code}」を削除してもいいですか？`:`選択した${items.length}件を削除してもいいですか？`;
+  document.getElementById('jdlg-m').innerHTML=(items.length>1?`<span class="j-dlist">${items.slice(0,6).map(nm).join('、')}${items.length>6?` ほか${items.length-6}件`:''}</span>`:'')+
+    `${DELNOTE[key]}<br>削除したあと10秒間は「元に戻す」で戻せます。`;
+  // 「削除」を押したときに直接消す(閉じたときの通知 close はブラウザによって届かないことがあるため使わない)
+  const ok=dlg.querySelector('button[value=ok]'),no=dlg.querySelector('button[value=cancel]');
+  ok.onclick=e=>{e.preventDefault();dlg.close();doDelete(key,items);};no.onclick=e=>{e.preventDefault();dlg.close();};
+  dlg.showModal();
+  setTimeout(()=>{const b=dlg.querySelector('button[value=cancel]');if(b)b.focus();},30);}
+async function doDelete(key,items){
+  const rs=await Promise.allSettled(items.map(x=>key==='watch'?JR.watchDel(x.id):api('positions/'+x.id,{method:'DELETE'})));
+  const gone=items.filter((x,i)=>rs[i].status==='fulfilled'),fail=items.length-gone.length;
+  if(key!=='watch'){POS=POS.filter(P=>!gone.includes(P));if(gone.some(P=>P.id===OPENED[key]))OPENED[key]=null;
+    if(EDIT&&gone.includes(EDIT)){document.getElementById('newbox').hidden=true;EDIT=null;}}
+  else if(gone.some(w=>wkey(w)===WST.sel)){WST.sel=null;StockCard.closeBelow('w');}
+  gone.forEach(x=>SEL[key].delete(x.id));renderAll();
+  if(fail)toast(`${fail}件は削除できませんでした（通信を確認してください）`);
+  if(!gone.length)return;
+  toastUndo(gone.length===1?`「${gone[0].name||gone[0].code}」を削除しました`:`${gone.length}件を削除しました`,async()=>{
+    if(key==='watch'){for(const w of gone)await JR.watchSet(w.mk,w.code,w.name,w.entry);}
+    else{for(const P of gone){const r=await api('positions',{method:'POST',body:pack(P)});P.id=r.position.id;if(!POS.includes(P))POS.push(P);}}
+    renderAll();});}
+function toastUndo(msg,undo){document.querySelectorAll('.j-toast.u').forEach(x=>x.remove());
+  const d=document.createElement('div');d.className='j-toast u';d.innerHTML='<span></span><button type="button">元に戻す</button>';d.firstChild.textContent=msg;document.body.appendChild(d);
+  const t=setTimeout(()=>d.remove(),10000);
+  d.querySelector('button').onclick=async e=>{e.currentTarget.disabled=true;clearTimeout(t);try{await undo();d.remove();toast('元に戻しました');}catch(x){d.remove();toast(x.message);}};}
 
 /* ================= つなぎ ================= */
 const RENDER={watch:renderWatch,hold:renderHold,hist:renderHist,rev:renderRev};

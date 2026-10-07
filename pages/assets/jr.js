@@ -44,8 +44,16 @@ function searchUniv(q){q=norm(q);if(!q)return [];const out=[];
 const unitOf=mk=>mk==='us'?'ドル':'円';
 const fld=(id,lab,inner,cl)=>`<div class="f${cl?' '+cl:''}"><label for="${id}">${lab}</label>${inner}</div>`;
 const fsel=(id,o,v)=>`<select id="${id}" name="${id}">${o.map(x=>`<option${x===v?' selected':''}>${x}</option>`).join('')}</select>`;
-const finp=(id,v,t='text',ph='')=>`<input id="${id}" name="${id}" type="${t}" value="${esc(v??'')}" placeholder="${ph}" ${t==='number'?'step="any"':''}>`;
-const unitInp=(id,v,mk)=>`<div class="j-unit">${finp(id,v,'number')}<span class="u" data-u>${unitOf(mk)}</span></div>`;
+// 金額・株数の入力欄は3桁区切り(t='num')。入力を終えると「10,000」の形にそろえる。読むときは num()
+const commas=v=>{if(v==null||v==='')return '';let s=String(v).replace(/[^\d.\-]/g,'');if(s===''||s==='-')return s;const neg=s[0]==='-';s=s.replace(/-/g,'');
+  const [i,...f]=s.split('.');return (neg?'-':'')+(i||'0').replace(/^0+(?=\d)/,'').replace(/\B(?=(\d{3})+(?!\d))/g,',')+(f.length?'.'+f.join(''):'');};
+const num=el=>{const s=String((el&&el.value)||'').replace(/[,\s]/g,'');return s===''?0:+s;};
+const finp=(id,v,t='text',ph='')=>t==='num'?`<input id="${id}" name="${id}" type="text" inputmode="decimal" class="j-num" value="${esc(commas(v??''))}" placeholder="${ph}" autocomplete="off">`
+  :`<input id="${id}" name="${id}" type="${t}" value="${esc(v??'')}" placeholder="${ph}" ${t==='number'?'step="any"':''}>`;
+const unitInp=(id,v,mk)=>`<div class="j-unit">${finp(id,v,'num')}<span class="u" data-u>${unitOf(mk)}</span></div>`;
+// 株数: −／＋ボタンで 米国株は1株、日本株は100株ずつ増減
+const qtyStep=mk=>mk==='us'?1:100;
+const qtyInp=(id,v,mk)=>`<div class="j-step" data-step="${qtyStep(mk)}"><button type="button" data-st="-1" aria-label="株数を減らす">−</button>${finp(id,v,'num')}<button type="button" data-st="1" aria-label="株数を増やす">＋</button><span class="u">株</span></div>`;
 function lineFld(px,lab,v,mk){return `<div class="f full"><label for="${px}">${lab}</label><div class="j-line">${unitInp(px,v,mk)}<span class="or">または</span><div class="j-pct"><span class="sg" id="${px}-sg">−</span><input id="${px}-pct" type="number" min="0" max="100" step="1" aria-label="${lab}を％で入れる"><span class="u">%</span></div><span class="j-pl" id="${px}-pl"></span></div></div>`;}
 const dueOf=d=>S(new Date(D(d).getTime()+182*864e5)); // 信用の返済期日(6か月)
 
@@ -58,7 +66,7 @@ function posFormHTML(p,P,u0){
       <div class="j-picked" id="${p}-picked"></div></div>
     ${fld(p+'-kind','現物／信用',fsel(p+'-kind',['現物','信用'],P?P.kind:'現物'))}${fld(p+'-dir','方向',fsel(p+'-dir',['ロング（買い）','ショート（売り）'],P&&P.dir==='S'?'ショート（売り）':'ロング（買い）'))}
     ${fld(p+'-acct','口座',fsel(p+'-acct',['特定','NISA','一般'],P?P.acct:'特定'))}${fld(p+'-date','購入日（約定日）',finp(p+'-date',f0?f0.d:TODAY,'date'))}
-    ${fld(p+'-qty','株数',finp(p+'-qty',f0?f0.q:'','number'))}${fld(p+'-px','平均取得単価',unitInp(p+'-px',f0?f0.p:(pz!=null?pz:''),mk))}
+    ${fld(p+'-qty','株数',qtyInp(p+'-qty',f0?f0.q:'',mk))}${fld(p+'-px','平均取得単価',unitInp(p+'-px',f0?f0.p:(pz!=null?pz:''),mk))}
     ${fld(p+'-total','建玉の合計（自動）','<div class="auto" id="'+p+'-total"></div>','w2')}
     ${fld(p+'-due','信用の返済期日（自動）','<div class="auto" id="'+p+'-due"></div>')}
   </div>
@@ -77,7 +85,7 @@ function bindPosForm(root,p,P,u0){
   let cur=P?[P.mk,P.code,P.name,'']:(u0?[u0[0],u0[1],u0[2],'']:null);
   const q=g('q'),list=g('acl');let hi=0,items=[];
   const pick=u=>{cur=u;q.value=u[2];list.hidden=true;
-    if(!P){const pz=priceOf(u[0],u[1]);g('px').value=pz!=null?pz:'';g('stop-pct').value=10;g('tgt-pct').value=20;LAST.stop=LAST.tgt='pct';}upd();};
+    if(!P){const pz=priceOf(u[0],u[1]);g('px').value=pz!=null?commas(pz):'';g('stop-pct').value=7;g('tgt-pct').value=20;LAST.stop=LAST.tgt='pct';}upd();};
   const showList=()=>{items=searchUniv(q.value);hi=0;if(!items.length){list.innerHTML='<li class="none">見つかりません</li>';list.hidden=false;return;}
     list.innerHTML=items.map((u,i)=>`<li role="option" data-i="${i}" class="${i===hi?'on':''}"><span class="j-flag ${u[0]}">${u[0]==='jp'?'JP':'US'}</span><span class="j-code">${u[1]}</span>${esc(u[2])}</li>`).join('');list.hidden=false;
     list.querySelectorAll('li[data-i]').forEach(li=>li.onmousedown=e=>{e.preventDefault();pick(items[+li.dataset.i]);});};
@@ -90,15 +98,16 @@ function bindPosForm(root,p,P,u0){
   const LAST={stop:P?'px':'pct',tgt:P?'px':'pct'};
   const rnd=v=>cur&&cur[0]==='us'?+v.toFixed(2):Math.round(v);
   function upd(){
-    const mk=cur?cur[0]:'jp',us=mk==='us',avg=+g('px').value,qty=+g('qty').value,s=sh();
+    const mk=cur?cur[0]:'jp',us=mk==='us',avg=num(g('px')),qty=num(g('qty')),s=sh();
     root.querySelectorAll('[data-u]').forEach(x=>x.textContent=unitOf(mk));
+    const sw=g('qty').closest('.j-step');if(sw)sw.dataset.step=qtyStep(mk);
     const ne=cur?st.earn[cur[0]+':'+cur[1]]:null;g('picked').innerHTML=cur?`<span class="j-flag ${mk}">${us?'US':'JP'}</span><span class="j-code">${cur[1]}</span>${esc(cur[2])}${ne?` ・ 次の決算 ${ne}`:''}`:'候補から銘柄を選んでください';
     g('total').innerHTML=!avg||!qty?'—':st.pub?'非表示':us?`$${fmt(avg*qty,2)} × ドル円 ${fxIn().toFixed(2)}${P?'（建てたとき）':st.ref.fx&&st.ref.fx.date?'（'+st.ref.fx.date.slice(5).replace('-','/')+'時点）':''}＝ <b>${fmt(avg*qty*fxIn())}円</b>`:`<b>${fmt(avg*qty)}円</b>`;
     const d=g('date').value;g('due').textContent=g('kind').value==='信用'&&d?dueOf(d):'—（現物）';
     [['stop',-1],['tgt',1]].forEach(([k,dirn])=>{const pin=g(k+'-pct'),inp=g(k);const sign=dirn*s;
       g(k+'-sg').textContent=sign>0?'+':'−';
-      if(avg&&LAST[k]==='pct'&&pin.value!=='')inp.value=rnd(avg*(1+sign*pin.value/100));
-      const v=+inp.value;
+      if(avg&&LAST[k]==='pct'&&pin.value!=='')inp.value=commas(rnd(avg*(1+sign*pin.value/100)));
+      const v=num(inp);
       if(avg&&LAST[k]==='px'&&v)pin.value=Math.round(Math.abs(v/avg-1)*100);
       if(v&&avg){const pl=s*(v-avg)*qty;const bad=k==='stop'?pl>0:pl<0;
         g(k+'-pl').innerHTML=(k==='stop'?'損失 ':'利益 ')+(st.pub?'非表示':us?`<span class="${cls(pl)}">${pl<0?'−':'+'}$${fmt(Math.abs(pl),2)}（${yen(pl*fxIn())}）</span>`:`<span class="${cls(pl)}">${yen(pl)}</span>`)+(bad?' <span class="j-warn">向きが逆です</span>':'');}
@@ -106,9 +115,9 @@ function bindPosForm(root,p,P,u0){
   }
   ['stop','tgt'].forEach(k=>{g(k+'-pct').oninput=()=>{LAST[k]='pct';upd();};g(k).oninput=()=>{LAST[k]='px';upd();};});
   ['px','qty','dir','kind','date'].forEach(k=>g(k).addEventListener('input',()=>upd()));
-  if(!P){g('stop-pct').value=10;g('tgt-pct').value=20;}
+  if(!P){g('stop-pct').value=7;g('tgt-pct').value=20;}
   upd();
-  return ()=>({u:cur,kind:g('kind').value,dir:sh()>0?'L':'S',acct:g('acct').value,date:g('date').value,qty:+g('qty').value,px:+g('px').value,stop:+g('stop').value,tgt:+g('tgt').value||null,
+  return ()=>({u:cur,kind:g('kind').value,dir:sh()>0?'L':'S',acct:g('acct').value,date:g('date').value,qty:num(g('qty')),px:num(g('px')),stop:num(g('stop')),tgt:num(g('tgt'))||null,
     tag:g('tag').value,reason:g('reason').value,memo:g('memo').value});
 }
 // 保存する項目(表示のための計算値は保存しない)
@@ -156,10 +165,10 @@ const ACTS={
       ${fld('cw-diff','現在値との差（自動）','<div class="auto" id="cw-diff">—</div>','w2')}</div>
       <div class="j-btnrow"><button class="btn" type="submit">${w?'エントリー予定株価を更新する':'監視銘柄に追加する'}</button><button class="btn ghost" type="button" data-back>戻る</button></div></form>`;
     const f=el.querySelector('form'),inp=f.querySelector('#cw-entry');noEnter(f);
-    const upd=()=>{f.querySelector('#cw-diff').innerHTML=+inp.value>0?diffHTML(mk,p,+inp.value)+'<span class="hint" style="margin-left:8px">（現在値 − 予定株価）</span>':'—';};
+    const upd=()=>{f.querySelector('#cw-diff').innerHTML=num(inp)>0?diffHTML(mk,p,num(inp))+'<span class="hint" style="margin-left:8px">（現在値 − 予定株価）</span>':'—';};
     inp.oninput=upd;upd();setTimeout(()=>inp.focus(),30);
     f.querySelector('[data-back]').onclick=back;
-    f.onsubmit=e=>{e.preventDefault();busy(f.querySelector('button[type=submit]'),async()=>{const v=+inp.value;if(!(v>0)){toast('エントリー予定株価を入れてください');inp.focus();return;}
+    f.onsubmit=e=>{e.preventDefault();busy(f.querySelector('button[type=submit]'),async()=>{const v=num(inp);if(!(v>0)){toast('エントリー予定株価を入れてください');inp.focus();return;}
       await watchSet(mk,o.code,o.name,v);back();toast(`${o.name}を${w?'更新':'監視銘柄に追加'}しました`);fire({watch:true});});};},
   hold:async(el,o,back)=>{el.innerHTML='<div class="phint">読み込み中…</div>';await load();
     const u0=[o.market,o.code,o.name];
@@ -194,8 +203,17 @@ const css=document.createElement('style');css.textContent=`
 .j-code{font:500 11px var(--f-num);color:var(--faint);margin-right:6px}
 .j-flag{display:inline-block;font:700 10px var(--f-num);border-radius:3px;padding:0 4px;margin-right:6px;color:var(--brand-ink);vertical-align:1px}.j-flag.jp{background:#B5524A}.j-flag.us{background:#4F72B0}
 .j-warn{color:var(--down);font-weight:700}.j-hide{color:var(--faint)}.w-dp{display:inline-block;min-width:52px;margin-left:6px;font-weight:500;font-size:11.5px}
+.j-step{display:flex;align-items:center;gap:4px}.j-step input{flex:1;min-width:0;width:100%}.j-step .u{font-size:12.5px;color:var(--muted);white-space:nowrap}
+.j-step button{flex:none;width:30px;height:30px;border:1px solid var(--line-strong);background:var(--surface-2);color:var(--ink);border-radius:8px;font:600 16px/1 var(--f-num);cursor:pointer;padding:0}
+.j-step button:hover{border-color:var(--brand);color:var(--brand)}input.j-num{text-align:right;font-variant-numeric:tabular-nums}
 .j-toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:999px;font-size:13px;z-index:50}`;
 document.head.appendChild(css);
+
+// 3桁区切り: 入力を終えたらそろえる／株数の−＋(押したら input を投げて合計などを計算し直す)
+document.addEventListener('focusout',e=>{const t=e.target;if(t&&t.classList&&t.classList.contains('j-num'))t.value=commas(t.value);});
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('.j-step button[data-st]');if(!b)return;e.preventDefault();
+  const w=b.closest('.j-step'),inp=w.querySelector('input'),st=+w.dataset.step||1,d=+b.dataset.st;let v=num(inp);if(!isFinite(v))v=0;
+  v=Math.max(0,d>0?Math.floor(v/st)*st+st:Math.ceil(v/st)*st-st);inp.value=commas(v);inp.dispatchEvent(new Event('input',{bubbles:true}));});
 
 /* ---------- 本人のときだけボタンを出す ---------- */
 let IP=null;
@@ -204,6 +222,6 @@ function init(force){if(IP&&!force)return IP;
     return Promise.all([watchList(true).catch(()=>{}),api('positions').then(r=>{st.pos=r.positions||[];}).catch(()=>{})]);}).catch(()=>{st.me=null;});}
 init();
 
-window.JR={st,TODAY,STRATS,api,load,init,priceOf,searchUniv,norm,unitOf,fld,fsel,finp,unitInp,posFormHTML,bindPosForm,pack,newPos,addPos,
+window.JR={st,TODAY,STRATS,api,load,init,priceOf,searchUniv,norm,unitOf,fld,fsel,finp,unitInp,qtyInp,commas,num,posFormHTML,bindPosForm,pack,newPos,addPos,
   findWatch,held,watchList,watchSet,watchDel,diffHTML,pxTxt,fire,toast};
 })();
