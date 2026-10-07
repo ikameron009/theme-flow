@@ -74,9 +74,16 @@ function drawHeat(R){const k=keyNum();
       const pos=k==='rs'?v>=50:v>=0,bg=v==null?'var(--surface-2)':`rgba(${pos?cssv('--brandrgb'):cssv('--downrgb')},${(0.12+a*0.78).toFixed(2)})`,fg=a>0.55?'#fff':'var(--ink)';
       return `<div class="tile" style="background:${bg};color:${fg};${typeof TILE==='function'?'cursor:pointer':''}" title="${esc(x.name)}" data-k="${esc(x.key||x.name)}"><b>${esc(x.name)}</b><small>${x.etf?esc(x.key):(x.n?x.n+'銘柄':'')}</small><span>${k==='rs'?v:sign(v)}</span></div>`;}).join('')}</div>`;}).join('');
   if(typeof TILE==='function')$$('#heat .tile').forEach(t=>t.onclick=()=>TILE(t.dataset.k));}
+/* 銘柄カード(card.js)の「株価・勢い」3行に渡す形。ETF=自身の数字(時価総額の欄は純資産総額)、業種・テーマ=構成銘柄の合計 */
+function groupM(x){const etf=!!x.etf;
+  return {trend:x.trend,price:etf?x.last:(x.idx??x.last),priceLabel:etf?'現在値':'指数（2年前=100）',pd:etf?(mk==='us'?2:(x.last>=1000?0:1)):1,
+    rs:x.rs,chg1:x.chg1,w1:x.w1,m0:(x.months||[])[0],m0Label:'今月（'+((D.months||[])[0]||'')+'）',r1m:x.r1m,r2m:x.r2m,r3m:x.r3m,r6m:x.r6m,r12m:x.r12m,
+    hi52:x.hi52,surge:x.surge,to20:x.to20,mcap:x.mcap,volx:x.volx,adr:x.adr,units:D.units,
+    toLabel:etf?'売買代金（20日平均）':'売買代金（合計・20日平均）',mcapLabel:etf?'純資産総額':'時価総額（合計）'};}
 function cardSlot(id){return `<div id="${id}" class="cardslot"></div>`;}
 function fitSlot(id){const el=document.getElementById(id),w=document.querySelector('.sx-wrap');if(el&&w)el.style.width=Math.max(320,w.clientWidth-28)+'px';}
 const COMMON_FOOT='<b>今月</b>＝月初来。<b>1か月前〜1年前</b>＝その時点から今日までの騰落（1か月＝21営業日、2か月＝42、3か月＝63、6か月＝126、1年＝252）。<b>52週高値</b>＝過去1年の最高値からの距離。<b>資金急増率</b>＝売買代金（終値×出来高）の直近5日平均 ÷ その前20営業日の平均 −1。<b>RS</b>＝3か月（40%）・6か月・9か月・12か月（各20%）の騰落を一覧の中で順位づけ（1〜99）。<b>トレンド</b>＝株価・50日線・200日線の並び（上昇＝株価＞50日線＞200日線）。';
+const CARD_FOOT='<b>カードの「勢い・規模」</b>：ETFは自身の売買代金（20日平均）・出来高倍率（当日÷前50日平均）・ADR%（1日の値幅の20日平均）・純資産総額。業種・テーマは構成銘柄の売買代金と時価総額の合計、出来高倍率は合計の売買代金で計算（当日÷前50日平均）、ADR%は構成銘柄の平均。';
 
 function load(m){mk=m==='us'?'us':'jp';$$('#mseg button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.m===mk));try{localStorage.setItem('tf_market',mk);}catch(e){}
   if(DATA[mk]){D=DATA[mk];st.grp='all';st.pick=null;draw();return;}

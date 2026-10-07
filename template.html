@@ -1,7 +1,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <link rel="icon" href="assets/icon-64.png">
-<script src="assets/card.js"></script>
+<script src="assets/card.js?v=20261007"></script>
 <title>投資家ハシビロコウの株式ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -329,6 +329,7 @@ input[type=range]{accent-color:var(--brand)}
 .ek-row{display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:8px;align-items:baseline;padding:3px 0;font-size:12.5px;width:100%;text-align:left;border:0;background:transparent;color:var(--ink);font-family:var(--f-body);line-height:1.6}
 button.ek-row{cursor:pointer;border-radius:6px}
 button.ek-row:hover .n{color:var(--brand)}
+button.ek-row.ek-on{background:var(--brand-soft)}button.ek-row.ek-on .n{color:var(--brand);font-weight:700}
 .ek-row .t{font:500 11.5px var(--f-num);color:var(--muted)}
 .ek-row .n{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500}
 .ek-row .n small{font:400 10.5px var(--f-num);color:var(--faint);margin-left:5px}
@@ -557,7 +558,7 @@ footer a:hover{color:var(--brand)}
     <div class="phead"><h3 id="rk-title">売買代金ランキング <span class="sub" id="rk-sub">全市場・上位100</span></h3>
       <div class="ctlrow" style="margin:0"><div class="seg" id="rkmetric"><button data-m="to" aria-pressed="true">売買代金</button><button data-m="vol" aria-pressed="false">出来高</button></div>
         <span class="search"><input id="rksearch" type="text" placeholder="銘柄名・コード" autocomplete="off"><span class="x" id="rksearch-x" hidden>✕</span></span><span class="phint" id="rksearch-hint"></span></div></div>
-    <div class="pdesc"><b>代金÷時価</b>＝1日の売買代金÷時価総額（資金の回転率）。10%以上は赤で表示。行を押すと、順位の推移とローソク足を下に表示します。</div>
+    <div class="pdesc"><b>代金÷時価</b>＝1日の売買代金÷時価総額（資金の回転率）。10%以上は赤で表示。行を押すと、その行のすぐ下に銘柄カード（株価・勢い・バリュエーション・チャート）を開き、下の順位の推移もその銘柄に切り替わります。</div>
     <div class="rank" style="max-height:520px"><table class="rk" id="rktbl">
       <thead><tr>
         <th class="l srt" data-k="rank" style="width:52px">順位<span class="ar" data-a="rank"></span></th><th class="l">銘柄</th>
@@ -571,9 +572,6 @@ footer a:hover{color:var(--brand)}
     <div class="phead" style="margin-top:20px"><h3>順位の推移 <span class="sub">直近120日・上＝1位・101位以下は圏外</span><span id="rkselname" style="color:var(--brand)"></span></h3>
       <div class="ctlrow" style="margin:0"><span class="ctl-label">本数</span><div class="seg" id="rkrows"><button data-n="10" aria-pressed="false">10</button><button data-n="20" aria-pressed="true">20</button><button data-n="30" aria-pressed="false">30</button></div></div></div>
     <div class="chartbox"><svg id="rkbump" viewBox="0 0 760 300" preserveAspectRatio="xMidYMid meet"></svg></div>
-    <div class="sp-h" id="rkc-h" style="font-size:14px;margin-top:16px"></div>
-    <div id="rkc-ctl"></div>
-    <div class="chartbox"><div id="rkcandle"></div></div>
   </div>
 
   <div class="foot" id="th-foot"></div>
@@ -607,7 +605,7 @@ footer a:hover{color:var(--brand)}
       </div>
       <div class="stats"><div><small>該当</small><b id="vs-n">–</b></div><div><small>新規</small><b id="vs-new" class="down">–</b></div><div><small>消失</small><b id="vs-gone" style="color:var(--faint)">–</b></div></div>
     </div>
-    <div class="pdesc" style="margin-top:12px"><b class="down">赤字＝新規</b>／<span class="muted">グレー＝消失（前回あり→今回なし）</span>／<span style="background:var(--warn-bg);color:var(--warn-ink);padding:0 5px;border-radius:4px">黄＝新しく優先度がついた</span>／継続＝連続掲載日数。◁ ▷ とスライダーで過去約半年を1日ずつさかのぼれます。行を押すと、表の下に銘柄のチャートとリンク（TradingView・Yahoo・株探）を表示します。</div>
+    <div class="pdesc" style="margin-top:12px"><b class="down">赤字＝新規</b>／<span class="muted">グレー＝消失（前回あり→今回なし）</span>／<span style="background:var(--warn-bg);color:var(--warn-ink);padding:0 5px;border-radius:4px">黄＝新しく優先度がついた</span>／継続＝連続掲載日数。◁ ▷ とスライダーで過去約半年を1日ずつさかのぼれます。行を押すと、その行のすぐ下に銘柄カード（株価・勢い・バリュエーション・チャート・TradingView等へのリンク）を表示します。</div>
     <div class="ctlrow" style="gap:12px;margin:8px 0 12px">
       <button class="daybtn" id="vcp-prev" type="button" aria-label="前の日">◁</button>
       <input id="vcp-day" type="range" min="0" max="0" value="0" step="1" style="flex:1;min-width:160px">
@@ -617,7 +615,6 @@ footer a:hover{color:var(--brand)}
     </div>
     <div class="rank" style="max-height:640px"><table class="rk" id="vcptbl"><thead><tr id="vcp-head"></tr></thead><tbody id="vcp-body"></tbody></table></div>
     <div id="vcp-lock"></div>
-    <div class="scard" id="vcpcard"></div>
     <div class="foot">
       <b>データ</b>：ミネルヴィニ式トレンドテンプレート（ステージ2）＋VCP判定。米国は業績成長（EDGAR）、日本は増収15%以上・増益15%以上（EDINET）で絞り込み。<br>
       <b>優先度</b>＝買い点の近くでVCPが有効な銘柄を、VCP・買い点への近さ・RS・該当ソース数で採点（監視は空欄）。<b>Buy</b>＝買い点の上抜け。<b>VCP</b>＝収縮のタイトさ等（0〜100）。<b>ピボット</b>＝買い点までの距離。
@@ -643,6 +640,6 @@ const GATE=__GATE__;
 const BUILT="__BUILT__";
 /*__SCRIPT__*/
 </script>
-<script src="assets/cal.js"></script>
+<script src="assets/cal.js?v=20261007"></script>
 <script>EarnCal.mountBlock('ek-block',{root:'',list:'tools/calendar.html'});</script>
 <script src="assets/help.js"></script>

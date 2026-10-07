@@ -168,7 +168,7 @@ table.rx tr.sel td.ck,table.rx tr.sel td:nth-child(2){background:var(--surface-2
   </div>
 
   <div class="panel">
-    <div id="vTable"><div id="vnote"></div><div class="rx-wrap"><table class="rx"><thead><tr id="thead"></tr></thead><tbody id="tbody"></tbody></table></div><button class="btn sm ghost more" id="more" hidden>さらに表示</button><div id="rcard"></div></div>
+    <div id="vTable"><div id="vnote"></div><div class="rx-wrap"><table class="rx"><thead><tr id="thead"></tr></thead><tbody id="tbody"></tbody></table></div><button class="btn sm ghost more" id="more" hidden>さらに表示</button></div>
     <div class="rtip" id="rtip" hidden></div>
     <div id="vHeat" hidden></div>
     <div id="vTree" hidden><svg id="tmap" viewBox="0 0 1100 640" preserveAspectRatio="xMidYMid meet"></svg><div class="phint" id="treeNote" style="margin-top:6px"></div></div>
@@ -184,7 +184,7 @@ table.rx tr.sel td.ck,table.rx tr.sel td:nth-child(2){background:var(--surface-2
   </div>
 </footer>
 
-<script src="../assets/card.js"></script>
+<script src="../assets/card.js?v=20261007"></script>
 <script>
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 const cssv=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
@@ -364,7 +364,9 @@ function showTip(el,title,items){const t=$('#rtip'),r=el.getBoundingClientRect()
   const w=t.offsetWidth,h=t.offsetHeight;let x=r.left,y=r.bottom+6;if(x+w>innerWidth-8)x=innerWidth-8-w;x=Math.max(8,x);if(y+h>innerHeight-8)y=Math.max(8,r.top-6-h);
   t.style.left=x+'px';t.style.top=y+'px';}
 function hideTip(){$('#rtip').hidden=true;}
-function openCard(code){const r=S.find(x=>g(x,'code')===code);if(!r)return;st.sel=code;
+/* 銘柄カード: 押した行のすぐ下に開く(表を描き直したら同じ行の下に付け直す) */
+function openCard(code,scroll){const r=S.find(x=>g(x,'code')===code);if(!r)return;st.sel=code;
+  const btn=[...document.querySelectorAll('#tbody .nmb')].find(b=>b.dataset.c===code);if(!btn)return;
   $$('#tbody tr').forEach(tr=>{const b=tr.querySelector('.nmb');tr.classList.toggle('sel',!!b&&b.dataset.c===code);});
   const cl=v=>(v??0)>=0?'up':'down',T=g(r,'themes').map(i=>D.themes[i]),tk=stageKey(r);
   const sec=g(r,'sector'),secTxt=sec?secBigOf(sec)+' ＞ '+sec:'–',TOPN=10;
@@ -373,11 +375,9 @@ function openCard(code){const r=S.find(x=>g(x,'code')===code);if(!r)return;st.se
   const foot=`<div class="cinfo"><div><span class="cl">業種</span><span class="cth">${sec?secBtn('secBig',big)+'<span class="gt">＞</span>'+secBtn('sectors',sec):'<span class="muted">なし</span>'}</span></div>
     <div><span class="cl">テーマ</span><span class="cth">${T.length?T.slice(0,TOPN).map(thBtn).join('')+(T.length>TOPN?`<span class="threst" hidden>${T.slice(TOPN).map(thBtn).join('')}</span><button class="thmore" type="button">ほか${T.length-TOPN}件 ▸</button>`:''):'<span class="muted">なし</span>'}</span></div>
     ${T.length?'':''}<div class="phint" style="margin:2px 0 0">業種・テーマを押すと、それで一覧を絞り込みます（もう一度押すと解除）。</div></div>`;
-  StockCard.open('rcard',{market:mk,code,name:g(r,'name'),
-    kv:[{l:'株価',v:fmt(g(r,'price'),g(r,'price')>=1000?0:2)},{l:'前日比',v:pct(g(r,'chg1')),cls:cl(g(r,'chg1'))},{l:'今月（'+esc(D.months[0])+'）',v:pct(g(r,'m0')),cls:cl(g(r,'m0'))},{l:'年初来',v:pct(g(r,'ytd')),cls:cl(g(r,'ytd'))},
-      {l:'52週高値から',v:pct(g(r,'hi52')),cls:cl(g(r,'hi52'))},{l:'RS',v:g(r,'rs')??'–'},{l:'トレンド',v:esc(stageName(tk)),cls:tk==='down'?'down':tk==='flat'?'muted':'up'},{l:'売買代金（20日平均・'+esc(D.units.to)+'）',v:fmt(g(r,'to20'),g(r,'to20')>=100?0:1)}],
+  const box=StockCard.below(btn.closest('tr'),{group:'r',market:mk,code,name:g(r,'name'),scroll:scroll!==false,
     foot,onClose:()=>{st.sel=null;$$('#tbody tr.sel').forEach(tr=>tr.classList.remove('sel'));}});
-  const box=$('#rcard'),mo=box.querySelector('.thmore');
+  const mo=box.querySelector('.thmore');
   if(mo)mo.onclick=()=>{const rest=box.querySelector('.threst'),open=rest.hidden;rest.hidden=!open;mo.textContent=open?'閉じる ◂':`ほか${T.length-TOPN}件 ▸`;};
   box.querySelectorAll('.thc').forEach(b=>b.onclick=()=>{const t=b.dataset.t;st.themes.has(t)?st.themes.delete(t):st.themes.add(t);st.limit=300;render();drawMS();
     box.querySelectorAll('.thc').forEach(x=>x.setAttribute('aria-pressed',st.themes.has(x.dataset.t)));});
@@ -420,7 +420,8 @@ function drawTable(R){
   $$('#tbody .tchip').forEach(e=>e.onclick=()=>{st.themes.add(e.dataset.t);render();drawMS();});
   $$('#tbody td.ck input').forEach(c=>c.onchange=()=>{c.checked?st.chk.add(c.dataset.c):st.chk.delete(c.dataset.c);const a=$('#ckAll');
     const on=R.filter(r=>st.chk.has(g(r,'code'))).length;a.checked=R.length>0&&on===R.length;a.indeterminate=on>0&&on<R.length;drawCopyBtns();});
-  $$('#tbody .nmb').forEach(b=>b.onclick=()=>openCard(b.dataset.c));
+  $$('#tbody .nmb').forEach(b=>b.onclick=()=>{if(st.sel===b.dataset.c){st.sel=null;StockCard.closeBelow('r');b.closest('tr').classList.remove('sel');}else openCard(b.dataset.c);});
+  if(st.sel&&rows.some(r=>g(r,'code')===st.sel))openCard(st.sel,false);else{st.sel=null;StockCard.closeBelow('r');}
   $$('#tbody .more').forEach(m=>{m.onmouseenter=()=>showTip(m,'残りのテーマ',m.dataset.tip.split('\n'));m.onmouseleave=hideTip;});
   $('#more').hidden=R.length<=st.limit;$('#more').textContent=`さらに表示（残り${(R.length-st.limit).toLocaleString()}件）`;
 }
@@ -458,12 +459,11 @@ function drawTree(R){const k=st.color,sz=st.size,W=1100,H=640;
         s+=`<text x="${(c.x+c.w/2).toFixed(1)}" y="${(c.y+c.h/2).toFixed(1)}" text-anchor="middle" font-size="${fs.toFixed(1)}" font-weight="600" fill="${fg}" font-family="IBM Plex Sans">${esc(g(c.r,'code'))}</text>`;
         if(c.h>fs*2.6)s+=`<text x="${(c.x+c.w/2).toFixed(1)}" y="${(c.y+c.h/2+fs*1.1).toFixed(1)}" text-anchor="middle" font-size="${(fs*0.8).toFixed(1)}" fill="${fg}" font-family="IBM Plex Sans">${vtxt(v,k)}</text>`;}});});
   $('#tmap').innerHTML=s;
-  $('#treeNote').textContent=`面積＝${sz==='to20'?'売買代金（20日平均）':'時価総額'}・色＝選んだ期間。${L.length<R.length?`面積の大きい上位${L.length}件を表示（全${R.length.toLocaleString()}件）。`:''}${sz==='mcap'&&mk==='jp'?'日本株の時価総額は一部の銘柄のみです。':''}`;}
+  $('#treeNote').textContent=`面積＝${sz==='to20'?'売買代金（20日平均）':'時価総額'}・色＝選んだ期間。${L.length<R.length?`面積の大きい上位${L.length}件を表示（全${R.length.toLocaleString()}件）。`:''}`;}
 
 function render(){
   drawChips();drawCopyBtns();drawVfil();
-  $$('#rcard .thc').forEach(x=>x.setAttribute('aria-pressed',st.themes.has(x.dataset.t)));
-  $$('#rcard .stbtn.sec').forEach(x=>x.setAttribute('aria-pressed',st[x.dataset.k].has(x.dataset.v)));const R=sorted(filtered());
+  const R=sorted(filtered());
   $('#cnt').innerHTML=`${R.length.toLocaleString()} <span class="muted" style="font-weight:400;font-size:13px">/ ${S.length.toLocaleString()} 銘柄${R.length<S.length?'（絞り込み中）':''}</span>`;
   drawSummary(R);
   $('#vTable').hidden=st.view!=='table';$('#vHeat').hidden=st.view!=='heat';$('#vTree').hidden=st.view!=='tree';

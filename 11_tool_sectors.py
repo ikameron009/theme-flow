@@ -13,7 +13,7 @@ warnings.filterwarnings("ignore")
 import numpy as np
 import pandas as pd
 from market_calendar import expected_session
-from tool_common import r, metrics, rs_rank, month_starts, equal_weight_index, surge
+from tool_common import r, metrics, rs_rank, month_starts, equal_weight_index, surge, stock_scale, group_scale, mcap_map, UNITS, TDIV, MDIV
 from us_etf_list import US_ETF_ALL, NO_DEDUPE, MIN_TURNOVER, MAX_CORR, REP_CORR
 
 BASE = os.path.dirname(os.path.abspath(__file__))
@@ -185,6 +185,31 @@ def select_us(lst, px):
     return keep, rep_of
 
 
+AUM_FILE = "etf_aum.json"      # ETFの純資産総額の控え(7日ごとに取り直す。CIはキャッシュで持ち越す)
+
+
+def etf_aum(tickers, max_new=250):
+    """ETFの純資産総額(元の通貨)。yfinance の totalAssets。取れなければ前回の値"""
+    import yfinance as yf
+    from datetime import date, timedelta
+    cache = json.load(open(P(AUM_FILE), encoding="utf-8")) if os.path.exists(P(AUM_FILE)) else {}
+    old = (date.today() - timedelta(days=7)).isoformat()
+    todo = [t for t in tickers if t not in cache or cache[t][1] < old][:max_new]
+    got = 0
+    for t in todo:
+        try:
+            v = yf.Ticker(t).info.get("totalAssets")
+            if v:
+                cache[t] = [float(v), date.today().isoformat()]; got += 1
+        except Exception:
+            pass
+        time.sleep(0.2)
+    with open(P(AUM_FILE), "w", encoding="utf-8") as f:
+        json.dump(cache, f, separators=(",", ":"))
+    print(f"  純資産総額 取り直し{got}/{len(todo)}  控え{len(cache)}本")
+    return {t: v[0] for t, v in cache.items()}
+
+
 def sector_indices(cut):
     """東証33業種の等加重指数(2年)。各業種の構成銘柄の日次騰落の平均を積み上げる。"""
     close = pd.read_pickle(P("close.pkl")).sort_index()
@@ -195,8 +220,8 @@ def sector_indices(cut):
     for sec, codes in u.groupby("sector")["code"]:
         cs = [c for c in codes if c in close.columns]
         if len(cs) >= 3:
-            out[sec] = (equal_weight_index(close, cs), turn[cs].sum(axis=1, min_count=1))
-    return out
+            out[sec] = (equal_weight_index(close, cs), turn[cs].sum(axis=1, min_count=1), cs)
+    return out, close, turn
 
 
 def main():
@@ -210,16 +235,30 @@ def main():
     rep_of = {}
     if mk == "us":
         lst, rep_of = select_us(lst, px)
-    series = []
+    series, scale = [], {}
+    aum = etf_aum([t for t, _, _ in lst if t in px])
     for t, nm, g in lst:
         if t in px:
             c, to, df = px[t]
-            write_ohlc(mk, t.replace(".T", ""), df[df.index.date <= cut])
-            series.append((t.replace(".T", ""), nm, g, c[c.index.date <= cut], to[to.index.date <= cut], True))
+            df = df[df.index.date <= cut]
+            k = t.replace(".T", "")
+            write_ohlc(mk, k, df)
+            series.append((k, nm, g, c[c.index.date <= cut], to[to.index.date <= cut], True))
+            # カードの「勢い・規模」: ETF自身の売買代金・出来高倍率・ADR%、時価総額の欄は純資産総額
+            v = df["Volume"]
+            scale[k] = {"to20": r(float((df["Close"] * v).iloc[-20:].mean()) / TDIV[mk], 1),
+                        "volx": r(float(v.iloc[-1] / v.iloc[-51:-1].mean()), 2) if len(v) > 51 and v.iloc[-51:-1].mean() else None,
+                        "adr": r(float(((df["High"] / df["Low"] - 1) * 100).iloc[-20:].mean()), 2),
+                        "mcap": r(aum[t] / MDIV[mk], 1) if t in aum else None}
     if mk == "jp" and os.path.exists(P("close.pkl")):
-        for sec, (s, to) in sector_indices(cut).items():
+        secs, sclose, sturn = sector_indices(cut)
+        hp, lp = P("high.pkl"), P("low.pkl")
+        adr = stock_scale(sturn, None, pd.read_pickle(hp).sort_index().reindex(sclose.index), pd.read_pickle(lp).sort_index().reindex(sclose.index))[2]             if os.path.exists(hp) and os.path.exists(lp) else None
+        mcap = mcap_map(mk, sclose.ffill(limit=3).iloc[-1], BASE)
+        for sec, (s, to, cs) in secs.items():
             write_ohlc(mk, sec, None, s)
             series.append((sec, sec + "（33業種）", SECTOR33_CAT.get(sec, "指数"), s, to, False))
+            scale[sec] = group_scale(cs, sturn, adr, mcap, mk)
     if not series:
         raise SystemExit("データなし")
     # 月の区切りは全体で最新の日付を基準にそろえる
@@ -231,15 +270,17 @@ def main():
         m = metrics(s, months)
         m.update({"key": key, "name": nm, "group": g, "etf": is_etf, "date": s.index[-1].strftime("%Y-%m-%d"),
                   "surge": surge(to)})
+        m.update(scale.get(key, {}))
         if not is_etf:
-            m["last"] = None            # 自前の業種指数は価格を出さない
+            m["idx"] = m["last"]        # カード用(2年前=100の指数)
+            m["last"] = None            # 自前の業種指数は価格を出さない(表)
         if rep_of:
             m["rep"] = rep_of.get(key, key)  # 代表ETF(自分が代表なら自分)
         rows.append(m)
     rs_rank(rows)                       # RS = 一覧内の順位(1-99)
     out = {
         "market": mk, "updated": latest.strftime("%Y-%m-%d"),
-        "months": [f"{m.month}月" for m in months], "groups": GROUP_ORDER[mk], "rows": rows,
+        "months": [f"{m.month}月" for m in months], "groups": GROUP_ORDER[mk], "rows": rows, "units": UNITS[mk],
     }
     with open(P(f"pro_sectors_{mk}.json"), "w", encoding="utf-8") as f:
         json.dump(out, f, ensure_ascii=False, separators=(",", ":"))

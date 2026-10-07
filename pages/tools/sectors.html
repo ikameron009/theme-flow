@@ -129,7 +129,7 @@ table.mt tr.on td{background:var(--surface-2)}
   </div>
 </footer>
 
-<script src="../assets/card.js"></script>
+<script src="../assets/card.js?v=20261007"></script>
 <script>
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 const cssv=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
@@ -206,9 +206,16 @@ function drawHeat(R){const k=keyNum();
       const pos=k==='rs'?v>=50:v>=0,bg=v==null?'var(--surface-2)':`rgba(${pos?cssv('--brandrgb'):cssv('--downrgb')},${(0.12+a*0.78).toFixed(2)})`,fg=a>0.55?'#fff':'var(--ink)';
       return `<div class="tile" style="background:${bg};color:${fg};${typeof TILE==='function'?'cursor:pointer':''}" title="${esc(x.name)}" data-k="${esc(x.key||x.name)}"><b>${esc(x.name)}</b><small>${x.etf?esc(x.key):(x.n?x.n+'銘柄':'')}</small><span>${k==='rs'?v:sign(v)}</span></div>`;}).join('')}</div>`;}).join('');
   if(typeof TILE==='function')$$('#heat .tile').forEach(t=>t.onclick=()=>TILE(t.dataset.k));}
+/* 銘柄カード(card.js)の「株価・勢い」3行に渡す形。ETF=自身の数字(時価総額の欄は純資産総額)、業種・テーマ=構成銘柄の合計 */
+function groupM(x){const etf=!!x.etf;
+  return {trend:x.trend,price:etf?x.last:(x.idx??x.last),priceLabel:etf?'現在値':'指数（2年前=100）',pd:etf?(mk==='us'?2:(x.last>=1000?0:1)):1,
+    rs:x.rs,chg1:x.chg1,w1:x.w1,m0:(x.months||[])[0],m0Label:'今月（'+((D.months||[])[0]||'')+'）',r1m:x.r1m,r2m:x.r2m,r3m:x.r3m,r6m:x.r6m,r12m:x.r12m,
+    hi52:x.hi52,surge:x.surge,to20:x.to20,mcap:x.mcap,volx:x.volx,adr:x.adr,units:D.units,
+    toLabel:etf?'売買代金（20日平均）':'売買代金（合計・20日平均）',mcapLabel:etf?'純資産総額':'時価総額（合計）'};}
 function cardSlot(id){return `<div id="${id}" class="cardslot"></div>`;}
 function fitSlot(id){const el=document.getElementById(id),w=document.querySelector('.sx-wrap');if(el&&w)el.style.width=Math.max(320,w.clientWidth-28)+'px';}
 const COMMON_FOOT='<b>今月</b>＝月初来。<b>1か月前〜1年前</b>＝その時点から今日までの騰落（1か月＝21営業日、2か月＝42、3か月＝63、6か月＝126、1年＝252）。<b>52週高値</b>＝過去1年の最高値からの距離。<b>資金急増率</b>＝売買代金（終値×出来高）の直近5日平均 ÷ その前20営業日の平均 −1。<b>RS</b>＝3か月（40%）・6か月・9か月・12か月（各20%）の騰落を一覧の中で順位づけ（1〜99）。<b>トレンド</b>＝株価・50日線・200日線の並び（上昇＝株価＞50日線＞200日線）。';
+const CARD_FOOT='<b>カードの「勢い・規模」</b>：ETFは自身の売買代金（20日平均）・出来高倍率（当日÷前50日平均）・ADR%（1日の値幅の20日平均）・純資産総額。業種・テーマは構成銘柄の売買代金と時価総額の合計、出来高倍率は合計の売買代金で計算（当日÷前50日平均）、ADR%は構成銘柄の平均。';
 
 function load(m){mk=m==='us'?'us':'jp';$$('#mseg button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.m===mk));try{localStorage.setItem('tf_market',mk);}catch(e){}
   if(DATA[mk]){D=DATA[mk];st.grp='all';st.pick=null;draw();return;}
@@ -233,7 +240,7 @@ function EXTRA(){const r=$('#repRow');if(!r)return;r.hidden=mk!=='us';if(mk!=='u
   $('#rep').innerHTML=`<button data-v="rep" aria-pressed="${!st.allEtf}">代表ETFだけ（${nRep}本）</button><button data-v="all" aria-pressed="${st.allEtf}">すべて（${D.rows.length}本）</button>`;
   $('#rep').onclick=e=>{const b=e.target.closest('button');if(!b)return;st.allEtf=b.dataset.v==='all';draw();};}
 function FOOT(){return (mk==='us'?'<b>データ</b>：各ETFの日次終値と出来高（Yahoo Finance）。<b>代表ETF</b>＝同じテーマの中で、日々の値動きの相関（直近1年）が0.85以上のETFを1つのグループにまとめ、売買代金が一番多いものを代表として表示（「すべて」で全部表示。名前の下の「似た動き」がまとめたETF）。'
-  :'<b>データ</b>：「（33業種）」は、各業種の構成銘柄（東証上場の内国普通株）を等しい重みで平均して自前で算出した指数（現在値は表示なし・チャートは終値の折れ線）。そのほかは東証上場ETFの日次終値と出来高（Yahoo Finance）。')+COMMON_FOOT+'行（ヒートマップはタイル）を押すと、下にチャート。';}
+  :'<b>データ</b>：「（33業種）」は、各業種の構成銘柄（東証上場の内国普通株）を等しい重みで平均して自前で算出した指数（現在値は表示なし・チャートは終値の折れ線）。そのほかは東証上場ETFの日次終値と出来高（Yahoo Finance）。')+COMMON_FOOT+CARD_FOOT+'行を押すとその行のすぐ下に、ヒートマップはタイルを押すと図の下にカード。';}
 function drawTable(R){head([['key','銘柄','l'],['name','テーマ','l']]);
   $('#tbody').innerHTML=R.map(x=>{const tw=mk==='us'&&!st.allEtf&&x.rep===x.key?twins(x):[],on=SEL===x.key;
     return `<tr class="xrow ${on?'open':''}" data-k="${esc(x.key)}"><td class="l"><span class="tk">${x.etf?esc(x.key):'<span class="muted">―</span>'}</span></td><td class="l"><span class="nm2">${esc(x.name)}</span><span style="font-size:11px;color:var(--faint)">${esc(x.group)}${tw.length?` ・ 似た動き：${tw.map(t=>esc(t.key)).join('・')}`:''}${mk==='us'&&x.rep&&x.rep!==x.key?` ・ 代表：${esc(x.rep)}`:''}</span></td>${cells(x)}</tr>`
@@ -245,8 +252,7 @@ function TILE(k){SEL=k;openSec('hcard');}
 function openSec(id){const x=D.rows.find(r=>r.key===SEL);if(!x)return;fitSlot(id);const tw=twins(x);
   StockCard.open(id,{market:mk,code:x.etf?x.key:'',name:x.name,sub:x.group,links:x.etf,line:!x.etf,val:false,scroll:id==='hcard',
     src:StockCard.root+(mk==='us'?'us_ohlc/':'ohlc/')+'sec_'+encodeURIComponent(x.key)+'.json',
-    kv:[{l:'現在値',v:x.last==null?'–':fmt(x.last,mk==='us'?2:0)},{l:'前日比',v:sign(x.chg1),cls:(x.chg1??0)>=0?'up':'down'},{l:'今月（'+esc((D.months||[])[0]||'')+'）',v:sign(x.months[0]),cls:(x.months[0]??0)>=0?'up':'down'},
-      {l:'年初来',v:sign(x.ytd),cls:(x.ytd??0)>=0?'up':'down'},{l:'52週高値から',v:sign(x.hi52),cls:(x.hi52??0)>=0?'up':'down'},{l:'資金急増率',v:sign(x.surge,0),cls:(x.surge??0)>=0?'up':'down'},{l:'RS',v:x.rs??'–'},{l:'トレンド',v:(TREND[x.trend]||TREND.flat).slice(0,2).join(' '),cls:(TREND[x.trend]||TREND.flat)[2]}],
+    m:groupM(x),
     foot:tw.length?'似た動きのETF：'+tw.map(t=>esc(t.key)+' '+esc(t.name)).join('、'):'',
     onClose:()=>{SEL=null;if(id==='card')drawTable(rows());}});}
 load(mk);

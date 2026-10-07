@@ -123,3 +123,51 @@ def stock_table(close, months):
     })
     df.loc[last.isna()] = np.nan
     return df
+
+
+# ---------- 銘柄カードの「勢い・規模」(売買代金・時価総額・出来高倍率・ADR%) ----------
+UNITS = {"jp": {"to": "億円", "mcap": "億円"}, "us": {"to": "百万ドル", "mcap": "十億ドル"}}
+TDIV = {"jp": 1e8, "us": 1e6}      # 売買代金の単位(円→億円・ドル→百万ドル)
+MDIV = {"jp": 1e8, "us": 1e9}      # 時価総額の単位(円→億円・ドル→十億ドル)
+
+
+def mcap_map(mk, last, base):
+    """銘柄→時価総額(億円/十億ドル)。日本=発行済株式数(shares.csv)×終値、米国=us_industry.csv の時価総額"""
+    import os
+    out = {}
+    if mk == "jp":
+        p = os.path.join(base, "shares.csv")
+        if os.path.exists(p):
+            sh = pd.read_csv(p, dtype=str)
+            for c, s in zip(sh["code"], pd.to_numeric(sh["shares"], errors="coerce")):
+                px = last.get(c, np.nan)
+                if np.isfinite(s) and px is not None and np.isfinite(px):
+                    out[c] = px * s / MDIV["jp"]
+    else:
+        p = os.path.join(base, "us_industry.csv")
+        if os.path.exists(p):
+            ind = pd.read_csv(p, dtype=str)
+            for t, v in zip(ind["ticker"], pd.to_numeric(ind["mcap"], errors="coerce")):
+                if np.isfinite(v):
+                    out[t] = v / MDIV["us"]
+    return out
+
+
+def stock_scale(turn, vol=None, hi=None, lo=None):
+    """銘柄ごと: 売買代金20日平均(元の単位)・出来高倍率(当日÷前50日平均)・ADR%(高値÷安値−1 の20日平均)"""
+    to20 = turn.iloc[-20:].mean()
+    volx = vol.iloc[-1] / vol.iloc[-51:-1].mean() if vol is not None else None
+    adr = ((hi / lo - 1) * 100).iloc[-20:].mean() if hi is not None and lo is not None else None
+    return to20, volx, adr
+
+
+def group_scale(cols, turn, adr, mcap, mk):
+    """テーマ・業種の合計: 売買代金(構成銘柄の合計・20日平均)・時価総額(合計。分かる銘柄が半分未満なら空)・
+    出来高倍率(合計売買代金の当日÷前50日平均)・ADR%(構成銘柄のADR%の平均)"""
+    t = turn[cols].sum(axis=1, min_count=1).dropna()
+    to20 = t.iloc[-20:].mean() / TDIV[mk] if len(t) else np.nan
+    volx = t.iloc[-1] / t.iloc[-51:-1].mean() if len(t) > 51 and t.iloc[-51:-1].mean() else np.nan
+    a = adr.reindex(cols).dropna() if adr is not None else pd.Series(dtype=float)
+    known = [mcap[c] for c in cols if c in mcap]
+    mc = sum(known) if cols and len(known) >= len(cols) / 2 else np.nan
+    return {"to20": r(to20, 1), "volx": r(volx, 2), "adr": r(a.mean(), 2) if len(a) else None, "mcap": r(mc, 1)}

@@ -76,6 +76,8 @@ jobs:
             ./market_jp.json
             ./market_us.json
             ./pro_*.json
+            ./card_*.json
+            ./etf_aum.json
             ./note_track.json
             ./calendar.json
             ./cal_shares.csv

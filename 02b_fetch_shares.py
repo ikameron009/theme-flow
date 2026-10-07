@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
 Step 2b: 時価総額計算用に発行済株式数を取得して shares.csv に保存。
-- 直近120日で一度でもTop100(売買代金 or 出来高)入りした銘柄に限定(=リーダーボード表示候補)
-- yfinance fast_info.shares を使用
+- 対象=全銘柄(ranking_universe.csv)。銘柄カード・業種銘柄リサーチの時価総額に使う(2026-10-07〜。以前はTop100入り銘柄だけ)
+- yfinance fast_info.shares を使用。既に株数がある銘柄は取り直さない(--refresh で直近120日のTop100入り銘柄だけ取り直す)
 - 株数は変化が遅いのでローカルで時々更新→commit。CIはこのcsvを使う
 出力: shares.csv (code, shares)
 """
@@ -21,7 +21,10 @@ cand = set()
 for df in (turn.iloc[-D:], vol.iloc[-D:]):
     for _, row in df.iterrows():
         cand.update(row.dropna().sort_values(ascending=False).head(100).index)
-cand = sorted(cand)
+REFRESH = "--refresh" in sys.argv
+top = set(cand)
+u = pd.read_csv(BASE + "ranking_universe.csv", dtype=str)
+cand = sorted(top | set(u["code"]))
 print(f"対象 {len(cand)} 銘柄の株数を取得...")
 
 # 既存を読み込み(差分更新)
@@ -33,6 +36,9 @@ if os.path.exists(BASE + "shares.csv"):
 
 out = {}
 for i, code in enumerate(cand):
+    if code in prev and not (REFRESH and code in top):
+        out[code] = prev[code]
+        continue
     sh = None
     for attempt in (1, 2):
         try:

@@ -477,13 +477,25 @@ function render(resetScroll) {
     return r.code === st.open ? row + detail(r) : row;
   }).join('') || `<tr><td colspan="${COLS.length}" style="text-align:center;color:var(--muted);padding:24px">当てはまる銘柄がありません。条件を緩めてください。</td></tr>`;
   $$('tr.r').forEach(tr => {
-    const tog = () => { st.open = st.open === tr.dataset.c ? null : tr.dataset.c; render(); };
+    const tog = () => { st.open = st.open === tr.dataset.c ? null : tr.dataset.c; CARD_SCROLL = true; render(); };
     tr.addEventListener('click', tog); tr.addEventListener('keydown', e => { if (e.key === 'Enter') tog(); });
   });
   $('#pager').innerHTML = `<span class="num muted">${rows.length ? (st.page * PER + 1).toLocaleString() : 0}〜${Math.min(rows.length, st.page * PER + PER).toLocaleString()} / ${rows.length.toLocaleString()}</span>
     <button type="button" id="pv" ${st.page === 0 ? 'disabled' : ''}>前へ</button><button type="button" id="nx" ${st.page >= pages - 1 ? 'disabled' : ''}>次へ</button>`;
   $('#pv').onclick = () => { st.page--; render(true); }; $('#nx').onclick = () => { st.page++; render(true); };
   if (resetScroll) $('#tw').scrollTop = 0;
+  syncBar();
+  openCard();
+}
+/* 銘柄カード(サイト共通 card.js): 開いた行のすぐ下(配当の詳細の上)に出す */
+let CARD_SCROLL = false;
+function openCard() {
+  const tr = st.open && document.querySelector(`#tb tr.r[data-c="${st.open}"]`);
+  if (!tr || !window.StockCard) { window.StockCard && StockCard.closeBelow('dv'); return; }
+  const r = R.find(x => x.code === st.open);
+  StockCard.below(tr, {group: 'dv', market: 'jp', code: r.code, name: r.name, sub: '日本/' + r.sector, scroll: CARD_SCROLL,
+    onClose: () => { st.open = null; render(); }});
+  CARD_SCROLL = false;
   syncBar();
 }
 
@@ -554,5 +566,6 @@ function init() {
   new MutationObserver(() => render()).observe(document.documentElement, {attributes: true, attributeFilter: ['data-theme']});
 }
 </script>
+<script src="../assets/card.js?v=20261007"></script>
 <script src="../assets/help.js"></script>
 </body></html>

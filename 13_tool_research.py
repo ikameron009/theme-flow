@@ -207,6 +207,17 @@ def main():
     kb = os.path.getsize(P(f"pro_research_{mk}.json")) / 1024
     print(f"[{mk}] 業種銘柄リサーチ {out['updated']} {len(rows)}銘柄 テーマ{len(themes)} ステージ{cnt} {kb:.0f}KB")
 
+    # 銘柄カード(card.js)の「株価・勢い」3行用。全ページ共通で同じ数字を出すため、ここで1つだけ作る(無料=site直下)
+    CC = ["price", "rs", "chg1", "w1", "m0", "r1m", "r2m", "r3m", "r6m", "r12m", "hi52", "surge", "to20", "mcap", "volx", "adr", "trend"]
+    ix = {k: COLS.index(k) for k in CC if k != "trend"}
+    TR = {"tt": 1, "vcp": 1, "up": 1, "flat": 0, "down": -1}
+    card = {"market": mk, "updated": out["updated"], "months": out["months"], "units": out["units"], "cols": CC,
+            "s": {rw[0]: [rw[ix[k]] for k in CC[:-1]] + [TR.get(rw[COLS.index("stage")], 0)] for rw in rows}}
+    with open(P(f"card_{mk}.json"), "w", encoding="utf-8") as f:
+        json.dump(card, f, ensure_ascii=False, separators=(",", ":"))
+    nm = sum(1 for rw in rows if rw[ix["mcap"]] is not None)
+    print(f"[{mk}] 銘柄カード用 card_{mk}.json {len(rows)}銘柄(時価総額あり{nm}) {os.path.getsize(P(f'card_{mk}.json')) / 1024:.0f}KB")
+
 
 if __name__ == "__main__":
     main()

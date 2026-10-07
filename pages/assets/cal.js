@@ -91,12 +91,19 @@
     return `<table class="rk ek-t"><thead>${th}</thead><tbody>${body}</tbody></table>`+
       (rows.length>limit?`<div class="ek-morebox"><button class="btn sm ghost" data-more>さらに表示（残り${rows.length-limit}件）</button></div>`:'');
   }
-  function openCard(boxId,tr){
-    if(!window.StockCard||!tr||!tr.dataset.code)return;
-    const mk=tr.dataset.mk;
-    StockCard.open(boxId,{market:mk,code:tr.dataset.code,name:tr.dataset.name,sub:(mk==='jp'?'日本':'米国')+(tr.dataset.sub?'/'+tr.dataset.sub:''),per:126});
-    const b=document.getElementById(boxId);if(b)b.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'nearest'});
+  /* 銘柄カード: 表の行=その行のすぐ下。3日の予定(列が並ぶ)のボタン=列の並びのすぐ下(1列表示のスマホではその日の下)。
+     同じ銘柄をもう一度押すと閉じる */
+  const CARD={},CBOX={};
+  function openCard(grp,el,anchor){
+    if(!window.StockCard||!el||!el.dataset.code)return;
+    const mk=el.dataset.mk,key=mk+':'+el.dataset.code+':'+(el.tagName==='TR'?'t':'b');
+    if(CARD[grp]===key&&CBOX[grp]&&CBOX[grp].isConnected){CARD[grp]=null;StockCard.closeBelow(grp);el.classList.remove('ek-on');return;}
+    CARD[grp]=key;document.querySelectorAll('.ek-stk.ek-on').forEach(x=>x.classList.remove('ek-on'));if(el.tagName!=='TR')el.classList.add('ek-on');
+    CBOX[grp]=StockCard.below(anchor||el,{group:grp,market:mk,code:el.dataset.code,name:el.dataset.name,sub:(mk==='jp'?'日本':'米国')+(el.dataset.sub?'/'+el.dataset.sub:''),per:126,
+      onClose:()=>{CARD[grp]=null;el.classList.remove('ek-on');}});
   }
+  function gridAnchor(btn){const g=btn.closest('.ek-grid');if(!g)return btn;
+    const one=getComputedStyle(g).gridTemplateColumns.trim().split(/\s+/).length<=1;return one?(btn.closest('.ek-day')||btn):g;}
   const searchBox=(id,ph,v)=>`<label class="search"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="${id}" type="text" placeholder="${ph}" value="${esc(v)}" autocomplete="off"></label>`;
   function keepFocus(id,fn){const a=document.getElementById(id),p=a?a.selectionStart:0;fn();const n=document.getElementById(id);if(n){n.focus();try{n.setSelectionRange(p,p);}catch(e){}}}
 
@@ -130,8 +137,8 @@
             <div class="ek-hr"><span class="meta">時刻は日本時間・米国決算は現地の日付</span><a class="ek-lnk" href="${list}">決算・経済カレンダー（2週間）→</a></div></div>
           <div class="ek-tabs" role="group" aria-label="列の切り替え">${COLS.map(c=>`<button type="button" data-c="${c}" aria-pressed="${st.mcol===c}">${TITLE[c]}</button>`).join('')}</div>
           <div class="ek-grid">${COLS.map(col).join('')}</div>
-          <div id="ek-drawer"></div><div id="ek-card"></div>
-          <div class="ek-note">各日、印のある銘柄を先に、時価総額の大きい順に4件まで表示。銘柄を押すとチャートを表示。${flags(['vcp'])} 当サイトのスクリーニング(VCP)に該当 ・ ${flags(['note'])} noteで紹介済み。経済イベントの●は重要度（赤●●●＝相場が大きく動きやすい）。日本株の決算は発表日のみで時刻は載せていません。出所：JPX（決算発表予定日）・Nasdaq。更新 ${esc(D.updated||'')}</div>`;
+          <div id="ek-drawer"></div>
+          <div class="ek-note">各日、印のある銘柄を先に、時価総額の大きい順に4件まで表示。銘柄を押すと銘柄カード（株価・勢い・チャート）を表示（表の行はその行のすぐ下）。${flags(['vcp'])} 当サイトのスクリーニング(VCP)に該当 ・ ${flags(['note'])} noteで紹介済み。経済イベントの●は重要度（赤●●●＝相場が大きく動きやすい）。日本株の決算は発表日のみで時刻は載せていません。出所：JPX（決算発表予定日）・Nasdaq。更新 ${esc(D.updated||'')}</div>`;
         drawer();
       };
       const drawer=()=>{
@@ -157,7 +164,7 @@
         const tb=t.closest('.ek-tabs button');if(tb){st.mcol=tb.dataset.c;render();return;}
         const sb=t.closest('[data-g="sort"] button');if(sb){st.sort=sb.dataset.s;drawer();return;}
         if(t.closest('[data-more]')){st.lim+=PAGE;drawer();return;}
-        const s=t.closest('.ek-stk,.ek-t tbody tr[data-code]');if(s){openCard('ek-card',s);}
+        const s=t.closest('.ek-stk,.ek-t tbody tr[data-code]');if(s){openCard('ek',s,s.tagName==='TR'?s:gridAnchor(s));}
       });
       render();
     });
@@ -194,7 +201,6 @@
             <div class="seg" data-g="cap">${CAPS[c].map(([k,n])=>`<button type="button" data-c="${k}" aria-pressed="${st.cap===k}">${n}</button>`).join('')}</div>
             ${c==='eco'?'':`<label class="ek-chk"><input type="checkbox" id="ek-lflag"${st.flag?' checked':''}>印のある銘柄だけ</label>`}
             <span class="phint">${rows.length}件${q?` ・「${esc(st.q.trim())}」で検索中`:''}</span></div>
-          <div id="ek-lcard"></div>
           <div class="ek-tbl ek-tall">${table(c,rows,q,true,st.lim)}</div>`;
         const inp=box.querySelector('#ek-lq');
         inp.addEventListener('input',()=>{st.q=inp.value;st.lim=PAGE;keepFocus('ek-lq',render);});
@@ -207,7 +213,7 @@
         const db=t.closest('.ek-dbtn');if(db){st.day=db.dataset.d;st.lim=PAGE;render();return;}
         const cb=t.closest('[data-g="cap"] button');if(cb){st.cap=cb.dataset.c;st.lim=PAGE;render();return;}
         if(t.closest('[data-more]')){st.lim+=PAGE;render();return;}
-        const s=t.closest('.ek-t tbody tr[data-code]');if(s)openCard('ek-lcard',s);
+        const s=t.closest('.ek-t tbody tr[data-code]');if(s)openCard('ekl',s);
       });
       render();
     });

@@ -143,7 +143,7 @@ table.mt td .tk{font:11px var(--f-num);color:var(--faint);margin-left:2px}
   </div>
 </footer>
 
-<script src="../assets/card.js"></script>
+<script src="../assets/card.js?v=20261007"></script>
 <script>
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 const cssv=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
@@ -220,9 +220,16 @@ function drawHeat(R){const k=keyNum();
       const pos=k==='rs'?v>=50:v>=0,bg=v==null?'var(--surface-2)':`rgba(${pos?cssv('--brandrgb'):cssv('--downrgb')},${(0.12+a*0.78).toFixed(2)})`,fg=a>0.55?'#fff':'var(--ink)';
       return `<div class="tile" style="background:${bg};color:${fg};${typeof TILE==='function'?'cursor:pointer':''}" title="${esc(x.name)}" data-k="${esc(x.key||x.name)}"><b>${esc(x.name)}</b><small>${x.etf?esc(x.key):(x.n?x.n+'銘柄':'')}</small><span>${k==='rs'?v:sign(v)}</span></div>`;}).join('')}</div>`;}).join('');
   if(typeof TILE==='function')$$('#heat .tile').forEach(t=>t.onclick=()=>TILE(t.dataset.k));}
+/* 銘柄カード(card.js)の「株価・勢い」3行に渡す形。ETF=自身の数字(時価総額の欄は純資産総額)、業種・テーマ=構成銘柄の合計 */
+function groupM(x){const etf=!!x.etf;
+  return {trend:x.trend,price:etf?x.last:(x.idx??x.last),priceLabel:etf?'現在値':'指数（2年前=100）',pd:etf?(mk==='us'?2:(x.last>=1000?0:1)):1,
+    rs:x.rs,chg1:x.chg1,w1:x.w1,m0:(x.months||[])[0],m0Label:'今月（'+((D.months||[])[0]||'')+'）',r1m:x.r1m,r2m:x.r2m,r3m:x.r3m,r6m:x.r6m,r12m:x.r12m,
+    hi52:x.hi52,surge:x.surge,to20:x.to20,mcap:x.mcap,volx:x.volx,adr:x.adr,units:D.units,
+    toLabel:etf?'売買代金（20日平均）':'売買代金（合計・20日平均）',mcapLabel:etf?'純資産総額':'時価総額（合計）'};}
 function cardSlot(id){return `<div id="${id}" class="cardslot"></div>`;}
 function fitSlot(id){const el=document.getElementById(id),w=document.querySelector('.sx-wrap');if(el&&w)el.style.width=Math.max(320,w.clientWidth-28)+'px';}
 const COMMON_FOOT='<b>今月</b>＝月初来。<b>1か月前〜1年前</b>＝その時点から今日までの騰落（1か月＝21営業日、2か月＝42、3か月＝63、6か月＝126、1年＝252）。<b>52週高値</b>＝過去1年の最高値からの距離。<b>資金急増率</b>＝売買代金（終値×出来高）の直近5日平均 ÷ その前20営業日の平均 −1。<b>RS</b>＝3か月（40%）・6か月・9か月・12か月（各20%）の騰落を一覧の中で順位づけ（1〜99）。<b>トレンド</b>＝株価・50日線・200日線の並び（上昇＝株価＞50日線＞200日線）。';
+const CARD_FOOT='<b>カードの「勢い・規模」</b>：ETFは自身の売買代金（20日平均）・出来高倍率（当日÷前50日平均）・ADR%（1日の値幅の20日平均）・純資産総額。業種・テーマは構成銘柄の売買代金と時価総額の合計、出来高倍率は合計の売買代金で計算（当日÷前50日平均）、ADR%は構成銘柄の平均。';
 
 function load(m){mk=m==='us'?'us':'jp';$$('#mseg button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.m===mk));try{localStorage.setItem('tf_market',mk);}catch(e){}
   if(DATA[mk]){D=DATA[mk];st.grp='all';st.pick=null;draw();return;}
@@ -238,11 +245,11 @@ $('#tpick').addEventListener('change',e=>{const v=e.target.value.trim();if(D&&D.
 $('#tpick').addEventListener('keydown',e=>{if(e.key==='Enter'){const v=e.target.value.trim();const hit=D&&(D.rows.find(x=>x.name===v)||D.rows.find(x=>x.name.includes(v)));if(hit)pick(hit.name);}});
 matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change',()=>D&&draw());
 const FILE='themes',MINN=5;
-const OPEN=new Set();let MSEL=null,VALD=null,VLOADING=null;
+const OPEN=new Set(),TCLOSED=new Set();let MSEL=null,VALD=null,VLOADING=null;
 /* テーマごとのバリュエーション(全銘柄の決算データがそろってから計算して出す。今はデータ収集中) */
 const XCOLS=[['vig','織り込み成長（中央値）',''],['vlow','期待は控えめの割合','']];
 function XCELLS(x){return '<td class="muted" style="font-size:11px">データ収集中</td><td class="muted" style="font-size:11px">データ収集中</td>';}
-function FOOT(){return `<b>データ</b>：${mk==='us'?'テーマ別ETF（SSGA・ARK）の構成銘柄、Yahooの業種、事業説明文のキーワードで分類した米国株':'株探のテーマ（テーマ→構成銘柄）'}ごとに、構成銘柄の日次騰落を等しい重みで平均して自前で算出（Yahoo Finance の終値）。<b>現在値</b>＝その指数（2年前＝100）。上位3つは構成5銘柄以上のテーマから選びます。`+COMMON_FOOT+'<b>織り込み成長（中央値）・期待は控えめの割合</b>＝構成銘柄のバリュエーションの集計（全銘柄の決算データがそろってから表示します）。行を押すと構成銘柄（RSは全銘柄の中での順位）。銘柄名を押すと、その下にチャート。構成銘柄のバリュエーションは計算結果の表示であり、売買の推奨ではありません（出所：日本株＝Powered by EDINET DB、米国株＝SEC EDGAR、株価＝Yahoo Finance）。';}
+function FOOT(){return `<b>データ</b>：${mk==='us'?'テーマ別ETF（SSGA・ARK）の構成銘柄、Yahooの業種、事業説明文のキーワードで分類した米国株':'株探のテーマ（テーマ→構成銘柄）'}ごとに、構成銘柄の日次騰落を等しい重みで平均して自前で算出（Yahoo Finance の終値）。<b>現在値</b>＝その指数（2年前＝100）。上位3つは構成5銘柄以上のテーマから選びます。`+COMMON_FOOT+CARD_FOOT+'<b>織り込み成長（中央値）・期待は控えめの割合</b>＝構成銘柄のバリュエーションの集計（全銘柄の決算データがそろってから表示します）。行を押すとテーマのカードと構成銘柄（RSは全銘柄の中での順位）。銘柄名を押すと、その銘柄の行のすぐ下にカード。構成銘柄のバリュエーションは計算結果の表示であり、売買の推奨ではありません（出所：日本株＝Powered by EDINET DB、米国株＝SEC EDGAR、株価＝Yahoo Finance）。';}
 /* 構成銘柄の配列: [名前,前日比,1週,今月,年初来,52週高値から,RS,トレンド,現在値,1か月前,2か月前,3か月前,6か月前,1年前,資金急増率,直近60日] */
 const MCOLS=[['銘柄','l'],['トレンド',''],['直近60日',''],['現在値',''],['RS',''],['前日比',''],['週間%',''],['__m0',''],['1か月前',''],['2か月前',''],['3か月前',''],['6か月前',''],['1年前',''],['52週高値から',''],['資金急増率%',''],
   ['織り込み成長',''],['実績（3年）',''],['直近1年',''],['差',''],['バリュエーション','l'],['PER位置（5年）',''],['PEG（実績）','']];
@@ -253,10 +260,11 @@ function stockRow(code,th){const s=D.stocks[code];if(!s)return '';const [n,c1,w1
     ${[c1,w1,m0,r1,r2,r3,r6,r12,hi].map(pc).join('')}<td class="${(sg??0)>=0?'up':'down'}">${sg==null?'–':sign(sg,1)}</td>
     ${VALD?StockCard.vtds((VALD.stocks||{})[code],mk):'<td colspan="7" class="l muted" style="font-size:11px">読み込み中…</td>'}</tr>`;}
 function memberHTML(x){const M=D.months||[];
-  return `<tr class="mem"><td colspan="30"><div class="memhead"><b>${esc(x.name)}</b><span class="muted">構成銘柄 ${x.members.length}（売買代金の多い順・銘柄名を押すとチャート）</span>
-    <button class="btn sm ghost" data-copy="${esc(x.name)}">ティッカーをコピー</button><span class="phint" data-copied></span></div>
+  return `<tr class="mem"><td colspan="30"><div class="memhead"><b>${esc(x.name)}</b><span class="muted">構成銘柄 ${x.members.length}（売買代金の多い順・銘柄名を押すとその行の下にカード）</span>
+    <button class="btn sm ghost" data-copy="${esc(x.name)}">ティッカーをコピー</button>${TCLOSED.has(x.name)?`<button class="btn sm ghost" data-tcard="${esc(x.name)}">テーマのカードを見る</button>`:''}<span class="phint" data-copied></span></div>
+    ${TCLOSED.has(x.name)?'':cardSlot('tc_'+x.key)}
     ${VALD?StockCard.valNote(VALD,mk):''}<div class="memwrap"><table class="mt"><thead><tr>${MCOLS.map(([l,c])=>`<th class="${c}">${l==='__m0'?'今月（'+esc(M[0]||'')+'）':l}</th>`).join('')}</tr></thead>
-    <tbody>${x.members.map(c=>stockRow(c,x.name)).join('')}</tbody></table></div>${MSEL&&MSEL.t===x.name?cardSlot('mcard'):''}</td></tr>`;}
+    <tbody>${x.members.map(c=>stockRow(c,x.name)).join('')}</tbody></table></div></td></tr>`;}
 function fitMem(){const w=document.querySelector('.sx-wrap');if(!w)return;$$('.memwrap').forEach(el=>el.style.width=Math.max(320,w.clientWidth-28)+'px');}
 addEventListener('resize',fitMem);
 function drawTable(R){head([['name','テーマ','l']]);
@@ -270,14 +278,20 @@ function drawTable(R){head([['name','テーマ','l']]);
   $$('#tbody [data-copy]').forEach(b=>b.onclick=e=>{e.stopPropagation();const x=D.rows.find(r=>r.name===b.dataset.copy);
     const txt=x.members.map(c=>mk==='jp'?c+'.T':c).join(',');const note=b.parentNode.querySelector('[data-copied]');
     navigator.clipboard.writeText(txt).then(()=>note.textContent='コピーしました（'+x.members.length+'銘柄）').catch(()=>{note.textContent=txt;});});
-  if(MSEL&&document.getElementById('mcard'))openMember();}
-function openMember(){const {c,t}=MSEL,s=D.stocks[c];if(!s)return;const [n,c1,w1,m0,ytd,hi,rs,tr]=s,T=TREND[tr===1?'up':tr===-1?'down':'flat'];fitSlot('mcard');
-  const cl=v=>(v??0)>=0?'up':'down',ths=D.rows.filter(r=>r.members&&r.members.includes(c)).map(r=>r.name);
-  StockCard.open('mcard',{market:mk,code:c,name:n,sub:t,
-    kv:[{l:'前日比',v:sign(c1),cls:cl(c1)},{l:'1週',v:sign(w1),cls:cl(w1)},{l:'今月（'+esc((D.months||[])[0]||'')+'）',v:sign(m0),cls:cl(m0)},{l:'年初来',v:sign(ytd),cls:cl(ytd)},
-      {l:'52週高値から',v:sign(hi),cls:cl(hi)},{l:'RS',v:rs??'–'},{l:'トレンド',v:T[0]+' '+T[1],cls:T[2]},{l:'所属テーマ数',v:ths.length}],
+  $$('#tbody [data-tcard]').forEach(b=>b.onclick=e=>{e.stopPropagation();TCLOSED.delete(b.dataset.tcard);drawTable(rows());});
+  R.filter(x=>OPEN.has(x.name)&&!TCLOSED.has(x.name)).forEach(openTheme);
+  const mb=MSEL&&[...document.querySelectorAll('#tbody .mnb')].find(b=>b.dataset.c===MSEL.c&&b.dataset.t===MSEL.t);
+  if(mb)openMember(mb.closest('tr'));else{MSEL=null;StockCard.closeBelow('m');}}
+/* テーマ自体のカード(テーマを開くと最初から表示・閉じても「テーマのカードを見る」で戻せる) */
+function openTheme(x){const id='tc_'+x.key;if(!document.getElementById(id))return;fitSlot(id);
+  StockCard.open(id,{market:mk,code:'',name:x.name,sub:x.group+' ・ '+x.n+'銘柄',links:false,line:true,val:false,scroll:false,
+    src:StockCard.root+(mk==='us'?'us_ohlc/':'ohlc/')+encodeURIComponent(x.key)+'.json',m:groupM(x),
+    onClose:()=>{TCLOSED.add(x.name);drawTable(rows());}});}
+function openMember(tr){const {c,t}=MSEL,s=D.stocks[c];if(!s)return;const n=s[0];
+  const ths=D.rows.filter(r=>r.members&&r.members.includes(c)).map(r=>r.name);
+  StockCard.below(tr,{group:'m',market:mk,code:c,name:n,sub:t,scroll:!MSEL.shown,
     foot:ths.length>1?'ほかの所属テーマ：'+ths.filter(x=>x!==t).map(esc).join('、'):'',
-    onClose:()=>{MSEL=null;drawTable(rows());}});}
+    onClose:()=>{MSEL=null;drawTable(rows());}});MSEL.shown=true;}
 load(mk);
 </script>
 <script src="../assets/help.js"></script>

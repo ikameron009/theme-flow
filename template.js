@@ -26,7 +26,7 @@ function lockHTML(key,hidden,cols){
 let market='jp',DATA,themes,dates,N,STK,byName,latestYear,RK,MK,OHLC_DIR='ohlc/',U={turn:'億',turnLong:'億円',mcap:'億'};
 const state={metric:'index',range:120,smooth:5,sort:'surge',selected:[],focus:null,
   gran:'week',hsort:'flow',hquery:'',mapTheme:null,spSort:'to',spStock:null,spPer:126,spFreq:'day',
-  rkMetric:'to',rkSel:null,rkSort:{k:'rank',dir:'asc'},rkRows:20,rkQuery:'',rkcPer:126,rkcFreq:'day',
+  rkMetric:'to',rkSel:null,rkCard:null,rkSort:{k:'rank',dir:'asc'},rkRows:20,rkQuery:'',
   secPer:1,brMode:'turnover',mcCat:'all',mcPer:126,rateSub:'jp',
   scCode:null,scPer:126,scFreq:'day',vcpIdx:null,vcpQuery:'',vcpSort:{k:'prio',dir:'desc'}};
 function bindMarket(mk){
@@ -41,7 +41,7 @@ function bindMarket(mk){
 function marketReset(){
   const top=flowRows().inn.map(t=>t.name).slice(0,5);
   state.selected=top; state.focus=top[0]||null; state.mapTheme=top[0]||(themes[0]&&themes[0].name)||null;
-  state.rkSel=null; state.spStock=null; state.hquery=''; state.rkQuery=''; state.scCode=null;
+  state.rkSel=null; state.rkCard=null; state.spStock=null; state.hquery=''; state.rkQuery=''; state.scCode=null;
   state.vcpIdx=null; state.vcpQuery=''; state.vcCode=null;
   ['#hsearch','#rksearch','#vcpsearch','#sq'].forEach(s=>{const el=$(s);if(el)el.value='';});
   ['#hsearch-x','#rksearch-x','#vcpsearch-x'].forEach(s=>{const el=$(s);if(el)el.hidden=true;});
@@ -440,7 +440,8 @@ function drawRkList(){
       <td class="num">${s.ratio==null?'–':(s.ratio>=10?`<span class="ratio-hi">${s.ratio.toFixed(2)}%</span>`:s.ratio.toFixed(2)+'%')}</td>
       <td class="num">${rkChip(rkDelta(code))}</td><td>${rankMini(rkSeries(code))}</td></tr>`;}).join('')
     :'<tr><td colspan="8" style="padding:12px;color:var(--faint)">該当する銘柄がありません。</td></tr>';
-  $$('#rktbody tr[data-code]').forEach(tr=>tr.onclick=()=>selectRk(tr.dataset.code));
+  $$('#rktbody tr[data-code]').forEach(tr=>tr.onclick=()=>selectRk(tr.dataset.code,true));
+  openRkCard(false);
   $('#rkl-lock').innerHTML=lockHTML('top100',top.length-nv,7);
 }
 function drawRkBump(){
@@ -463,12 +464,14 @@ function drawRkBump(){
     el.addEventListener('click',()=>selectRk(c));});
   $('#rkselname').textContent=' ― '+s.name;
 }
-function drawRkCandle(){const code=state.rkSel;if(!code){$('#rkc-h').textContent='';$('#rkc-ctl').innerHTML='';$('#rkcandle').innerHTML='';return;}
-  $('#rkc-h').innerHTML='ローソク足：'+esc(RK.stocks[code]?.name||code)+'（'+esc(code)+'）'+stockLinks(code);
-  $('#rkc-ctl').innerHTML=candleCtl('rkc',state.rkcPer,state.rkcFreq);
-  mountCandle('rkcandle','rkc',code,()=>state.rkcPer,v=>state.rkcPer=v,()=>state.rkcFreq,v=>state.rkcFreq=v,300,()=>state.rkSel===code,1100);}
-function selectRk(code){state.rkSel=code;drawRkList();drawRkBump();drawRkCandle();}
-function drawRk(){if(!RK||!rkTop().length)return;if(!state.rkSel)state.rkSel=rkTop()[0];drawRkList();drawRkBump();drawRkCandle();}
+/* 銘柄カード: 押した行のすぐ下(同じ行をもう一度押すと閉じる)。順位の推移の線を押しても開く */
+function openRkCard(scroll){const tr=state.rkCard&&[...document.querySelectorAll('#rktbody tr[data-code]')].find(t=>t.dataset.code===state.rkCard);
+  if(!tr){StockCard.closeBelow('rk');return;}
+  const box=StockCard.below(tr,cardOpts(state.rkCard,{group:'rk',scroll,onClose:()=>{state.rkCard=null;}}));bindChips(box);}
+function selectRk(code,toggle){state.rkSel=code;state.rkCard=toggle&&state.rkCard===code?null:code;
+  if(state.rkCard&&state.rkQuery&&!(RK.stocks[code].name||'').toLowerCase().includes(state.rkQuery.toLowerCase())&&!code.toLowerCase().includes(state.rkQuery.toLowerCase())){state.rkQuery='';const q=$('#rksearch');if(q)q.value='';}
+  drawRkList();openRkCard(true);drawRkBump();}
+function drawRk(){if(!RK||!rkTop().length)return;if(!state.rkSel)state.rkSel=rkTop()[0];drawRkList();drawRkBump();}
 function drawThemes(){
   $('#th-meta').textContent=`${MKNAME[market]} ・ ${DATA.n_themes}テーマ・${DATA.n_stocks.toLocaleString()}銘柄 ・ ${DATA.updated}まで`;
   $('#rk-sub').textContent=market==='us'?'米国上場の普通株・上位100':'東証上場の全銘柄・上位100';
@@ -490,28 +493,13 @@ function searchStocks(q){q=_nz(q).trim();if(!q)return[];UIDX=UIDX||univIndex();c
     .filter(o=>o.s>=0).sort((a,b)=>a.s-b.s||a.x.code.localeCompare(b.x.code)).slice(0,30).map(o=>o.x);}
 function themesOf(code){return themes.filter(t=>(t.members||[]).includes(code));}
 function showStock(code){state.scCode=code;$('#sres').hidden=true;drawStockCard();}
-function drawStockCard(){renderCard('scard','sc',state.scCode);}
-function renderCard(boxId,idp,code){
-  const box=document.getElementById(boxId);if(!box)return;if(!code){box.innerHTML='';return;}
-  UIDX=UIDX||univIndex();const u=UIDX.find(x=>x.code===code)||{code,name:code,sec:''};
-  const s=STK[code],r=RK&&RK.stocks[code],top=rkTop(),rank=top.indexOf(code);
-  const ths=themesOf(code);
-  box.innerHTML=`<div class="shead"><b>${esc(u.name)}</b><span class="num muted">${esc(code)}</span>${u.sec?`<span class="tag">${esc(u.sec)}</span>`:''}${stockLinks(code)}${boxId!=='scard'?'<button class="btn sm ghost" data-close style="margin-left:auto">閉じる</button>':''}</div>
-    <div class="kv"><div><small>売買代金（${U.turn}）</small><b>${s?fmt(s.to,1):r?fmt(r.to,1):'–'}</b></div>
-      <div><small>20日の騰落</small><b id="${idp}-r20" class="${s&&s.ret20>=0?'up':'down'}">${s?sign(s.ret20)+'%':'–'}</b></div>
-      <div><small>売買代金の急増率</small><b>${s&&s.surge!=null?sign(s.surge,0)+'%':'–'}</b></div>
-      <div><small>売買代金の順位</small><b>${rank>=0?(rank+1)+'位':'100位圏外'}</b></div></div>
-    <div id="${idp}-val"></div>
-    ${ths.length?`<div class="meta" style="margin-bottom:6px">所属テーマ（押すとテーマ別資金フローへ）</div><div class="chips">${ths.map(t=>`<button class="chip" data-nm="${esc(t.name)}">${esc(t.name)} <span class="${(t.surge??0)>=0?'up':'down'}">${sign(t.surge,0)}%</span></button>`).join('')}</div>`:''}
-    ${candleCtl(idp,state[idp+'Per']||126,state[idp+'Freq']||'day')}<div id="${idp}candle"></div>`;
-  box.querySelectorAll('.chips .chip[data-nm]').forEach(b=>b.onclick=()=>{focusTheme(b.dataset.nm,true);goto('themes');});
-  const cl=box.querySelector('[data-close]');if(cl)cl.onclick=()=>{box.innerHTML='';if(idp==='vc')state.vcCode=null;};
-  const cur=()=>(idp==='sc'?state.scCode:state.vcCode)===code;
-  if(window.StockCard)StockCard.mountVal(document.getElementById(idp+'-val'),market,code);
-  mountCandle(idp+'candle',idp,code,()=>state[idp+'Per']||126,v=>state[idp+'Per']=v,()=>state[idp+'Freq']||'day',v=>state[idp+'Freq']=v,340,cur,1100);
-  if(!s)loadOHLC(code).then(oh=>{const el=document.getElementById(idp+'-r20');if(!oh||!el||!cur()||oh.c.length<21)return;
-    const v=(oh.c[oh.c.length-1]/oh.c[oh.c.length-21]-1)*100;el.textContent=sign(v)+'%';el.className=v>=0?'up':'down';});
-}
+function drawStockCard(){const box=$('#scard');if(!box)return;if(!state.scCode){box.innerHTML='';return;}
+  StockCard.open(box,cardOpts(state.scCode,{scroll:false,onClose:()=>{state.scCode=null;}}));bindChips(box);}
+/* 銘柄カード(assets/card.js・サイト共通)に渡す指定。所属テーマのボタンはカードの下に */
+function cardOpts(code,extra){UIDX=UIDX||univIndex();const u=UIDX.find(x=>x.code===code)||{code,name:code,sec:''},ths=themesOf(code);
+  return Object.assign({market,code,name:u.name,sub:u.sec||'',per:126,
+    foot:ths.length?`<div class="meta" style="margin:4px 0 6px">所属テーマ（押すとテーマ別資金フローへ）</div><div class="chips">${ths.map(t=>`<button class="chip" data-nm="${esc(t.name)}">${esc(t.name)} <span class="${(t.surge??0)>=0?'up':'down'}">${sign(t.surge,0)}%</span></button>`).join('')}</div>`:''},extra);}
+function bindChips(box){if(box)box.querySelectorAll('.chips .chip[data-nm]').forEach(b=>b.onclick=()=>{focusTheme(b.dataset.nm,true);goto('themes');});}
 function renderResults(q){const box=$('#sres'),R=searchStocks(q);
   if(!q.trim()){box.hidden=true;return;}box.hidden=false;
   box.innerHTML=R.length?R.map((x,i)=>`<button data-code="${esc(x.code)}" class="${i===0?'kb':''}"><span>${esc(x.name)}</span><small>${esc(x.code)}${x.sec?' ・ '+esc(x.sec):''}</small></button>`).join(''):'<div class="phint" style="padding:10px 14px">該当する銘柄がありません。</div>';
@@ -569,10 +557,14 @@ function drawVcp(){
       if(lb)return `<span class="vpill ${lb[0]}">${lb[1]}</span>`;const t=!v?(mk==='jp'?'収集中':'—'):v.ex?'対象外':v.status==='no_data'?'データなし':'—';return `<span class="muted" style="font-size:11px" title="${esc(v&&v.ex||'')}">${t}</span>`;}
     return'';};
   body.innerHTML=rows.map(r=>`<tr class="${r._gone?'gone':''}" data-code="${esc(r.code)}" style="cursor:pointer">`+cols.map(c=>`<td ${c[0]==='tl'?'style="text-align:center"':(c[2]==='l'?'':'class="num"')}>${cell(r,c[0])}</td>`).join('')+'</tr>').join('');
-  body.querySelectorAll('tr').forEach(tr=>tr.onclick=()=>{const c=tr.dataset.code;if(!c)return;state.vcCode=c;renderCard('vcpcard','vc',c);const el=$('#vcpcard');if(el)el.scrollIntoView({behavior:'smooth',block:'nearest'});});
+  body.querySelectorAll('tr[data-code]').forEach(tr=>tr.onclick=()=>{const c=tr.dataset.code;state.vcCode=state.vcCode===c?null:c;openVcCard(true);});
   $('#vcp-lock').innerHTML=lockHTML('vcp',hidden,8);
-  if(!state.vcCode){const b=$('#vcpcard');if(b)b.innerHTML='';}
+  openVcCard(false);
 }
+/* 銘柄カード: 押した行のすぐ下(同じ行をもう一度押すと閉じる) */
+function openVcCard(scroll){const tr=state.vcCode&&[...document.querySelectorAll('#vcp-body tr[data-code]')].find(t=>t.dataset.code===state.vcCode);
+  if(!tr){StockCard.closeBelow('vc');return;}
+  const box=StockCard.below(tr,cardOpts(state.vcCode,{group:'vc',scroll,onClose:()=>{state.vcCode=null;}}));bindChips(box);}
 function drawScreening(){const mk=market;loadVcp(mk).then(()=>{if(market===mk)drawVcp();});}
 
 /* ================= 全体 ================= */
@@ -626,7 +618,7 @@ const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting)navLink
 $$('section.sec').forEach(s=>io.observe(s));
 
 /* 配色の切り替え(ライト/ダーク)で描き直す */
-function redrawAll(){if(state.vcCode)renderCard('vcpcard','vc',state.vcCode);drawStrip();drawIndexCards();drawBreadth();drawMacro();drawRatios();drawChart();drawRank();drawHeat();drawStock();drawRkBump();drawRkCandle();drawStockCard();}
+function redrawAll(){drawStrip();drawIndexCards();drawBreadth();drawMacro();drawRatios();drawChart();drawRank();drawHeat();drawStock();drawRkBump();drawStockCard();if(RK&&rkTop().length)drawRkList();if(VCP_DATA[market])drawVcp();}
 matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change',redrawAll);
 new MutationObserver(redrawAll).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
 window.addEventListener('resize',()=>syncPanelHeight());

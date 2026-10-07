@@ -1,5 +1,8 @@
 /* 銘柄カード(「銘柄を探す」と同じ見た目のチャート＋情報)。ツールのページとnote紹介記事検証で共通に使う。
-   StockCard.open(箱, {market, code, name, sub, kv:[{l,v,cls}], src, mark:{date,label}, per, line, foot, onClose, val})
+   StockCard.open(箱, {market, code, name, sub, m, kv, extra, src, mark:{date,label}, per, line, foot, onClose, val})
+   StockCard.below(行, {同じ指定 + group}) = 選んだ行のすぐ下に開く(全ページこちらを使う。2026-10-07〜)
+   1段目「株価・勢い」= 3行(いま/過去から今日まで/勢い・規模)。個別銘柄は card_{jp,us}.json を自動で読む。テーマ・業種・ETFは m で渡す。
+   kv(旧4列) は card_*.json に無い銘柄の予備。extra = ページ固有の補足(note掲載時の株価など)
    val:false でバリュエーション欄を出さない(ETF・指数)。StockCard.mountVal(箱, 市場, コード) は単独でも使える
    src を省くと 銘柄を探す と同じ ohlc/<code>.json(米国は us_ohlc/)を読む。o/h/l の無いデータは折れ線で描く。 */
 (function(){
@@ -144,15 +147,60 @@
     .sc-val .vpend{font-size:11.5px;color:var(--warn-ink);background:var(--warn-bg);border-radius:4px;padding:2px 8px;display:inline-block;margin-bottom:6px}
     .sc-val .vsrc{font-size:10.5px;color:var(--faint);margin-top:6px}
     .sc-div{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:-2px 0 10px}.sc-div .dvs{font-size:12px;color:var(--muted)}.sc-div .dvs b{font:600 14px var(--f-num);color:var(--ink)}`;document.head.appendChild(vcss);
+  /* ---------- 1段目: 株価・勢い(3行) ---------- */
+  /* 個別銘柄 = /card_{jp,us}.json(13_tool_research.py。業種銘柄リサーチと同じ計算)。無料なので公開側に置く
+     テーマ・業種・ETF = 呼ぶ側が o.m に同じ形で渡す(11/12 のデータ) */
+  const CARD_URL=mk=>ROOT+'card_'+mk+'.json';
+  const cload=mk=>load(CARD_URL(mk));
+  const TRN={up:['上昇','up'],flat:['中立','flat'],down:['下落','down']};
+  const pc=(x,d=1)=>x==null||!isFinite(x)?'–':(x>=0?'+':'−')+Math.abs(x).toFixed(d)+'%';
+  const pcl=x=>x==null||!isFinite(x)?'muted':x>=0?'up':'down';
+  const amt=(x,u)=>x==null||!isFinite(x)?'–':fmt(x,x>=100?0:x>=10?1:2)+`<span class="u">${esc(u)}</span>`;
+  function stockM(D,code,mk){const a=D&&D.s&&D.s[code];if(!a)return null;const m={};D.cols.forEach((k,i)=>m[k]=a[i]);
+    m.trend=m.trend===1?'up':m.trend===-1?'down':'flat';m.units=D.units;m.m0Label='今月（'+((D.months||[])[0]||'')+'）';m.pd=mk==='us'?2:(m.price>=1000?0:1);return m;}
+  function kv3(m,mk){m=m||{};const u=m.units||(mk==='us'?{to:'百万ドル',mcap:'十億ドル'}:{to:'億円',mcap:'億円'}),t=TRN[m.trend];
+    const c=(l,v,cls,big)=>`<div class="c"><small>${l}</small><b class="${cls||''}${big?' big':''}">${v}</b></div>`;
+    const pd=m.pd!=null?m.pd:(m.price!=null&&m.price>=1000?0:mk==='us'?2:1);
+    return `<div class="sc-kv3">
+      <div class="kvr"><div class="rl">いま</div>${c('トレンド',t?`<span class="sc-tr ${t[1]}">${t[0]}</span>`:'–')}${c(m.priceLabel||'株価',m.price==null?'–':fmt(m.price,pd),'',true)}${c('RS',m.rs??'–','',true)}
+        ${c('前日比',pc(m.chg1,2),pcl(m.chg1))}${c('週間',pc(m.w1),pcl(m.w1))}${c(m.m0Label||'今月',pc(m.m0),pcl(m.m0))}</div>
+      <div class="kvr"><div class="rl">過去から<br>今日まで</div>${[['r1m','1か月前'],['r2m','2か月前'],['r3m','3か月前'],['r6m','6か月前'],['r12m','1年前']].map(([k,l])=>c(l,pc(m[k]),pcl(m[k]))).join('')}<div class="c e"></div></div>
+      <div class="kvr"><div class="rl">勢い・規模</div>${c('52週高値から',pc(m.hi52),pcl(m.hi52))}${c('資金急増率',pc(m.surge,0),pcl(m.surge))}
+        ${c(m.toLabel||'売買代金（20日平均）',amt(m.to20,u.to))}${c(m.mcapLabel||'時価総額',amt(m.mcap,u.mcap))}
+        ${c(m.volxLabel||'出来高倍率',m.volx==null?'–':fmt(m.volx,2)+'<span class="u">倍</span>')}${c('ADR%',m.adr==null?'–':fmt(m.adr,2)+'%')}</div></div>`;}
+  function kvOld(kv){return `<div class="kv" style="grid-template-columns:repeat(${Math.min(kv.length,4)},minmax(0,1fr))">${kv.map(k=>`<div><small>${k.l}</small><b class="${k.cls||''}">${k.v}</b></div>`).join('')}</div>`;}
+  function mountKv(el,o){if(!el)return;
+    if(o.m){el.innerHTML=kv3(o.m,o.market);return;}
+    if(!o.code){el.innerHTML=o.kv&&o.kv.length?kvOld(o.kv):kv3({},o.market);return;}
+    el.innerHTML=kv3({},o.market).replace(/<b class="([^"]*)">–<\/b>/g,'<b class="$1 muted">…</b>');
+    cload(o.market).then(D=>{if(!el.isConnected)return;const m=stockM(D,o.code,o.market);
+      el.innerHTML=m?kv3(m,o.market):(o.kv&&o.kv.length?kvOld(o.kv):kv3({},o.market)+(D?'<div class="sc-nodata">この銘柄は株価・勢いの集計対象外です（売買代金が少ない銘柄など）。</div>':''));});}
+  const kcss=document.createElement('style');kcss.textContent=`.sc-kv3{border:1px solid var(--line);border-radius:8px;overflow:hidden;margin:12px 0 10px}
+    .sc-kv3 .kvr{display:grid;grid-template-columns:96px repeat(6,minmax(0,1fr));border-top:1px solid var(--line)}.sc-kv3 .kvr:first-child{border-top:0}
+    .sc-kv3 .rl{background:var(--surface-2);font-size:11.5px;font-weight:700;color:var(--ink-2);padding:7px 10px;display:flex;align-items:center;line-height:1.35}
+    .sc-kv3 .c{padding:6px 10px;min-width:0}.sc-kv3 .c small{display:block;font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .sc-kv3 .c b{font:600 16px/1.35 var(--f-num);font-variant-numeric:tabular-nums;white-space:nowrap}.sc-kv3 .c b.big{font-size:19px}
+    .sc-kv3 .c b .u{font-size:11px;font-weight:500;color:var(--muted);margin-left:2px}
+    .sc-tr{display:inline-block;font-size:12px;font-weight:700;padding:0 10px;border-radius:999px;line-height:1.8;vertical-align:2px}
+    .sc-tr.up{background:var(--up-soft);color:var(--up)}.sc-tr.down{background:var(--down-soft);color:var(--down)}.sc-tr.flat{background:var(--surface-2);color:var(--muted)}
+    @media (max-width:720px){.sc-kv3 .kvr{grid-template-columns:repeat(3,minmax(0,1fr))}.sc-kv3 .rl{grid-column:1/-1;padding:4px 10px}.sc-kv3 .c.e{display:none}}
+    .sc-nodata{font-size:12px;color:var(--muted);margin:-4px 0 10px}
+    .sc-extra{display:flex;flex-wrap:wrap;gap:6px 22px;align-items:baseline;margin:-2px 0 10px;font-size:12px;color:var(--muted)}.sc-extra b{font:600 14px var(--f-num);color:var(--ink);margin-left:6px}
+    .sc-extra .t{font-weight:700;color:var(--ink-2)}
+    tr.sc-row>td{padding:0 0 12px!important;background:var(--bg)!important;text-align:left;white-space:normal;font-family:var(--f-body);border-bottom:1px solid var(--line)}
+    .sc-row .sc-slot{position:sticky;left:0;padding:0 6px;box-sizing:border-box}.sc-row .sc-slot>.panel{margin-top:6px!important}
+    .sc-anchor>td{background:var(--brand-soft)!important}.sc-anchor>td:first-child{box-shadow:inset 3px 0 0 var(--brand)}`;document.head.appendChild(kcss);
+
   const PER=[['21','1か月'],['63','3か月'],['126','6か月'],['252','1年'],['520','2年']];
   const st={per:126,freq:'day'};
   function open(box,o){
     if(typeof box==='string')box=document.getElementById(box);if(!box)return;
     const per=o.per||st.per,src=o.src||(ROOT+(o.market==='us'?'us_ohlc/':'ohlc/')+encodeURIComponent(o.code)+'.json');
     const tok=Symbol();box._sc=tok;
-    box.innerHTML=`<div class="panel sc-card" style="margin-top:14px;position:relative"><div class="shead" style="padding-right:76px"><b>${esc(o.name)}</b><span class="num muted">${esc(o.code)}</span>${o.sub?`<span class="tag">${esc(o.sub)}</span>`:''}${o.links===false?'':links(o.market,o.code)}
+    box.innerHTML=`<div class="panel sc-card" style="margin-top:14px;position:relative"><div class="shead" style="padding-right:76px"><b>${esc(o.name)}</b>${o.code&&o.showCode!==false?`<span class="num muted">${esc(o.code)}</span>`:''}${o.sub?`<span class="tag">${esc(o.sub)}</span>`:''}${o.links===false?'':links(o.market,o.code)}
         <button class="btn sm ghost" data-close style="position:absolute;top:12px;right:12px">閉じる</button></div>
-      ${o.kv&&o.kv.length?`<div class="kv" style="grid-template-columns:repeat(${Math.min(o.kv.length,4)},minmax(0,1fr))">${o.kv.map(k=>`<div><small>${k.l}</small><b class="${k.cls||''}">${k.v}</b></div>`).join('')}</div>`:''}
+      <div class="sc-kvbox"></div>
+      ${o.extra&&o.extra.length?`<div class="sc-extra">${o.extraTitle?`<span class="t">${esc(o.extraTitle)}</span>`:''}${o.extra.map(k=>`<span>${k.l}<b class="${k.cls||''}">${k.v}</b></span>`).join('')}</div>`:''}
       <div class="sc-valbox"></div>
       <div class="ctlrow" style="margin:6px 0 4px"><div class="seg" data-g="per">${PER.map(p=>`<button data-v="${p[0]}" aria-pressed="${+p[0]===per}">${p[1]}</button>`).join('')}</div>
         <div class="seg" data-g="freq"><button data-v="day" aria-pressed="${st.freq==='day'}">日足</button><button data-v="week" aria-pressed="${st.freq==='week'}">週足</button></div>
@@ -164,9 +212,40 @@
     box.querySelectorAll('.seg').forEach(sg=>sg.onclick=e=>{const b=e.target.closest('button');if(!b)return;sg.querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b));
       if(sg.dataset.g==='per'){cur.per=+b.dataset.v;st.per=cur.per;}else{cur.freq=b.dataset.v;st.freq=cur.freq;}draw();});
     box.querySelector('[data-close]').onclick=()=>{box._sc=null;box.innerHTML='';o.onClose&&o.onClose();};
+    mountKv(box.querySelector('.sc-kvbox'),o);
     if(o.val!==false&&o.code)mountVal(box.querySelector('.sc-valbox'),o.market,o.code);
     draw();
     if(o.scroll!==false)setTimeout(()=>box.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'nearest'}),30);
   }
-  window.StockCard={open,root:ROOT,mountVal,valData:vload,vlab,vgap,vig,vp,vposTxt,vmini,vtds,valNote};
+
+  /* ---------- 選んだ行のすぐ下にカードを開く ---------- */
+  /* StockCard.below(行, {open と同じ指定, group}) : 行が <tr> なら直後に1行足してカードを入れる(横スクロールしてもカードは見えている幅に収まる)。
+     <tr> 以外なら要素の直後に入れる。group ごとにカードは1枚(別の行を押すと移る)。縦の高さ制限のある箱の中なら、開いている間だけ制限を外す */
+  const SLOTS={};
+  function closeBelow(grp){grp=grp||'main';const s=SLOTS[grp];if(!s)return;delete SLOTS[grp];
+    s.host.remove();s.anchor.classList.remove('sc-anchor');s.lifted.forEach(([el,v])=>el.style.maxHeight=v);if(s.ro)s.ro.disconnect();if(s.onR)removeEventListener('resize',s.onR);}
+  function below(anchor,o){const grp=o.group||'main';closeBelow(grp);if(!anchor)return null;
+    let host,box;
+    if(anchor.tagName==='TR'){const n=[...anchor.cells].reduce((a,c)=>a+(c.colSpan||1),0);
+      host=document.createElement('tr');host.className='sc-row';host.innerHTML=`<td colspan="${n}"><div class="sc-slot"></div></td>`;box=host.querySelector('.sc-slot');}
+    else{host=document.createElement('div');host.className='sc-slot sc-slot-b';box=host;}
+    anchor.after(host);anchor.classList.add('sc-anchor');
+    /* 高さ制限のある箱(一覧のスクロール枠)は、カードの高さぶんだけ広げる(一覧の見出し固定と前後の行はそのまま) */
+    const lifted=[];let sx=null,vy=null;
+    for(let el=host.parentElement;el&&el!==document.body;el=el.parentElement){const cs=getComputedStyle(el);
+      if(!vy&&cs.maxHeight!=='none'&&/(auto|scroll)/.test(cs.overflowY)){vy=el;lifted.push([el,el.style.maxHeight,parseFloat(cs.maxHeight)||el.clientHeight]);}
+      if(!sx&&/(auto|scroll)/.test(cs.overflowX)&&el.scrollWidth>el.clientWidth+1)sx=el;}
+    const fit=()=>{if(sx&&host.tagName==='TR')box.style.width=Math.max(300,sx.clientWidth)+'px';
+      lifted.forEach(([el,,mh])=>el.style.maxHeight=Math.ceil(mh+host.offsetHeight)+'px');};
+    const s={host,anchor,lifted,ro:null,onR:null};SLOTS[grp]=s;
+    const uc=o.onClose;
+    open(box,Object.assign({},o,{scroll:false,onClose:()=>{closeBelow(grp);uc&&uc();}}));
+    fit();[300,1200,3000].forEach(t=>setTimeout(()=>{if(SLOTS[grp]===s)fit();},t));
+    if(window.ResizeObserver){s.ro=new ResizeObserver(fit);s.ro.observe(box);if(sx)s.ro.observe(sx);}else{s.onR=fit;addEventListener('resize',fit);}
+    if(o.scroll!==false)setTimeout(()=>{
+      if(vy){const th=vy.querySelector('thead');vy.scrollTop+=anchor.getBoundingClientRect().top-vy.getBoundingClientRect().top-(th?th.offsetHeight:0);}
+      const r=anchor.getBoundingClientRect();if(r.top<56||r.top>innerHeight*0.45)
+        scrollBy({top:r.top-72,behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});},30);
+    return box;}
+  window.StockCard={open,below,closeBelow,root:ROOT,mountVal,valData:vload,cardData:cload,kv3,vlab,vgap,vig,vp,vposTxt,vmini,vtds,valNote};
 })();

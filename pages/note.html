@@ -135,8 +135,7 @@ table.pk .sk2{box-shadow:1px 0 0 var(--line-strong)}
   <div class="panel mt">
     <div class="phead"><h3>紹介した全銘柄 <span class="sub" id="pkSub"></span></h3><span class="search"><input id="q" type="text" placeholder="銘柄名・コード" autocomplete="off"><span class="x" id="qx" hidden title="消す">✕</span></span></div>
     <div class="pk-wrap" id="pkWrap"><table class="pk"><thead><tr class="ctl" id="pkCtl"></tr><tr id="pkHead"></tr></thead><tbody id="pkBody"></tbody></table></div>
-    <div class="phint" style="margin-top:6px">銘柄名を押すと、下にチャートが出ます（点線＝noteで公開した日）。<a href="https://note.com/hashibirokou_jp" target="_blank" rel="noopener" style="color:var(--brand)">noteの記事一覧↗</a></div>
-    <div id="pkCard"></div>
+    <div class="phint" style="margin-top:6px">銘柄名を押すと、その行のすぐ下に銘柄カードが出ます（チャートの点線＝noteで公開した日）。<a href="https://note.com/hashibirokou_jp" target="_blank" rel="noopener" style="color:var(--brand)">noteの記事一覧↗</a></div>
     <div class="foot" id="foot"></div>
   </div>
 </section>
@@ -149,7 +148,7 @@ table.pk .sk2{box-shadow:1px 0 0 var(--line-strong)}
   </div>
 </footer>
 
-<script src="assets/card.js"></script>
+<script src="assets/card.js?v=20261007"></script>
 <script>
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 const cssv=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
@@ -246,16 +245,19 @@ function drawPicks(L){
       <td><span class="${p.trend==='up'?'up':'down'}">${p.trend==='up'?'▲ 50日線の上':'▼ 50日線の下'}</span></td>
       <td style="text-align:center">${p.url?`<a class="art" href="${esc(p.url)}" target="_blank" rel="noopener" title="${esc(p.title||'noteの記事を読む')}" aria-label="noteの記事を読む">${ICON[ART_ICON]}</a>`:'<span class="muted">–</span>'}</td></tr>`;}).join('')
     ||'<tr><td colspan="17" class="l muted" style="padding:14px">該当がありません。</td></tr>';
-  $$('#pkBody .nmb').forEach(b=>b.onclick=()=>openCard(b.dataset.id));
+  $$('#pkBody .nmb').forEach(b=>b.onclick=()=>{if(st.sel===b.dataset.id){st.sel=null;StockCard.closeBelow('pk');b.closest('tr').classList.remove('sel');}else openCard(b.dataset.id);});
   stickCols();
   bindSegs();fitTable();
+  if(st.sel)openCard(st.sel,false);else StockCard.closeBelow('pk');
 }
-function openCard(id){const p=D.picks.find(x=>pid(x)===id);if(!p)return;st.sel=id;
+/* 銘柄カード: 押した行のすぐ下に開く(表を描き直したら同じ行の下に付け直す) */
+function openCard(id,scroll){const p=D.picks.find(x=>pid(x)===id);if(!p)return;
+  const btn=[...document.querySelectorAll('#pkBody .nmb')].find(b=>b.dataset.id===id);if(!btn){st.sel=null;StockCard.closeBelow('pk');return;}st.sel=id;
   $$('#pkBody tr').forEach(tr=>{const b=tr.querySelector('.nmb');tr.classList.toggle('sel',!!b&&b.dataset.id===id);});
   const m=M(p),money=v=>p.market==='us'?'$'+fmt(v,2):fmt(v,v>=1000?0:1)+'円';
-  StockCard.open('pkCard',{market:p.market,code:p.code,name:p.name,sub:(p.market==='jp'?'日本':'米国')+'/'+p.sector,per:63,
-    mark:{date:p.entry_date,label:'note公開 '+p.date.slice(5).replace('-','/')},
-    kv:[{l:'掲載時の株価',v:money(p.entry)},{l:'現在の株価',v:money(p.last)},{l:'騰落（掲載日から現在まで）',v:pct(m.ret),cls:m.ret>=0?'up':'down'},{l:'急成長スコア（掲載時）',v:p.score??'–'}],
+  StockCard.below(btn.closest('tr'),{group:'pk',scroll:scroll!==false,market:p.market,code:p.code,name:p.name,sub:(p.market==='jp'?'日本':'米国')+'/'+p.sector,per:63,
+    mark:{date:p.entry_date,label:'note公開 '+p.date.slice(5).replace('-','/')},extraTitle:'note掲載',
+    extra:[{l:'掲載時の株価',v:money(p.entry)},{l:'騰落（掲載日から現在まで）',v:pct(m.ret),cls:m.ret>=0?'up':'down'},{l:'急成長スコア（掲載時）',v:p.score??'–'}],
     foot:p.url?`記事：<a href="${esc(p.url)}" target="_blank" rel="noopener" style="color:var(--brand)">${esc(p.title||'noteの記事')}↗</a>`:'',
     onClose:()=>{st.sel=null;$$('#pkBody tr.sel').forEach(tr=>tr.classList.remove('sel'));}});}
 /* 掲載日・銘柄の2列は横スクロールしても見えるように */
@@ -263,14 +265,14 @@ function stickCols(){const t=$('#pkWrap table');const w0=t.querySelector('#pkHea
   [...t.rows].forEach(tr=>{const c=tr.cells;if(c.length<2)return;c[0].classList.add('sk');c[0].style.left='0px';c[1].classList.add('sk','sk2');c[1].style.left=w0+'px';});}
 /* 10行ぶんの高さ＋上のスクロールバー */
 function fitTable(){const w=$('#pkWrap'),t=w.querySelector('table');
-  const rows=[...t.tBodies[0].rows].slice(0,10),hd=t.tHead.getBoundingClientRect().height;
+  const rows=[...t.tBodies[0].rows].filter(r=>!r.classList.contains('sc-row')).slice(0,10),hd=t.tHead.getBoundingClientRect().height;
   const h=hd+rows.reduce((s,r)=>s+r.getBoundingClientRect().height,0);if(h>0)w.style.setProperty('--pkh',Math.ceil(h+2)+'px');}
 
 addEventListener('resize',()=>D&&fitTable());
 /* 上の操作パネルと表の中のボタンを同期 */
 function bindSegs(){$$('.seg[data-key]').forEach(el=>{el.onclick=e=>{const b=e.target.closest('button');if(!b)return;const key=el.dataset.key;st[key]=b.dataset.v;
   $$(`.seg[data-key="${key}"] button`).forEach(x=>x.setAttribute('aria-pressed',x.dataset.v===st[key]));
-  const sl=$('#pkWrap').scrollLeft;draw();$('#pkWrap').scrollLeft=sl;if(st.sel)openCard(st.sel);};});}
+  const sl=$('#pkWrap').scrollLeft;draw();$('#pkWrap').scrollLeft=sl;};});}
 $('#q').addEventListener('input',e=>{st.q=e.target.value.trim();$('#qx').hidden=!st.q;drawPicks(base());});
 $('#qx').onclick=()=>{$('#q').value='';st.q='';$('#qx').hidden=true;drawPicks(base());};
 matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change',()=>D&&draw());

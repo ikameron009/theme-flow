@@ -14,15 +14,30 @@ warnings.filterwarnings("ignore")
 import numpy as np
 import pandas as pd
 from market_calendar import expected_session
-from tool_common import r, metrics, rs_rank, month_starts, equal_weight_index, stock_table, spark_small, surge_all
+from tool_common import r, metrics, rs_rank, month_starts, equal_weight_index, stock_table, spark_small, surge_all,     stock_scale, group_scale, mcap_map, UNITS
+import hashlib
 
 BASE = os.path.dirname(os.path.abspath(__file__))
 P = lambda f: os.path.join(BASE, f)
 CFG = {
-    "jp": dict(map="themes_map.csv", key="code", close="close.pkl", turn="turnover.pkl", flow="theme_flow.json"),
-    "us": dict(map="us_themes_map.csv", key="ticker", close="us_close.pkl", turn="us_turnover.pkl", flow="us_theme_flow.json"),
+    "jp": dict(map="themes_map.csv", key="code", close="close.pkl", turn="turnover.pkl", flow="theme_flow.json", pre=""),
+    "us": dict(map="us_themes_map.csv", key="ticker", close="us_close.pkl", turn="us_turnover.pkl", flow="us_theme_flow.json", pre="us_"),
 }
 TREND = {"up": 1, "flat": 0, "down": -1}
+
+
+def theme_key(name):
+    """テーマのチャート用ファイル名(テーマ名から決まる短い文字列。テーマが増減しても変わらない)"""
+    return "thm_" + hashlib.md5(name.encode("utf-8")).hexdigest()[:10]
+
+
+def write_line(mk, key, s):
+    """銘柄カードのチャート用(終値だけ=折れ線)。セクター状況と同じ置き場 site/ohlc|us_ohlc"""
+    d = P(os.path.join("site", "ohlc" if mk == "jp" else "us_ohlc"))
+    os.makedirs(d, exist_ok=True)
+    s = s.dropna().iloc[-520:]
+    with open(os.path.join(d, f"{key}.json"), "w", encoding="utf-8") as f:
+        json.dump({"d": [x.strftime("%Y-%m-%d") for x in s.index], "c": [round(float(v), 2) for v in s]}, f, separators=(",", ":"))
 
 
 def main():
@@ -45,6 +60,11 @@ def main():
     latest = close.index[-1]
     months = month_starts(latest)
     to20 = turn.iloc[-20:].mean()                     # 構成銘柄の並び順(売買代金20日平均)
+    # カードの「勢い・規模」: 構成銘柄の合計(売買代金・時価総額・出来高倍率)と ADR% の平均
+    ld = lambda k: pd.read_pickle(P(f"{c['pre']}{k}.pkl")).sort_index().reindex(close.index) if os.path.exists(P(f"{c['pre']}{k}.pkl")) else None
+    hi, lo = ld("high"), ld("low")
+    _, _, adr = stock_scale(turn, None, hi, lo)
+    mcap = mcap_map(mk, close.ffill(limit=3).iloc[-1], BASE)
 
     rows = []
     for (theme, cat), g in m.groupby(["theme", "category"]):
@@ -58,6 +78,9 @@ def main():
         mt.update({"name": theme, "group": cat, "n": len(cols),
                    "surge": r(f.get("surge"), 1), "share_chg": r(f.get("share_chg"), 3),
                    "members": sorted(cols, key=lambda x: -(to20.get(x) if np.isfinite(to20.get(x, np.nan)) else -1))})
+        mt.update(group_scale(cols, turn, adr, mcap, mk))
+        mt["key"] = theme_key(theme)
+        write_line(mk, mt["key"], idx)
         rows.append(mt)
     rs_rank(rows)
 
@@ -83,7 +106,7 @@ def main():
     cats = [cc for cc in cat_order if any(t["group"] == cc for t in rows)] + \
            sorted({t["group"] for t in rows} - set(cat_order))
     out = {"market": mk, "updated": latest.strftime("%Y-%m-%d"), "months": [f"{x.month}月" for x in months],
-           "groups": cats, "rows": rows,
+           "groups": cats, "rows": rows, "units": UNITS[mk],
            "stock_cols": ["name", "chg1", "w1", "m0", "ytd", "hi52", "rs", "trend", "last", "r1m", "r2m", "r3m", "r6m", "r12m", "surge", "spark"], "stocks": stocks}
     with open(P(f"pro_themes_{mk}.json"), "w", encoding="utf-8") as f:
         json.dump(out, f, ensure_ascii=False, separators=(",", ":"))
