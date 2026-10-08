@@ -1,5 +1,5 @@
 // テーマ別資金フロー: 公開サイトの入口。静的ファイルはそのまま返す。
-// /api/journal/* = 本人専用の監視銘柄・売買記録(保存先 D1: trade-journal。表 positions=建玉、watchlist=監視銘柄)。パスワードは Worker の秘密の値 JOURNAL_PASSWORD
+// /api/journal/* = 本人専用の監視銘柄・売買記録(保存先 D1: trade-journal。表 positions=建玉、watchlist=監視銘柄、pnl_daily/pnl_monthly=損益カレンダー)。パスワードは Worker の秘密の値 JOURNAL_PASSWORD
 //   (登録: cd site_worker && npx wrangler@4 secret put JOURNAL_PASSWORD)。ログインすると署名つき Cookie を30日渡す。
 // ★いまはログインを省略中(wrangler.toml の [vars] JOURNAL_AUTH = "off")。戻すときは "on" にして push する。
 // ③C で /pro/* の会員確認(Cookie)もここに追加する。
@@ -121,6 +121,40 @@ async function journal(req, env, path) {
   if (w && method === "DELETE") {
     await db.prepare("DELETE FROM watchlist WHERE id = ?").bind(Number(w[1])).run();
     return json({ ok: true });
+  }
+  // 損益カレンダー(tools/pnl.html)。GET=全部、POST=変更分をまとめて保存(v が null の行は削除)
+  if (path === "/api/journal/pnl" && method === "GET") {
+    const [d, m] = await Promise.all([db.prepare("SELECT d, v FROM pnl_daily").all(), db.prepare("SELECT ym, v, ack_s, ack_c FROM pnl_monthly").all()]);
+    const daily = {}, monthly = {}, ack = {};
+    d.results.forEach((r) => (daily[r.d] = r.v));
+    m.results.forEach((r) => {
+      monthly[r.ym] = r.v;
+      if (r.ack_s != null && r.ack_c != null) ack[r.ym] = { s: r.ack_s, c: r.ack_c };
+    });
+    return json({ daily, monthly, ack });
+  }
+  if (path === "/api/journal/pnl" && method === "POST") {
+    const b = await req.json().catch(() => null);
+    const days = b && Array.isArray(b.days) ? b.days : [], months = b && Array.isArray(b.months) ? b.months : [];
+    if (!days.length && !months.length) return json({ ok: true });
+    if (days.length + months.length > 1000) return json({ error: "一度に保存できる件数を超えています" }, 400);
+    const yen = (x) => (x == null ? null : Number.isInteger(x) && Math.abs(x) < 1e11 ? x : NaN);
+    const now = new Date().toISOString(), st = [];
+    for (const r of days) {
+      const v = yen(r && r.v);
+      if (!r || !/^20\d\d-\d\d-\d\d$/.test(r.d) || Number.isNaN(v)) return json({ error: "日の損益の形が正しくありません" }, 400);
+      st.push(v == null ? db.prepare("DELETE FROM pnl_daily WHERE d = ?").bind(r.d)
+        : db.prepare("INSERT INTO pnl_daily (d, v, updated_at) VALUES (?, ?, ?) ON CONFLICT (d) DO UPDATE SET v = excluded.v, updated_at = excluded.updated_at").bind(r.d, v, now));
+    }
+    for (const r of months) {
+      const v = yen(r && r.v), a = r && r.ack && typeof r.ack === "object" ? r.ack : null;
+      const as = a ? yen(a.s) : null, ac = a ? yen(a.c) : null;
+      if (!r || !/^20\d\d-\d\d$/.test(r.ym) || Number.isNaN(v) || Number.isNaN(as) || Number.isNaN(ac)) return json({ error: "月の損益の形が正しくありません" }, 400);
+      st.push(v == null ? db.prepare("DELETE FROM pnl_monthly WHERE ym = ?").bind(r.ym)
+        : db.prepare("INSERT INTO pnl_monthly (ym, v, ack_s, ack_c, updated_at) VALUES (?, ?, ?, ?, ?) ON CONFLICT (ym) DO UPDATE SET v = excluded.v, ack_s = excluded.ack_s, ack_c = excluded.ack_c, updated_at = excluded.updated_at").bind(r.ym, v, as, ac, now));
+    }
+    await db.batch(st);
+    return json({ ok: true, saved: st.length });
   }
   return json({ error: "not found" }, 404);
 }

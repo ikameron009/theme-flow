@@ -86,7 +86,7 @@ nav.jump{position:sticky;top:calc(env(safe-area-inset-top,0px) + 60px);z-index:2
 nav.jump .wrap{display:flex;align-items:center;gap:28px;overflow-x:auto;scrollbar-width:none}
 /* メニューは2行(1行目=このページの各セクション、2行目=ツールのページ)。各行は横にスクロールできる */
 /* メニュー=2段×6件。列をそろえる(1つの格子に12件)。狭い画面は横スクロール。段の間の線は背景で引く(横スクロールしても続くよう local) */
-nav.jump .wrap.jrows{display:grid;grid-template-columns:repeat(6,minmax(max-content,1fr));gap:0 28px;overflow-x:auto;scrollbar-width:none;background:linear-gradient(var(--line),var(--line)) 0 50%/100% 1px no-repeat local}
+nav.jump .wrap.jrows{display:grid;grid-template-columns:repeat(7,minmax(max-content,1fr));gap:0 28px;overflow-x:auto;scrollbar-width:none;background:linear-gradient(var(--line),var(--line)) 0 50%/100% 1px no-repeat local}
 nav.jump .wrap.jrows::-webkit-scrollbar{display:none}
 nav.jump .jrow{display:contents}
 nav.jump .jrow::-webkit-scrollbar{display:none}
@@ -438,6 +438,7 @@ footer a:hover{color:var(--brand)}
     <a href="tools/dividend.html" data-page="1">高配当・増配銘柄リサーチ</a>
     <a href="tools/calendar.html" data-page="1">決算・経済カレンダー</a>
     <a href="tools/journal.html" data-page="1">監視銘柄・売買記録</a>
+    <a href="tools/pnl.html" data-page="1">損益カレンダー</a>
     <a href="note.html" data-page="1">note紹介記事検証</a>
     </div>
   </div>

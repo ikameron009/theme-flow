@@ -1,0 +1,675 @@
+<!doctype html>
+<html lang="ja"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<link rel="icon" href="../assets/icon-64.png">
+<title>損益カレンダー｜投資家ハシビロコウの株式ダッシュボード</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@600;800&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="../assets/site.css">
+<style>
+/* 損益カレンダー(本人専用・デイトレの損益を手入力)。記録は D1(/api/journal/pnl)。site.css と同じ名前の部品は pl- を付ける */
+:root{--warn-line:#E2B66A;--off:#E9EDEC;--off-ink:#8C9B99;--y0:#0D5B5E;--y1:#C8813A;--y2:#4F72B0}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--warn-line:#8A6A2E;--off:#1A2524;--off-ink:#5E7472;--y0:#5FB5B1;--y1:#E0A060;--y2:#86A6E0}}
+:root[data-theme="dark"]{--warn-line:#8A6A2E;--off:#1A2524;--off-ink:#5E7472;--y0:#5FB5B1;--y1:#E0A060;--y2:#86A6E0}
+.j-lock{font-size:10.5px;font-weight:700;color:var(--brand);border:1px solid var(--brand);border-radius:4px;padding:0 4px;margin-left:4px;vertical-align:1px}
+.pl-msg{border-radius:10px;padding:8px 14px;font-size:12.5px;background:var(--warn-bg);color:var(--warn-ink)}
+.pl-save{font-size:12px;color:var(--muted);min-height:1.5em;margin-top:2px}
+.pos{color:var(--up)} .neg{color:var(--down)} .zero{color:var(--muted)} .muted{color:var(--faint)}
+
+
+main.wrap{padding-block:22px 48px;display:flex;flex-direction:column;gap:22px}
+#pl h1{font:800 26px var(--f-display);margin:0;letter-spacing:.02em}
+#pl h2{font:800 19px var(--f-display);margin:0}
+#pl h3{font:700 14px var(--f-body);margin:0 0 8px}
+#pl .lead{margin:4px 0 0;color:var(--ink-2);font-size:13.5px;max-width:80ch}
+
+.titlebar{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap}
+.yearnav,.monthnav{display:inline-flex;align-items:center;gap:4px;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:3px}
+.yearnav button,.monthnav button{border:0;background:transparent;color:var(--ink-2);width:30px;height:30px;border-radius:50%;font-size:14px}
+.yearnav button:hover:not(:disabled),.monthnav button:hover:not(:disabled){background:var(--surface-2)}
+.yearnav button:disabled,.monthnav button:disabled{opacity:.3;cursor:default}
+.yearnav b,.monthnav b{font:600 15px var(--f-num);min-width:84px;text-align:center}
+.monthnav b{min-width:110px}
+
+/* 今年の数字 */
+.kpis{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.kpi{background:var(--surface);padding:14px 18px;min-width:0}
+.kpi small{display:block;font-size:12px;color:var(--muted)}
+.kpi b{display:block;font:600 20px var(--f-num);font-variant-numeric:tabular-nums;line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kpi.big b{font-size:30px;line-height:1.25}
+.kpi em{display:block;font-style:normal;font-size:12px;color:var(--faint)}
+@media (max-width:560px){.kpi{padding:10px 12px}.kpi.big b{font-size:21px}.kpi b{font-size:17px}.kpi em{font-size:11px}}
+/* 年の表示切り替え */
+.ytog{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.ytog label{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line-strong);border-radius:999px;padding:3px 12px 3px 8px;font:600 12.5px var(--f-num);cursor:pointer;background:var(--surface);user-select:none}
+.ytog label i{width:12px;height:12px;border-radius:3px;display:inline-block}
+.ytog input{accent-color:var(--brand);margin:0}
+.ytog label.offy{color:var(--faint);background:var(--bg)}
+.ytog label.offy i{opacity:.35}
+.ytog label.na{opacity:.45;cursor:not-allowed}
+.chart{min-width:0}
+.chart .pl-sc{overflow-x:auto}
+.chart .pl-sc svg{min-width:700px}
+.pl-chip.ack{background:var(--brand-soft);color:var(--brand)}
+.conf.st-ack{border-color:var(--brand)}
+.choose{display:flex;flex-direction:column;gap:6px;margin-top:10px}
+.choose .pl-btn{text-align:left;display:flex;justify-content:space-between;gap:8px}
+.choose .pl-btn span{font-family:var(--f-num);font-variant-numeric:tabular-nums}
+
+.pl-panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 18px;min-width:0}
+.sechead{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.hint{font-size:12px;color:var(--muted)}
+
+/* カレンダー */
+.calwrap{display:grid;grid-template-columns:minmax(0,1fr) 290px;gap:16px;align-items:start}
+@media (max-width:980px){.calwrap{grid-template-columns:1fr}}
+.pl-cal{display:grid;grid-template-columns:repeat(5,minmax(0,1fr)) minmax(0,.55fr) minmax(0,.55fr) minmax(0,.9fr);border-top:1px solid var(--line);border-left:1px solid var(--line)}
+.pl-cal>div{border-right:1px solid var(--line);border-bottom:1px solid var(--line);min-width:0}
+.pl-cal .wh{font-size:11.5px;color:var(--muted);text-align:center;padding:4px 0;background:var(--surface-2);font-weight:700}
+.pl-cal .wh.wk{color:var(--brand)}
+.day{min-height:78px;padding:5px 7px;display:flex;flex-direction:column;gap:2px;position:relative;background:var(--surface)}
+.day .dn{font:500 12px var(--f-num);color:var(--ink-2);display:flex;justify-content:space-between;gap:4px}
+.day .hn{font-size:10px;color:var(--off-ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.day .amt{margin-top:auto;text-align:right;font:600 15px var(--f-num);font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.day.ed{cursor:pointer}
+.day.ed:hover{box-shadow:inset 0 0 0 2px var(--brand-soft)}
+.day.p{background:var(--up-soft)} .day.n{background:var(--down-soft)}
+.day.off{background:var(--off);cursor:default}
+.day.off .dn{color:var(--off-ink)}
+.day.out{background:var(--bg)}
+.day.fut .dn{color:var(--faint)}
+.day.today{box-shadow:inset 0 0 0 2px var(--brand)}
+.day.today .dn b{background:var(--brand);color:var(--brand-ink);border-radius:999px;padding:0 6px}
+.day .empty{font-size:11px;color:var(--faint);font-weight:400}
+.day input,.mrow input,.wrow input{width:100%;font:600 15px var(--f-num);text-align:right;border:1.5px solid var(--brand);border-radius:6px;padding:2px 6px;background:var(--surface);color:var(--ink);min-width:0}
+.day input.bad,.mrow input.bad,.conf input.bad{border-color:var(--down);animation:shake .25s}
+@keyframes shake{25%{transform:translateX(-3px)}75%{transform:translateX(3px)}}
+@media (prefers-reduced-motion:reduce){.day input.bad,.mrow input.bad,.conf input.bad{animation:none}}
+.wsum{background:var(--surface-2);padding:5px 8px;display:flex;flex-direction:column;justify-content:flex-end;text-align:right}
+.wsum small{font-size:10.5px;color:var(--muted)}
+.wsum b{font:600 14px var(--f-num);font-variant-numeric:tabular-nums}
+.pl-legend{display:flex;gap:14px;flex-wrap:wrap;font-size:11.5px;color:var(--muted);margin-top:10px}
+.pl-legend i{display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:-1px;margin-right:4px;border:1px solid var(--line)}
+
+/* スマホ: 週ごとの縦リスト */
+.wlist{display:none}
+@media (max-width:640px){.pl-cal{display:none}.wlist{display:flex;flex-direction:column;gap:10px}}
+.wk{border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.wk .wkh{display:flex;justify-content:space-between;background:var(--surface-2);padding:5px 12px;font-size:12px;color:var(--muted)}
+.wk .wkh b{font:600 13px var(--f-num);font-variant-numeric:tabular-nums}
+.wrow{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 12px;border-top:1px solid var(--line);min-height:44px}
+.wrow .dl{font:500 13px var(--f-num);display:flex;gap:6px;align-items:baseline;min-width:0}
+.wrow .dl small{font-size:10.5px;color:var(--off-ink);font-family:var(--f-body)}
+.wrow .amt{font:600 15px var(--f-num);font-variant-numeric:tabular-nums;text-align:right;min-width:0}
+.wrow.ed{cursor:pointer}
+.wrow.p{background:var(--up-soft)} .wrow.n{background:var(--down-soft)}
+.wrow.off{background:var(--off);color:var(--off-ink)}
+.wrow.today{box-shadow:inset 3px 0 0 var(--brand)}
+.wrow input{max-width:150px}
+
+/* 右側: 照合・月の成績 */
+.side{display:flex;flex-direction:column;gap:14px}
+.conf{border-radius:12px;padding:14px 16px;border:1px solid var(--line);background:var(--surface)}
+.conf.st-ok{border-color:var(--up)}
+.conf.st-diff{border-color:var(--warn-line);background:var(--warn-bg)}
+.conf dl{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;margin:8px 0 0;align-items:baseline}
+.conf dt{font-size:12.5px;color:var(--muted)}
+.conf dd{margin:0;text-align:right;font:600 16px var(--f-num);font-variant-numeric:tabular-nums}
+.conf dd input{width:100%;max-width:150px;font:600 16px var(--f-num);text-align:right;border:1px solid var(--line-strong);border-radius:6px;padding:2px 6px;background:var(--surface);color:var(--ink)}
+.conf dd input:focus{border-color:var(--brand);outline:none;box-shadow:0 0 0 2px var(--brand-soft)}
+.conf .diffrow{border-top:1px dashed var(--line-strong);padding-top:4px}
+.conf p{margin:8px 0 0;font-size:12px;color:var(--ink-2)}
+.conf.st-diff p{color:var(--warn-ink)}
+.conf .acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.pl-btn{border:1px solid var(--brand);background:var(--brand);color:var(--brand-ink);border-radius:8px;padding:4px 12px;font-size:12.5px;font-weight:700}
+.pl-btn.ghost{background:transparent;color:var(--brand)}
+.pl-chip{display:inline-block;font:700 11px var(--f-body);border-radius:999px;padding:1px 9px;white-space:nowrap}
+.pl-chip.ok{background:var(--up-soft);color:var(--up)}
+.pl-chip.diff{background:var(--warn-bg);color:var(--warn-ink);border:1px solid var(--warn-line)}
+.pl-chip.open{background:var(--surface-2);color:var(--muted);border:1px solid var(--line-strong)}
+.pl-chip.none{color:var(--faint)}
+.pl-stats{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.pl-stats>div{background:var(--surface);padding:8px 12px;min-width:0}
+.pl-stats small{display:block;font-size:11.5px;color:var(--muted)}
+.pl-stats b{display:block;font:600 16px var(--f-num);font-variant-numeric:tabular-nums;white-space:nowrap}
+.pl-stats em{display:block;font-style:normal;font-size:11px;color:var(--faint);font-family:var(--f-num)}
+.pl-stats .wide{grid-column:span 2}
+.pl-bar{height:8px;border-radius:999px;background:var(--down-soft);overflow:hidden;margin-top:4px}
+.pl-bar i{display:block;height:100%;background:var(--up)}
+
+/* 年間 */
+.charts{display:grid;grid-template-columns:1fr;gap:18px}
+.chart svg{width:100%;height:auto;display:block}
+.chart .ax{fill:var(--muted);font:11px var(--f-num)}
+.chart .lbl{font:600 10.5px var(--f-num)}
+.chart .gl{stroke:var(--line)}
+.chart .zero{stroke:var(--line-strong)}
+.ckey{display:flex;gap:14px;font-size:11.5px;color:var(--muted);flex-wrap:wrap}
+.ckey i{display:inline-block;width:14px;height:3px;vertical-align:3px;margin-right:4px;border-radius:2px}
+.tblbox{overflow-x:auto;margin-top:16px}
+table{border-collapse:collapse;width:100%;min-width:620px;font-size:13px}
+th{font-size:11.5px;color:var(--muted);font-weight:700;text-align:right;padding:6px 10px;border-bottom:1px solid var(--line-strong);white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+td{padding:5px 10px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+td.n{font-family:var(--f-num);font-variant-numeric:tabular-nums}
+tr.mrow{cursor:pointer}
+tr.mrow:hover td{background:var(--surface-2)}
+tr.mrow.sel td{background:var(--brand-soft)}
+tr.mrow.sel td:first-child{box-shadow:inset 3px 0 0 var(--brand)}
+tr.mrow td.cf{width:170px}
+tr.mrow td.cf span{display:inline-block;min-width:120px;padding:2px 6px;border:1px dashed transparent;border-radius:6px}
+tr.mrow td.cf span:hover{border-color:var(--line-strong)}
+tr.mrow input{max-width:150px;font-size:13px}
+tfoot td{font-weight:700;border-top:2px solid var(--line-strong);border-bottom:0;background:var(--surface-2)}
+.mname{font-weight:700}
+</style>
+</head><body>
+<header class="top">
+  <div class="wrap hbar">
+    <a class="logo" href="../index.html" aria-label="投資家ハシビロコウの株式ダッシュボード トップ">
+      <img src="../assets/icon-64.png" width="32" height="32" alt="" style="border-radius:50%;flex:none">
+      <span class="lg"><small>投資家ハシビロコウの</small><b>株式ダッシュボード</b></span>
+    </a>
+    <span class="jpbadge">日本株・米国株</span>
+    <span style="flex:1"></span>
+    <span class="upd">毎日 17時(日本)・7時(米国)更新</span>
+  </div>
+</header>
+<nav class="jump" aria-label="メニュー">
+  <div class="wrap jrows">
+    <div class="jrow">
+    <a href="../index.html#market">市場概況</a>
+    <a href="../index.html#schedule">今後の予定</a>
+    <a href="../index.html#themes">テーマ別資金フロー</a>
+    <a href="../index.html#stocks">銘柄を探す</a>
+    <a href="../index.html#screening">スクリーニング</a>
+    <a href="../tools/sectors.html" data-page="1">セクター状況</a>
+    </div>
+    <div class="jrow">
+    <a href="../tools/themes.html" data-page="1">業種状況</a>
+    <a href="../tools/research.html" data-page="1">業種銘柄リサーチ</a>
+    <a href="../tools/dividend.html" data-page="1">高配当・増配銘柄リサーチ</a>
+    <a href="../tools/calendar.html" data-page="1">決算・経済カレンダー</a>
+    <a href="../tools/journal.html" data-page="1">監視銘柄・売買記録<span class="j-lock">本人</span></a>
+    <a href="../tools/pnl.html" data-page="1" class="on">損益カレンダー<span class="j-lock">本人</span></a>
+    <a href="../note.html" data-page="1">note紹介記事検証</a>
+    </div>
+  </div>
+</nav>
+
+<main class="wrap" id="pl">
+  <div class="pl-msg" id="plmsg" hidden></div>
+
+  <div class="titlebar">
+    <div>
+      <h1>損益カレンダー</h1>
+      <p class="lead">デイトレの損益を1日ずつ記録します。月の損益は証券会社の確定値を別に入力し、年間の合計はその月の確定値を足したものです。スイングトレードは「監視銘柄・売買記録」に記録します。このページの記録は本人だけが見られます。</p>
+      <div class="pl-save" id="plsave" aria-live="polite"></div>
+    </div>
+    <div class="yearnav" aria-label="年の切り替え">
+      <button type="button" id="yprev" aria-label="前の年">◀</button><b id="ylabel"></b><button type="button" id="ynext" aria-label="次の年">▶</button>
+    </div>
+  </div>
+
+  <section class="kpis" id="kpis" aria-label="今年の数字"></section>
+
+  <section class="pl-panel" aria-labelledby="calh">
+    <div class="sechead">
+      <h2 id="calh">日々の損益</h2>
+      <div class="monthnav" aria-label="月の切り替え">
+        <button type="button" id="mprev" aria-label="前の月">◀</button><b id="mlabel"></b><button type="button" id="mnext" aria-label="次の月">▶</button>
+      </div>
+    </div>
+    <div class="calwrap">
+      <div style="min-width:0">
+        <div class="pl-cal" id="cal"></div>
+        <div class="wlist" id="wlist"></div>
+        <div class="pl-legend">
+          <span>マスを押して金額を入力し、Enterで保存。空欄で保存すると「取引なし」、0は「取引したが±0」</span>
+        </div>
+        <div class="pl-legend">
+          <span><i style="background:var(--up-soft)"></i>プラスの日</span>
+          <span><i style="background:var(--down-soft)"></i>マイナスの日</span>
+          <span><i style="background:var(--off)"></i>土日・祝日（休場）</span>
+          <span><i style="background:var(--surface);box-shadow:inset 0 0 0 2px var(--brand)"></i>今日</span>
+        </div>
+      </div>
+      <div class="side">
+        <div class="conf" id="conf"></div>
+        <div>
+          <h3>この月の成績<span class="hint">（日の入力から自動計算）</span></h3>
+          <div class="pl-stats" id="stats"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="pl-panel" aria-labelledby="yh">
+    <div class="sechead">
+      <h2 id="yh">年間の推移</h2>
+      <span class="hint">月の損益は確定値だけを使います。今年の未確定の月は点線で日の合計を参考表示</span>
+    </div>
+    <div class="ytog" id="ytog" aria-label="比べる年"></div>
+    <div class="charts">
+      <div class="chart">
+        <h3>月別の損益<span class="hint">（単位：万円）</span></h3>
+        <div class="pl-sc" id="ch1"></div>
+      </div>
+      <div class="chart">
+        <h3>累計の損益<span class="hint">（単位：万円）</span></h3>
+        <div class="pl-sc" id="ch2"></div>
+      </div>
+    </div>
+    <div class="tblbox">
+      <table>
+        <thead><tr><th>月</th><th>日の合計（自動）</th><th>月の確定損益（入力）</th><th>差額</th><th>取引日数</th><th>勝率</th><th>状態</th></tr></thead>
+        <tbody id="mtbody"></tbody>
+        <tfoot id="mtfoot"></tfoot>
+      </table>
+    </div>
+    <p class="hint" style="margin:8px 0 0">月の確定損益は、表の数字を押して入力できます。空欄で保存すると未確定に戻ります。</p>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div><b style="font-family:var(--f-display);color:var(--ink);font-size:14px">投資家ハシビロコウの株式ダッシュボード</b><br>運営：投資家ハシビロコウ ・ 当サイトの情報は投資助言ではありません。投資判断はご自身の責任でお願いします。</div>
+    <nav><a href="../learn.html">学ぶ</a><a href="../join.html">会員案内・ログイン</a><a href="../about.html">運営者情報・免責</a></nav>
+  </div>
+</footer>
+
+<script>
+(function(){
+'use strict';
+const TODAY=new Date().toLocaleDateString('sv-SE',{timeZone:'Asia/Tokyo'});
+const WD=['日','月','火','水','木','金','土'];
+
+// 東証の休場日(土日以外): 祝日(振替休日・国民の休日を含む)＋年末年始。2020年以降を計算で出す
+const HOLC={};
+function holYear(y){
+  if(HOLC[y])return HOLC[y];
+  const h={},nthMon=(m,n)=>{const f=(8-new Date(y,m-1,1).getDay())%7+1;return f+(n-1)*7};
+  const put=(m,d,n)=>{h[key(y,m,d)]=n};
+  put(1,1,'元日');put(1,nthMon(1,2),'成人の日');put(2,11,'建国記念の日');put(2,23,'天皇誕生日');
+  put(3,Math.floor(20.8431+0.242194*(y-1980)-Math.floor((y-1980)/4)),'春分の日');
+  put(4,29,'昭和の日');put(5,3,'憲法記念日');put(5,4,'みどりの日');put(5,5,'こどもの日');
+  if(y===2020){put(7,23,'海の日');put(7,24,'スポーツの日');put(8,10,'山の日')}
+  else if(y===2021){put(7,22,'海の日');put(7,23,'スポーツの日');put(8,8,'山の日')}
+  else{put(7,nthMon(7,3),'海の日');put(8,11,'山の日');put(10,nthMon(10,2),'スポーツの日')}
+  put(9,nthMon(9,3),'敬老の日');
+  put(9,Math.floor(23.2488+0.242194*(y-1980)-Math.floor((y-1980)/4)),'秋分の日');
+  put(11,3,'文化の日');put(11,23,'勤労感謝の日');
+  // 振替休日
+  Object.keys(h).sort().forEach(k=>{const [a,b,c]=k.split('-').map(Number);if(new Date(a,b-1,c).getDay()===0){let d=new Date(a,b-1,c+1);while(h[key(d.getFullYear(),d.getMonth()+1,d.getDate())])d.setDate(d.getDate()+1);h[key(d.getFullYear(),d.getMonth()+1,d.getDate())]='振替休日'}});
+  // 国民の休日(祝日にはさまれた平日)
+  for(let m=1;m<=12;m++)for(let d=2;d<dim(y,m);d++){const k=key(y,m,d);if(!h[k]&&h[key(y,m,d-1)]&&h[key(y,m,d+1)]&&new Date(y,m-1,d).getDay()!==0)h[k]='国民の休日'}
+  // 年末年始
+  ['01-02','01-03'].forEach(s=>{if(!h[y+'-'+s])h[y+'-'+s]='年始休場'});h[y+'-12-31']='年末休場';
+  return HOLC[y]=h;
+}
+function hol(k){return holYear(+k.slice(0,4))[k]}
+
+function key(y,m,d){return y+'-'+String(m).padStart(2,'0')+'-'+String(d).padStart(2,'0')}
+function mkey(y,m){return y+'-'+String(m).padStart(2,'0')}
+function dim(y,m){return new Date(y,m,0).getDate()}
+function dow(y,m,d){return new Date(y,m-1,d).getDay()}
+function isOff(y,m,d){const w=dow(y,m,d);return w===0||w===6||!!hol(key(y,m,d))}
+function yen(v,short){
+  if(v==null)return '—';
+  if(v===0)return '±0';
+  const s=(v>0?'+':'−')+Math.abs(v).toLocaleString('ja-JP');
+  return short?s:s+'円';
+}
+function man(v){if(v===0)return '±0';return (v>0?'+':'−')+(Math.abs(v)/10000).toFixed(1)+'万'}
+function cls(v){return v==null?'muted':v>0?'pos':v<0?'neg':'zero'}
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+
+// 記録(D1)。SAVED=最後に保存できた状態。変更はその差分だけ送る
+let data={daily:{},monthly:{},ack:{}},SAVED={daily:{},monthly:{},ack:{}},READY=false;
+const clone=o=>JSON.parse(JSON.stringify(o));
+function msg(t){const e=document.getElementById('plmsg');e.hidden=!t;e.innerHTML=t||''}
+function saved(t){document.getElementById('plsave').textContent=t||''}
+async function api(body){
+  const r=await fetch('/api/journal/pnl',{method:body?'POST':'GET',headers:body?{'content-type':'application/json'}:{},body:body?JSON.stringify(body):undefined,credentials:'same-origin',cache:'no-store'});
+  const j=await r.json().catch(()=>({}));
+  if(r.status===401)throw Object.assign(new Error('login'),{login:true});
+  if(!r.ok)throw new Error(j.error||'通信できませんでした');
+  return j;
+}
+const LOGIN='<a href="journal.html" style="text-decoration:underline">監視銘柄・売買記録</a>';
+async function load(){
+  saved('記録を読み込んでいます…');
+  try{const j=await api();data={daily:j.daily||{},monthly:j.monthly||{},ack:j.ack||{}};SAVED=clone(data);READY=true;msg('');saved('');render()}
+  catch(e){saved('');msg(e.login?'ログインが必要です。'+LOGIN+'のページでログインしてから、このページを開き直してください。':'記録を読み込めませんでした（'+esc(e.message)+'）。ページを開き直してください。')}
+}
+let busy=null;
+async function save(){
+  if(!READY)return;
+  if(busy){busy.again=true;return}
+  const days=[],months=[],A=data.ack||{},B=SAVED.ack||{};
+  new Set([...Object.keys(data.daily),...Object.keys(SAVED.daily)]).forEach(k=>{if(data.daily[k]!==SAVED.daily[k])days.push({d:k,v:data.daily[k]??null})});
+  new Set([...Object.keys(data.monthly),...Object.keys(SAVED.monthly),...Object.keys(A),...Object.keys(B)]).forEach(k=>{
+    const a=data.monthly[k]==null?null:(A[k]||null),b=SAVED.monthly[k]==null?null:(B[k]||null);
+    if(data.monthly[k]!==SAVED.monthly[k]||JSON.stringify(a)!==JSON.stringify(b))months.push({ym:k,v:data.monthly[k]??null,ack:a})});
+  if(!days.length&&!months.length)return;
+  const snap=clone(data);busy={again:false};saved('保存しています…');
+  try{await api({days,months});SAVED=snap;msg('');saved('保存しました（'+new Date().toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'})+'）')}
+  catch(e){saved('');msg(e.login?'ログインが切れました。'+LOGIN+'でログインし直してください（いまの入力はまだ保存されていません）。':'保存できませんでした（'+esc(e.message)+'）。次に入力したときにもう一度送ります。')}
+  const again=busy.again;busy=null;if(again)save();
+}
+
+function monthSum(daily,y,m){
+  let sum=0,days=0,win=0,loss=0,even=0,sw=0,sl=0,best=null,worst=null,entered=0;
+  for(let d=1;d<=dim(y,m);d++){
+    const k=key(y,m,d),v=daily[k];
+    if(v==null)continue;
+    entered++;days++;sum+=v;
+    if(v>0){win++;sw+=v}else if(v<0){loss++;sl+=v}else even++;
+    if(best==null||v>best.v)best={v,d};
+    if(worst==null||v<worst.v)worst={v,d};
+  }
+  return {sum,days,win,loss,even,sw,sl,best,worst,entered};
+}
+function confirmed(y,m){const v=data.monthly[mkey(y,m)];return v==null?null:v}
+// 月の状態: ok=一致 / ack=ずれているが月の確定損益で確定済み / diff=ずれていて未選択 / open=未確定 / none=これから
+function mstat(y,m){
+  const mk=mkey(y,m),c=confirmed(y,m),s=monthSum(data.daily,y,m).sum;
+  // 未確定=日の入力がある月か今月(入力の無い過去の月は「—」)
+  if(c==null)return mk===TODAY.slice(0,7)||monthSum(data.daily,y,m).entered?'open':'none';
+  if(c===s)return 'ok';
+  const a=(data.ack||{})[mk];
+  return a&&a.s===s&&a.c===c?'ack':'diff';
+}
+const CHIP={ok:'<span class="pl-chip ok">確定・一致</span>',ack:'<span class="pl-chip ack">確定・月の値を採用</span>',diff:'<span class="pl-chip diff">ずれあり・選択待ち</span>',open:'<span class="pl-chip open">未確定</span>',none:'<span class="pl-chip none">—</span>'};
+
+function parse(s){
+  s=String(s).trim()
+    .replace(/[０-９]/g,c=>String.fromCharCode(c.charCodeAt(0)-0xFEE0))
+    .replace(/[－ー−▲△]/g,'-').replace(/＋/g,'+').replace(/[，,円\s]/g,'').replace(/．/g,'.');
+  if(s==='')return {empty:true};
+  let mult=1;if(/万$/.test(s)){mult=10000;s=s.slice(0,-1)}
+  if(!/^[+-]?\d+(\.\d+)?$/.test(s))return {bad:true};
+  return {v:Math.round(parseFloat(s)*mult)};
+}
+
+// 表示中の年・月
+const t=new Date(TODAY+'T00:00:00');
+let Y=t.getFullYear(),M=t.getMonth()+1;
+const MINY=2020,MAXY=t.getFullYear();
+let SHOW={0:true,1:true,2:true};
+try{const v=JSON.parse(localStorage.getItem('pnl-ytog'));if(v)SHOW=v}catch(e){}
+
+function render(){renderKpis();renderCal();renderSide();renderYear();
+  document.getElementById('ylabel').textContent=Y+'年';
+  document.getElementById('mlabel').textContent=Y+'年'+M+'月';
+  document.getElementById('yprev').disabled=Y<=MINY;
+  document.getElementById('ynext').disabled=Y>=MAXY;
+  document.getElementById('mprev').disabled=Y<=MINY&&M===1;
+  document.getElementById('mnext').disabled=mkey(Y,M)>=mkey(t.getFullYear(),t.getMonth()+1);
+}
+
+function renderKpis(){
+  let tot=0,n=0,prevTot=0,prevN=0,open=[],won=0;
+  for(let m=1;m<=12;m++){
+    const c=confirmed(Y,m);
+    if(c!=null){tot+=c;n++;if(c>0)won++;const p=confirmed(Y-1,m);if(p!=null){prevTot+=p;prevN++}}
+    else if(mstat(Y,m)==='open'){open.push(m)}
+  }
+  const lastM=n?Math.max(...[...Array(12)].map((_,i)=>confirmed(Y,i+1)!=null?i+1:0)):0;
+  const openSum=open.reduce((a,m)=>a+monthSum(data.daily,Y,m).sum,0);
+  const diff=tot-prevTot;
+  document.getElementById('kpis').innerHTML=
+   `<div class="kpi big"><small>${Y}年の合計（確定した月だけ）</small><b class="${cls(tot)}">${n?yen(tot):'—'}</b><em>${n?'確定した'+n+'か月の合計（最後は'+lastM+'月）':'確定した月はまだありません'}</em></div>`+
+   `<div class="kpi big"><small>前年の同じ月までと比べて</small><b class="${prevN?cls(diff):'muted'}">${prevN?yen(diff):'—'}</b><em>${prevN?'前年 '+yen(prevTot,true):'前年の記録なし'}</em></div>`+
+   `<div class="kpi"><small>確定した月</small><b>${n}<span style="font-size:14px;color:var(--muted)"> / 12か月</span></b><em>プラスの月 ${won}・マイナスの月 ${n-won}</em></div>`+
+   `<div class="kpi"><small>未確定の月</small><b>${open.length?open.map(m=>m+'月').join('・'):'なし'}</b><em>${open.length?'日の合計 <span class="'+cls(openSum)+'">'+yen(openSum,true)+'</span>（参考・年間合計には含めない）':'すべて確定済み'}</em></div>`;
+}
+
+function dayState(y,m,d){
+  const k=key(y,m,d),off=isOff(y,m,d),fut=k>TODAY,v=data.daily[k];
+  return {k,off,fut,v,hol:hol(k),today:k===TODAY,ed:!off&&!fut};
+}
+
+function renderCal(){
+  const el=document.getElementById('cal');
+  let h=['月','火','水','木','金','土','日'].map(w=>`<div class="wh">${w}</div>`).join('')+'<div class="wh wk">週の合計</div>';
+  const first=(dow(Y,M,1)+6)%7,n=dim(Y,M);
+  const cells=[];for(let i=0;i<first;i++)cells.push(null);for(let d=1;d<=n;d++)cells.push(d);while(cells.length%7)cells.push(null);
+  const weeks=[];
+  for(let i=0;i<cells.length;i+=7){
+    let ws=0,wn=0;
+    for(let j=0;j<7;j++){
+      const d=cells[i+j];
+      if(d==null){h+='<div class="day out"></div>';continue}
+      const s=dayState(Y,M,d);
+      if(s.v!=null){ws+=s.v;wn++}
+      const c=['day'];if(s.off)c.push('off');if(s.fut)c.push('fut');if(s.today)c.push('today');if(s.ed)c.push('ed');
+      if(s.v>0)c.push('p');else if(s.v<0)c.push('n');
+      const amt=s.off?'':s.v!=null?`<span class="${cls(s.v)}">${yen(s.v,true)}</span>`:(s.ed?'<span class="empty">取引なし</span>':'');
+      h+=`<div class="${c.join(' ')}" data-k="${s.k}" ${s.ed?'tabindex="0" role="button" aria-label="'+M+'月'+d+'日の損益を入力"':''}><span class="dn"><b>${d}</b></span>${s.hol?`<span class="hn">${esc(s.hol)}</span>`:''}<span class="amt">${amt}</span></div>`;
+    }
+    h+=`<div class="wsum"><small>${wn?wn+'日':''}</small><b class="${wn?cls(ws):'muted'}">${wn?yen(ws,true):'—'}</b></div>`;
+    weeks.push({days:cells.slice(i,i+7),ws,wn});
+  }
+  el.innerHTML=h;
+
+  // スマホ用: 週ごとの縦リスト(土日は省き、祝日は灰色で残す)
+  let L='';
+  weeks.forEach(w=>{
+    const ds=w.days.filter(d=>d!=null&&dow(Y,M,d)%6!==0);
+    if(!ds.length)return;
+    L+=`<div class="wk"><div class="wkh"><span>${M}/${ds[0]}〜${M}/${ds[ds.length-1]}</span><span>週の合計 <b class="${w.wn?cls(w.ws):'muted'}">${w.wn?yen(w.ws,true):'—'}</b></span></div>`;
+    ds.forEach(d=>{
+      const s=dayState(Y,M,d);
+      const c=['wrow'];if(s.off)c.push('off');if(s.today)c.push('today');if(s.ed)c.push('ed');if(s.v>0)c.push('p');else if(s.v<0)c.push('n');
+      const amt=s.off?'休場':s.v!=null?`<span class="${cls(s.v)}">${yen(s.v,true)}</span>`:s.fut?'':'<span class="muted" style="font-size:12px;font-weight:400">取引なし</span>';
+      L+=`<div class="${c.join(' ')}" data-k="${s.k}" ${s.ed?'tabindex="0" role="button"':''}><span class="dl">${M}/${d}(${WD[dow(Y,M,d)]})${s.hol?'<small>'+esc(s.hol)+'</small>':''}</span><span class="amt">${amt}</span></div>`;
+    });
+    L+='</div>';
+  });
+  document.getElementById('wlist').innerHTML=L;
+}
+
+function renderSide(){
+  const ms=monthSum(data.daily,Y,M),c=confirmed(Y,M),mk=mkey(Y,M);
+  const st=mstat(Y,M)==='none'?'open':mstat(Y,M);
+  const diff=c==null?null:c-ms.sum;
+  const msg={open:'月が締まったら、証券会社の月間損益を入力してください。年間の合計に入るのはこの確定値です。',
+    ok:'日の合計と確定値が一致しています。',
+    ack:'ずれていますが「月の確定損益」で確定済みです（手数料・税などの差として扱います）。',
+    diff:'日の合計と月の確定損益がずれています。日の入力漏れや手数料・税の差を確認して、どちらで確定するか選んでください。選ぶまでは、月の確定損益を年間の合計に入れています。'}[st];
+  const conf=document.getElementById('conf');
+  conf.className='conf st-'+st;
+  conf.innerHTML=
+   `<div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><h3 style="margin:0">${M}月の照合</h3>${CHIP[st]}</div>
+    <dl>
+      <dt>日の合計（自動）</dt><dd class="${cls(ms.sum)}">${ms.entered?yen(ms.sum):'—'}</dd>
+      <dt><label for="cfin">月の確定損益</label></dt><dd><input id="cfin" inputmode="decimal" placeholder="未入力" value="${c==null?'':yen(c,true).replace('−','-')}" aria-label="${M}月の確定損益"></dd>
+      <dt class="diffrow">差額</dt><dd class="diffrow ${diff==null?'muted':diff===0?'zero':'neg'}">${diff==null?'—':diff===0?'なし':yen(diff)}</dd>
+    </dl>
+    <p>${msg}</p>
+    ${st==='diff'?`<div class="choose">
+      <button type="button" class="pl-btn" id="useDaily">日の合計で確定<span>${yen(ms.sum,true)}</span></button>
+      <button type="button" class="pl-btn" id="useMonth">月の確定損益で確定<span>${yen(c,true)}</span></button></div>`:''}
+    <div class="acts">${st==='open'&&ms.entered?'<button type="button" class="pl-btn" id="useDaily">日の合計をそのまま確定</button>':''}${st==='ack'?'<button type="button" class="pl-btn ghost" id="useDaily">日の合計に切り替える</button>':''}${c!=null?'<button type="button" class="pl-btn ghost" id="cfclear">未確定に戻す</button>':''}</div>`;
+  const inp=document.getElementById('cfin');
+  inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();commitMonth(mk,inp)}});
+  inp.addEventListener('change',()=>commitMonth(mk,inp));
+  data.ack=data.ack||{};
+  const ud=document.getElementById('useDaily');if(ud)ud.onclick=()=>{data.monthly[mk]=ms.sum;delete data.ack[mk];save();render()};
+  const um=document.getElementById('useMonth');if(um)um.onclick=()=>{data.ack[mk]={s:ms.sum,c};save();render()};
+  const cl=document.getElementById('cfclear');if(cl)cl.onclick=()=>{delete data.monthly[mk];delete data.ack[mk];save();render()};
+
+  const decided=ms.win+ms.loss,rate=decided?ms.win/decided:null;
+  const aw=ms.win?ms.sw/ms.win:null,al=ms.loss?ms.sl/ms.loss:null;
+  const pf=aw!=null&&al!=null?aw/Math.abs(al):null;
+  document.getElementById('stats').innerHTML=ms.entered?
+   `<div class="wide"><small>勝率（±0の日は除く）</small><b>${rate==null?'—':Math.round(rate*100)+'%'}</b><div class="pl-bar" aria-hidden="true"><i style="width:${rate==null?0:rate*100}%"></i></div><em>勝ち ${ms.win}日・負け ${ms.loss}日・±0 ${ms.even}日（取引 ${ms.days}日）</em></div>
+    <div><small>最大の勝ち日</small><b class="${ms.best&&ms.best.v>0?'pos':'muted'}">${ms.best&&ms.best.v>0?yen(ms.best.v,true):'—'}</b><em>${ms.best&&ms.best.v>0?M+'/'+ms.best.d+'('+WD[dow(Y,M,ms.best.d)]+')':''}</em></div>
+    <div><small>最大の負け日</small><b class="${ms.worst&&ms.worst.v<0?'neg':'muted'}">${ms.worst&&ms.worst.v<0?yen(ms.worst.v,true):'—'}</b><em>${ms.worst&&ms.worst.v<0?M+'/'+ms.worst.d+'('+WD[dow(Y,M,ms.worst.d)]+')':''}</em></div>
+    <div><small>平均の勝ち額</small><b class="${aw?'pos':'muted'}">${aw?yen(Math.round(aw),true):'—'}</b></div>
+    <div><small>平均の負け額</small><b class="${al?'neg':'muted'}">${al?yen(Math.round(al),true):'—'}</b></div>
+    <div class="wide"><small>平均の勝ち額 ÷ 平均の負け額</small><b>${pf==null?'—':pf.toFixed(2)+' 倍'}</b><em>1倍より大きいほど、勝つ日の稼ぎが負ける日の損より大きい</em></div>`
+   :'<div class="wide"><small>この月はまだ入力がありません</small><b class="muted">—</b><em>カレンダーのマスを押すと入力できます</em></div>';
+}
+
+function commitMonth(mk,inp){
+  const p=parse(inp.value);
+  if(p.bad){inp.classList.remove('bad');void inp.offsetWidth;inp.classList.add('bad');return}
+  if(p.empty)delete data.monthly[mk];else data.monthly[mk]=p.v;
+  save();render();
+}
+
+// 年間グラフ
+function renderYear(){
+  const rows=[];
+  for(let m=1;m<=12;m++){const ms=monthSum(data.daily,Y,m);rows.push({m,ms,c:confirmed(Y,m),st:mstat(Y,m)})}
+  // 比べる年(今年・去年・一昨年)と表示のオンオフ
+  const yrs=[0,1,2].map(o=>({o,y:Y-o,col:'var(--y'+o+')',na:Y-o<MINY}));
+  document.getElementById('ytog').innerHTML=yrs.map(r=>`<label class="${r.na?'na':SHOW[r.o]?'':'offy'}" for="yt${r.o}"><input type="checkbox" id="yt${r.o}" data-o="${r.o}" ${SHOW[r.o]&&!r.na?'checked':''} ${r.na?'disabled':''}><i style="background:${r.col}"></i>${r.y}年${r.na?'（記録なし）':''}</label>`).join('');
+  const vis=yrs.filter(r=>SHOW[r.o]&&!r.na);
+  // 年ごとの月の値(確定値。未確定で日の入力があれば日の合計を点線で)
+  const ser=vis.map(r=>{
+    const pts=[];for(let m=1;m<=12;m++){
+      const c=confirmed(r.y,m),ms=monthSum(data.daily,r.y,m);
+      pts.push(c!=null?{v:c,est:false}:(ms.entered?{v:ms.sum,est:true}:null));
+    }
+    return {...r,pts};
+  });
+  const n1=v=>(v>0?'+':v<0?'−':'±')+(Math.abs(v)/10000).toFixed(1);
+  const empty='<p class="hint" style="padding:30px 0;text-align:center">表示する年を選んでください</p>';
+
+  // 月別の棒(年ごとに並べる)
+  const W=1100,H=280,L=46,R=10,T=22,B=26,iw=W-L-R,ih=H-T-B;
+  const all1=[0];ser.forEach(s=>s.pts.forEach(p=>{if(p)all1.push(p.v)}));
+  const mx=Math.max(...all1),mn=Math.min(...all1),pd=(mx-mn)*.1||1;
+  const top=mx+(mx>0?pd:0),bot=mn-(mn<0?pd:0);
+  const sy=v=>T+(top-v)/((top-bot)||1)*ih;
+  const gw=iw/12,slot=gw*.84/Math.max(1,ser.length);
+  let s=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="月別の損益">`;
+  const st1=niceStep((top-bot)/5);
+  for(let v=Math.ceil(bot/st1)*st1;v<=top;v+=st1){s+=`<line class="${v===0?'zero':'gl'}" x1="${L}" x2="${W-R}" y1="${sy(v)}" y2="${sy(v)}"/><text class="ax" x="${L-6}" y="${sy(v)+4}" text-anchor="end">${v===0?'0':n1(v).replace('+','')}</text>`}
+  for(let m=0;m<12;m++){
+    const gx=L+m*gw+gw*.08;
+    ser.forEach((r,j)=>{
+      const p=r.pts[m];if(!p)return;
+      const x=gx+j*slot+slot*.1,w=slot*.8,y0=sy(0),y1=sy(p.v);
+      s+=`<rect x="${x.toFixed(1)}" y="${Math.min(y0,y1).toFixed(1)}" width="${w.toFixed(1)}" height="${Math.max(1,Math.abs(y1-y0)).toFixed(1)}" rx="2" fill="${p.est?'none':r.col}" ${p.est?`stroke="${r.col}" stroke-dasharray="3 2" stroke-width="1.3"`:''}><title>${r.y}年${m+1}月 ${p.est?'未確定・日の合計 ':''}${yen(p.v)}</title></rect>`;
+      s+=`<text class="lbl" x="${(x+w/2).toFixed(1)}" y="${(p.v>=0?y1-4:y1+11).toFixed(1)}" text-anchor="middle" fill="${p.v>0?'var(--up)':p.v<0?'var(--down)':'var(--muted)'}" style="font-size:${ser.length>2?9.5:10.5}px">${n1(p.v)}</text>`;
+    });
+    s+=`<text class="ax" x="${L+m*gw+gw/2}" y="${H-6}" text-anchor="middle">${m+1}月</text>`;
+  }
+  s+='</svg>';
+  document.getElementById('ch1').innerHTML=ser.length?s:empty;
+
+  // 累計(確定値だけ)
+  const cs=ser.map(r=>{let a=0,last=-1;const v=[];for(let m=0;m<12;m++){const c=confirmed(r.y,m+1);if(c!=null){a+=c;last=m}v.push(a)}return {...r,v:v.map((x,i)=>i<=last?x:null),last}}).filter(r=>r.last>=0);
+  const W2=1100,H2=260,L2=46,R2=120,T2=14,B2=24,iw2=W2-L2-R2,ih2=H2-T2-B2;
+  const all2=[0];cs.forEach(r=>r.v.forEach(x=>{if(x!=null)all2.push(x)}));
+  const mx2=Math.max(...all2),mn2=Math.min(...all2),pad=(mx2-mn2)*.1||1;
+  const y2=v=>T2+(mx2+pad-v)/((mx2-mn2)+pad*2)*ih2,x2=i=>L2+i*(iw2/11);
+  let g=`<svg viewBox="0 0 ${W2} ${H2}" role="img" aria-label="累計の損益">`;
+  const step=niceStep((mx2-mn2+pad*2)/5);
+  for(let v=Math.ceil((mn2-pad)/step)*step;v<=mx2+pad;v+=step){g+=`<line class="${v===0?'zero':'gl'}" x1="${L2}" x2="${W2-R2}" y1="${y2(v)}" y2="${y2(v)}"/><text class="ax" x="${L2-6}" y="${y2(v)+4}" text-anchor="end">${v===0?'0':n1(v).replace('+','')}</text>`}
+  for(let i=0;i<12;i++)g+=`<text class="ax" x="${x2(i)}" y="${H2-6}" text-anchor="middle">${i+1}月</text>`;
+  const labs=[];
+  cs.slice().reverse().forEach(r=>{
+    const d=r.v.map((v,i)=>v==null?null:(i?'L':'M')+x2(i).toFixed(1)+' '+y2(v).toFixed(1)).filter(Boolean).join(' ').replace(/^L/,'M');
+    g+=`<path d="${d}" fill="none" stroke="${r.col}" stroke-width="${r.o===0?2.8:2}"/>`;
+    g+=r.v.map((v,i)=>v==null?'':`<circle cx="${x2(i).toFixed(1)}" cy="${y2(v).toFixed(1)}" r="${i===r.last?4:2.2}" fill="${r.col}"><title>${r.y}年${i+1}月までの累計 ${yen(v)}</title></circle>`).join('');
+    labs.push({x:x2(r.last)+8,y:y2(r.v[r.last])+4,t:`${r.y}年 ${n1(r.v[r.last])}`,col:r.col,num:r.v[r.last]});
+  });
+  // 同じ位置のラベルが重ならないよう上下にずらす
+  labs.sort((a,b)=>a.x-b.x||a.y-b.y);
+  for(let i=1;i<labs.length;i++){const p=labs[i-1],q=labs[i];if(Math.abs(p.x-q.x)<60&&q.y-p.y<14)q.y=p.y+14}
+  labs.forEach(l=>{g+=`<text class="lbl" x="${l.x}" y="${l.y}" fill="${l.col}">${l.t}</text>`});
+  g+='</svg>';
+  document.getElementById('ch2').innerHTML=cs.length?g:empty;
+
+  // 月別表(表示中の年)
+  let tb='',sumD=0,sumC=0,nC=0;
+  rows.forEach(r=>{
+    const diff=r.c!=null?r.c-r.ms.sum:null;
+    if(r.ms.entered)sumD+=r.ms.sum;if(r.c!=null){sumC+=r.c;nC++}
+    const dec=r.ms.win+r.ms.loss;
+    tb+=`<tr class="mrow${r.m===M?' sel':''}" data-m="${r.m}">
+      <td><span class="mname">${r.m}月</span></td>
+      <td class="n ${r.ms.entered?cls(r.ms.sum):'muted'}">${r.ms.entered?yen(r.ms.sum,true):'—'}</td>
+      <td class="n cf" data-mk="${mkey(Y,r.m)}"><span class="${cls(r.c)}" tabindex="0" role="button" aria-label="${r.m}月の確定損益を入力">${r.c!=null?yen(r.c,true):(r.st==='open'?'未入力':'—')}</span></td>
+      <td class="n ${diff==null?'muted':diff===0?'zero':'neg'}">${diff==null?'—':diff===0?'0':yen(diff,true)}</td>
+      <td class="n">${r.ms.days||'—'}</td>
+      <td class="n">${dec?Math.round(r.ms.win/dec*100)+'%':'—'}</td>
+      <td>${CHIP[r.st]}</td></tr>`;
+  });
+  document.getElementById('mtbody').innerHTML=tb;
+  document.getElementById('mtfoot').innerHTML=`<tr><td>年間</td><td class="n ${cls(sumD)}">${yen(sumD,true)}</td><td class="n ${nC?cls(sumC):'muted'}">${nC?yen(sumC,true):'—'}</td><td></td><td class="n">${rows.reduce((a,r)=>a+r.ms.days,0)||'—'}</td><td></td><td style="font-weight:400;font-size:12px;color:var(--muted)">年間の合計＝確定値の合計（${nC}か月）</td></tr>`;
+}
+function niceStep(x){const p=Math.pow(10,Math.floor(Math.log10(x))),f=x/p;return (f<1.5?1:f<3.5?2:f<7.5?5:10)*p}
+
+// 日の入力
+function openDay(el){
+  if(!READY)return;
+  if(!el||!el.classList.contains('ed')||el.querySelector('input'))return;
+  const k=el.dataset.k,v=data.daily[k];
+  const amt=el.querySelector('.amt');
+  amt.innerHTML=`<input inputmode="decimal" aria-label="${k}の損益" placeholder="例 -12000" value="${v==null?'':String(v)}">`;
+  const inp=amt.querySelector('input');inp.focus();inp.select();
+  let done=false;
+  const commit=()=>{
+    if(done)return;
+    const p=parse(inp.value);
+    if(p.bad){inp.classList.remove('bad');void inp.offsetWidth;inp.classList.add('bad');inp.focus();return}
+    done=true;
+    if(p.empty)delete data.daily[k];else data.daily[k]=p.v;
+    save();render();
+  };
+  inp.addEventListener('keydown',e=>{
+    if(e.key==='Enter'){e.preventDefault();commit()}
+    else if(e.key==='Escape'){done=true;render()}
+  });
+  inp.addEventListener('blur',()=>{setTimeout(commit,0)});
+  inp.addEventListener('click',e=>e.stopPropagation());
+}
+function onDayEvt(e){
+  if(e.type==='keydown'&&e.key!=='Enter'&&e.key!==' ')return;
+  if(e.target.tagName==='INPUT')return;
+  const el=e.target.closest('.day.ed,.wrow.ed');
+  if(el){if(e.type==='keydown')e.preventDefault();openDay(el)}
+}
+['cal','wlist'].forEach(id=>{const n=document.getElementById(id);n.addEventListener('click',onDayEvt);n.addEventListener('keydown',onDayEvt)});
+
+// 月別表: 行で月を選ぶ・確定値を押して入力
+const tbody=document.getElementById('mtbody');
+function tblEvt(e){
+  if(e.type==='keydown'&&e.key!=='Enter')return;
+  if(e.target.tagName==='INPUT')return;
+  const cf=e.target.closest('td.cf span');
+  if(cf){
+    e.preventDefault();
+    const td=cf.parentNode,mk=td.dataset.mk,v=data.monthly[mk];
+    td.innerHTML=`<input inputmode="decimal" placeholder="空欄で未確定" value="${v==null?'':v}" aria-label="${mk}の確定損益">`;
+    const inp=td.querySelector('input');inp.focus();inp.select();
+    let done=false;
+    const commit=()=>{if(done)return;const p=parse(inp.value);if(p.bad){inp.classList.remove('bad');void inp.offsetWidth;inp.classList.add('bad');inp.focus();return}done=true;if(p.empty)delete data.monthly[mk];else data.monthly[mk]=p.v;save();render()};
+    inp.addEventListener('keydown',ev=>{if(ev.key==='Enter'){ev.preventDefault();commit()}else if(ev.key==='Escape'){done=true;render()}});
+    inp.addEventListener('blur',()=>setTimeout(commit,0));
+    return;
+  }
+  const tr=e.target.closest('tr.mrow');
+  if(tr){M=+tr.dataset.m;render();document.getElementById('calh').scrollIntoView({behavior:matchMedia('(prefers-reduced-motion:reduce)').matches?'auto':'smooth',block:'start'})}
+}
+tbody.addEventListener('click',tblEvt);tbody.addEventListener('keydown',tblEvt);
+
+document.getElementById('ytog').addEventListener('change',e=>{const o=e.target.dataset.o;if(o==null)return;SHOW[o]=e.target.checked;try{localStorage.setItem('pnl-ytog',JSON.stringify(SHOW))}catch(_){}renderYear()});
+document.getElementById('yprev').onclick=()=>{Y--;render()};
+document.getElementById('ynext').onclick=()=>{Y++;if(mkey(Y,M)>mkey(t.getFullYear(),t.getMonth()+1))M=t.getMonth()+1;render()};
+document.getElementById('mprev').onclick=()=>{M--;if(M<1){M=12;Y--}render()};
+document.getElementById('mnext').onclick=()=>{M++;if(M>12){M=1;Y++}render()};
+
+render();
+load();
+})();
+</script>
+</body></html>
