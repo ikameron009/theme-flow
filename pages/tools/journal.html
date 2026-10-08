@@ -289,6 +289,7 @@ details.j-rec summary{cursor:pointer;font-size:12.5px;font-weight:700;color:var(
     </a>
     <span class="jpbadge">日本株・米国株</span>
     <span style="flex:1"></span>
+    <span class="upd">毎日 17時(日本)・7時(米国)更新</span>
     <label class="j-switch" title="金額(円)を隠し、％と「損切り幅の何倍」だけにします。人に見せる・スクリーンショットを撮るとき用"><input type="checkbox" id="pubview"> 公開用の見え方</label>
     <span class="j-me" id="me" hidden>● 本人ログイン中</span><button class="j-hbtn" id="logout" type="button" hidden>ログアウト</button>
   </div>
@@ -301,16 +302,15 @@ details.j-rec summary{cursor:pointer;font-size:12.5px;font-weight:700;color:var(
     <a href="../index.html#themes">テーマ別資金フロー</a>
     <a href="../index.html#stocks">銘柄を探す</a>
     <a href="../index.html#screening">スクリーニング</a>
+    <a href="../tools/sectors.html" data-page="1">セクター状況</a>
     </div>
     <div class="jrow">
-    <a href="../tools/sectors.html" data-page="1">セクター状況</a>
     <a href="../tools/themes.html" data-page="1">業種状況</a>
     <a href="../tools/research.html" data-page="1">業種銘柄リサーチ</a>
     <a href="../tools/dividend.html" data-page="1">高配当・増配銘柄リサーチ</a>
     <a href="../tools/calendar.html" data-page="1">決算・経済カレンダー</a>
     <a href="../tools/journal.html" data-page="1" class="on">監視銘柄・売買記録<span class="j-lock">本人</span></a>
     <a href="../note.html" data-page="1">note紹介記事検証</a>
-    <span class="upd">毎日 17時(日本)・7時(米国)更新</span>
     </div>
   </div>
 </nav>
@@ -361,7 +361,7 @@ details.j-rec summary{cursor:pointer;font-size:12.5px;font-weight:700;color:var(
       </div>
     </div>
     <div style="border-top:1px dashed var(--line-strong);margin:14px 0 10px"></div>
-    <div class="hd"><h3 style="font-size:14px">TradingViewに赤・緑の帯を出す（保有中のみ）</h3><span class="phint">並び＝銘柄=方向,損切,建値,利確,建てた日</span></div>
+    <div class="hd"><h3 style="font-size:14px">TradingViewに赤・緑の帯を出す（保有中のみ）</h3><span class="phint">並び＝銘柄=方向,損切,エントリー,利確,エントリーした日</span></div>
     <pre class="j-code-pre" id="tv-zone" style="margin-top:6px"></pre>
     <div class="j-btnrow" style="margin-top:8px"><button class="btn sm ghost" type="button" data-tvcopy="tv-zone">帯の文字列をコピー</button></div>
     <details><summary>インジケーターの入れ方とスクリプト（最初の1回だけ）</summary>
@@ -407,7 +407,7 @@ details.j-rec summary{cursor:pointer;font-size:12.5px;font-weight:700;color:var(
     </div>
     <div class="j-selbar" id="sb-hold" hidden></div>
     <div class="j-tblbox"><table class="j-tbl" id="tbl-hold"></table></div>
-    <div class="foot"><b>記録のしかた</b>：新規は「＋ 新しく建てる」。銘柄の行を押すと、すぐ下に銘柄カードが開き（チャートは建てた日に▲・建値〜損切ラインを赤・建値〜利確ラインを緑）、カードの上に「決済を記録」（利確・損切りの反対売買。一部だけでも可）と「編集」が出ます。損切ライン・利確ライン・株数・平均取得単価の変更は「編集」から。全株を決済すると「取引完了」のボタンが出て、押すと売買履歴へ移ります。<br>
+    <div class="foot"><b>記録のしかた</b>：新規は「＋ 新しく建てる」。銘柄の行を押すと、すぐ下に銘柄カードが開き（チャートはエントリーした日に▲・エントリー〜損切ラインを赤・エントリー〜利確ラインを緑。凡例を押すと表示を切り替え）、カードの上に「決済を記録」（利確・損切りの反対売買。一部だけでも可）と「編集」が出ます。損切ライン・利確ライン・株数・平均取得単価の変更は「編集」から。全株を決済すると「取引完了」のボタンが出て、押すと売買履歴へ移ります。<br>
       <b>利確ライン</b>：自分で決めた利確の価格と、現在値からの距離。<b>到達した段</b>：平均取得単価から +5〜+30%（ショートは −5〜−30%）のうち、保有中に一度でも届いた段が緑。<b>損切まで</b>：現在値から損切ラインまでの距離。<b>損切り幅の何倍</b>：いまの損益が、建てたときに決めた損切り幅（取得単価と損切ラインの差×株数）の何倍か。−1.0倍＝損切ラインどおりの負け、+2.0倍＝損切り幅の2倍の利益。<b>最大含み益／損</b>：保有中の高値・安値で見た最大値。<b>信用期日</b>：残り30日以内は赤。</div>
   </div>
 
@@ -462,7 +462,7 @@ details.j-rec summary{cursor:pointer;font-size:12.5px;font-weight:700;color:var(
   </div>
 </footer>
 
-<script src="../assets/card.js?v=20261008lw"></script>
+<script src="../assets/card.js?v=20261008lg"></script>
 <script src="../assets/jr.js?v=20261009"></script>
 <script>
 (function(){
@@ -734,7 +734,7 @@ let EXCH=null;
 const loadExch=()=>EXCH?Promise.resolve(EXCH):getJSON(ROOT+'assets/us_exch.json').then(d=>{EXCH={};if(d)Object.keys(d).forEach(k=>d[k].forEach(t=>EXCH[t]=k));return EXCH;});
 const tvTicker=(mk,code)=>mk==='us'?String(code).replace('-','.'):String(code);
 const tvSym=(mk,code)=>{const t=tvTicker(mk,code);if(mk!=='us')return 'TSE:'+t;const e=EXCH&&EXCH[t];return e?e+':'+t:t;};
-// 帯の文字列(TradingViewの自作インジケーターの設定に貼る) 銘柄=方向,損切,建値,利確,建てた日
+// 帯の文字列(TradingViewの自作インジケーターの設定に貼る) 銘柄=方向,損切,エントリー,利確,エントリーした日
 const n4=v=>v==null||!isFinite(v)?'':String(+(+v).toFixed(4));
 const zoneStr=P=>`${tvTicker(P.mk,P.code)}=${P.dir},${n4(P.c.stopNow)},${n4(P.c.avg)},${n4(P.target)},${String(P.c.d0||'').replace(/-/g,'')}`;
 const openPos=()=>POS.filter(P=>!P.done&&P.c&&P.c.open);
@@ -772,7 +772,7 @@ function initTV(){const btn=document.getElementById('tv-btn'),box=document.getEl
   loadExch().then(tvDot);}
 const PINE=`//@version=6
 // 投資家ハシビロコウの株式ダッシュボード「監視銘柄・売買記録」→「TradingViewへ書き出し」の帯の文字列を貼ると、
-// 表示中の銘柄の 建値〜損切ライン を赤、建値〜利確ライン を緑で、建てた日から右へ塗ります(売り建ては上下が逆)
+// 表示中の銘柄の エントリー〜損切ライン を赤、エントリー〜利確ライン を緑で、エントリーした日から右へ塗ります(売り建ては上下が逆)
 indicator("ハシビロコウ 損切・利確", overlay = true, max_boxes_count = 4, max_labels_count = 4)
 
 data = input.text_area("", "ダッシュボードからコピーした帯の文字列")
@@ -818,7 +818,7 @@ hitTgt  = not na(tgt) and (dir == "L" ? close >= tgt : close <= tgt)
 alertcondition(hitStop, "損切ライン到達", "{{ticker}} 終値が損切ラインに到達")
 alertcondition(hitTgt,  "利確ライン到達", "{{ticker}} 終値が利確ラインに到達")`;
 
-// ---- 保有中: 行を押すと、すぐ下に銘柄カード(ほかのページと同じ)。上に「ポジション」段、チャートに建てた日の▲と赤・緑の帯 ----
+// ---- 保有中: 行を押すと、すぐ下に銘柄カード(ほかのページと同じ)。上に「ポジション」段、チャートにエントリーした日の▲と赤・緑の帯 ----
 let HSCROLL=false;
 function posBlock(P){const c=P.c;if(!c.open)return '';const tg=P.target,us=P.mk==='us',fx=us?(FXNOW||c.avgFx||0):1;
   const lp=v=>c.sh*(v-c.avg)*c.q*fx,rt=tg&&c.risk?lp(tg)/c.risk:null;
@@ -827,7 +827,7 @@ function posBlock(P){const c=P.c;if(!c.open)return '';const tg=P.target,us=P.mk=
     const L=P.dir==='L',lc=L?'dn':'up',rc=L?'up':'dn';
     bar=`<div class="j-pzbar" aria-hidden="true"><div class="m"><span class="e0">${px(P,lo)}</span><span class="nw" style="left:${fn}%">▼ 現在値 ${px(P,c.last)}</span><span class="e1">${px(P,hi)}</span></div>
       <div class="b"><i class="${lc}" style="width:${fe}%"></i><i class="${rc}" style="width:${100-fe}%"></i></div></div>`;}
-  return `<div class="j-pz"><div class="j-pzh">ポジション<span>${P.dir==='L'?'買い':'売り建て'} ${fmt(c.q)}株 ・ ${c.d0.slice(5).replace('-','/')} 建て ・ 平均取得単価 ${px(P,c.avg)}</span></div>
+  return `<div class="j-pz"><div class="j-pzh">ポジション<span>${P.dir==='L'?'買い':'売り建て'} ${fmt(c.q)}株 ・ ${c.d0.slice(5).replace('-','/')} エントリー ・ 平均取得単価 ${px(P,c.avg)}</span></div>
     <div class="j-pzg">
       <div class="dn"><small>損切ライン</small><b class="down">${px(P,c.stopNow)}</b><em>${sgn(c.sh*(c.stopNow/c.avg-1)*100)}% ／ ${linePL(P,c.stopNow)}</em></div>
       <div><small>いまの含み損益</small><b class="${cls(c.unreal)}">${yen(c.unreal)}</b><em>${pct(c.retPct)}</em></div>
@@ -836,14 +836,14 @@ function posBlock(P){const c=P.c;if(!c.open)return '';const tg=P.target,us=P.mk=
     </div>${bar}</div>`;}
 function openHoldCard(P){const tr=document.querySelector(`#tbl-hold tr.row[data-id="${P.id}"]`);if(!tr)return;const c=P.c,scroll=HSCROLL;HSCROLL=false;
   const r=recParts(P),op=f=>(f.t==='buy')===(P.dir==='L');
-  const lines=[{price:c.avg,color:'--ink-2',title:'建値',legend:false}];
-  if(c.open){lines.unshift({price:c.stopNow,color:'--down',title:'損切',legend:false});if(P.target)lines.push({price:P.target,color:'--up',title:'利確',style:'dashed',legend:false});}
-  const markers=P.fills.map(f=>op(f)?{date:f.d,above:P.dir==='S',shape:P.dir==='L'?'up':'down',color:'--brand',text:'建て'}:{date:f.d,above:P.dir==='L',shape:P.dir==='L'?'down':'up',color:'--j-hold',text:'決済'});
+  // key: zdn=赤い帯と損切ライン / zup=緑の帯と利確ライン / ent=エントリーの印とエントリー価格の線(凡例を押すと一緒に消える)
+  const lines=[{price:c.avg,color:'--ink-2',title:'エントリー',key:'ent'}];
+  if(c.open){lines.unshift({price:c.stopNow,color:'--down',title:'損切',key:'zdn'});if(P.target)lines.push({price:P.target,color:'--up',title:'利確',style:'dashed',key:'zup'});}
+  const markers=P.fills.map(f=>op(f)?{date:f.d,above:P.dir==='S',shape:P.dir==='L'?'up':'down',color:'--brand',text:'エントリー',key:'ent',legend:'エントリー'}:{date:f.d,above:P.dir==='L',shape:P.dir==='L'?'down':'up',color:'--j-hold',text:'決済'});
   const btns=`<button class="btn sm" type="button" data-act="${c.open?'close':'done'}"${c.open?'':' hidden'}>決済を記録</button><button class="btn ghost sm" type="button" data-act="edit">編集</button>
     <button class="btn ghost sm" type="button" data-tv1>TradingView用にコピー（${esc(tvSym(P.mk,P.code))}）</button>${c.open?'<button class="btn ghost sm" type="button" data-tvz>帯の文字列をコピー</button>':''}`;
   StockCard.below(tr,{group:'h',market:P.mk,code:P.code,name:P.name,sub:(P.mk==='jp'?'日本':'米国')+' ・ '+(P.dir==='L'?'ロング':'ショート'),scroll,acts:false,
     lines,markers,zones:c.open?{from:c.d0,entry:c.avg,stop:c.stopNow,tgt:P.target||null}:null,
-    legend:c.open?`<span><i style="background:rgba(var(--downrgb),.22)"></i>建値〜損切ライン</span>${P.target?'<span><i style="background:color-mix(in srgb,var(--up) 24%,transparent)"></i>建値〜利確ライン（点線）</span>':''}<span>${P.dir==='L'?'▲':'▼'} 建てた日</span>`:'',
     foot:P.nextEarn?'次の決算 '+P.nextEarn:'',
     pre:`<div data-pid="${P.id}"><div class="sc-acts j-cacts">${btns}</div>${actForm(P)}${posBlock(P)}</div>`,
     post:`<details class="j-rec"><summary>記録の詳細（約定・エントリーの理由・到達した段）</summary><div class="j-recg"><div>${r.fillsTbl}</div><div>${r.right}</div></div></details>`,
@@ -1155,7 +1155,7 @@ function openWatchCard(k,scroll){const tr=document.querySelector(`#tbl-watch tr.
   document.querySelectorAll('#tbl-watch tr.w-row').forEach(x=>x.classList.toggle('sel',x===tr));
   const ne=EARN[k];
   StockCard.below(tr,{group:'w',market:w.mk,code:w.code,name:R.name,sub:(w.mk==='jp'?'日本':'米国')+(R.sector?'/'+R.sector:''),scroll,
-    lines:w.entry?[{price:w.entry,color:'--j-hold',title:'エントリー予定',style:'dashed',width:2}]:[],
+    lines:w.entry?[{price:w.entry,color:'--j-hold',title:'エントリー予定',style:'dashed',width:2,key:'plan',legend:'エントリー予定'}]:[],
     legend:w.entry?'':'<span>エントリー予定株価を一覧の欄に入れると、チャートに点線が出ます</span>',
     pre:`<div class="sc-acts j-cacts"><button class="btn ghost sm" type="button" data-tv1>TradingView用にコピー（${esc(tvSym(w.mk,w.code))}）</button></div>`,
     onMount:box=>{box.querySelector('[data-tv1]').onclick=()=>copySyms([[w.mk,w.code]]);},

@@ -26,9 +26,15 @@
      移動平均 = 5/20/50/150/200(週足のときは同じ本数の週線)。価格の目盛りは左。ドラッグで横に動かす・一度クリックするとホイールで拡大縮小(ページのスクロールを邪魔しないため)。
      追加の指定(open の o):
        lines:[{price,color:'--down'など,title,style:'dashed',width}] 横線＋左の目盛りに価格
-       zones:{from:'YYYY-MM-DD',entry,stop,tgt} 建値〜損切ライン=赤・建値〜利確ライン=緑の帯(from の足から右端まで)
+       zones:{from:'YYYY-MM-DD',entry,stop,tgt} エントリー〜損切ライン=赤・エントリー〜利確ライン=緑の帯(from の足から右端まで)
+       ★2026-10-08〜 説明の文字(凡例)を押すと表示のオン・オフ。key でまとめて切り替える:
+         'ma5'〜'ma200'=移動平均 / 'zdn'=赤い帯 / 'zup'=緑の帯 / lines・markers は各自の key(同じ key の線・印・帯は一緒に消える)
+         lines・markers の legend:'文字' で凡例に出す(legend:false や未指定は凡例に出さず、key だけで連動)。オフにした key はブラウザに覚える(全ページ共通 localStorage sc_hide)
        markers:[{date,above:true/false,shape:'up'|'down'|'circle',color,text}]
        mark:{date,label} 縦の点線(note掲載日など) */
+  const HKEY='sc_hide';
+  const hidGet=()=>{try{return new Set(JSON.parse(localStorage.getItem(HKEY)||'[]'));}catch(e){return new Set();}};
+  const hidSet=h=>{try{localStorage.setItem(HKEY,JSON.stringify([...h]));}catch(e){}};
   let LWP=null;
   function lwc(){return LWP||(LWP=new Promise((ok,ng)=>{if(window.LightweightCharts)return ok(window.LightweightCharts);
     const s=document.createElement('script');s.src=ROOT+'assets/lightweight-charts.js';s.onload=()=>ok(window.LightweightCharts);s.onerror=()=>{LWP=null;ng(new Error('lwc'));};document.head.appendChild(s);}));}
@@ -70,19 +76,22 @@
       main.setData(D.map((d,i)=>({time:d,value:data.c[i]})));}
     else{const up=cssv('--up'),dn=cssv('--down');main=ch.addCandlestickSeries({priceScaleId:'left',upColor:up,downColor:dn,wickUpColor:up,wickDownColor:dn,borderVisible:false,priceLineVisible:false,priceFormat:fmtP,autoscaleInfoProvider:asp});
       main.setData(D.map((d,i)=>({time:d,open:data.o[i],high:data.h[i],low:data.l[i],close:data.c[i]})));}
+    const H=hidGet(),R={ma:[],pl:[],mk:[],zr:null,zg:null};
     MAS.forEach(([w,c])=>{let s=0;const a=[];for(let i=0;i<n;i++){s+=data.c[i];if(i>=w)s-=data.c[i-w];if(i>=w-1)a.push({time:D[i],value:s/w});}
-        if(a.length)ch.addLineSeries({priceScaleId:'left',color:cssv(c),lineWidth:1,priceLineVisible:false,lastValueVisible:false,crosshairMarkerVisible:false,priceFormat:fmtP,autoscaleInfoProvider:asp}).setData(a);});
-    (o.lines||[]).forEach(L=>{if(!L||!isFinite(L.price))return;main.createPriceLine({price:L.price,color:colv(L.color)||cssv('--ink-2'),lineWidth:L.width||1,
-      lineStyle:L.style==='dashed'?LC.LineStyle.Dashed:L.style==='dotted'?LC.LineStyle.Dotted:LC.LineStyle.Solid,axisLabelVisible:true,title:L.title||''});});
+        if(!a.length)return;const se=ch.addLineSeries({priceScaleId:'left',color:cssv(c),lineWidth:1,priceLineVisible:false,lastValueVisible:false,crosshairMarkerVisible:false,priceFormat:fmtP,autoscaleInfoProvider:asp,visible:!H.has('ma'+w)});
+        se.setData(a);R.ma.push(['ma'+w,se]);});
+    (o.lines||[]).forEach((L,k)=>{if(!L||!isFinite(L.price))return;const key=L.key||'l'+k,off=H.has(key);
+      R.pl.push([key,L.title||'',main.createPriceLine({price:L.price,color:colv(L.color)||cssv('--ink-2'),lineWidth:L.width||1,
+      lineStyle:L.style==='dashed'?LC.LineStyle.Dashed:L.style==='dotted'?LC.LineStyle.Dotted:LC.LineStyle.Solid,lineVisible:!off,axisLabelVisible:!off,title:off?'':L.title||''})]);});
     const idx=d=>{let k=-1;for(let i=0;i<n;i++){if(D[i]<=d)k=i;else break;}return k;};
     // 日足のデータより新しい日(当日の更新前など)の印は出さない
-    const mk=(o.markers||[]).map(m=>{const i=idx(m.date);if(i<0||(freq!=='week'&&m.date>D[n-1]))return null;return{time:D[i],position:m.above?'aboveBar':'belowBar',color:colv(m.color)||cssv('--ink'),
-      shape:m.shape==='down'?'arrowDown':m.shape==='circle'?'circle':'arrowUp',text:m.text||''};}).filter(Boolean).sort((a,b)=>a.time<b.time?-1:a.time>b.time?1:0);
-    if(mk.length)main.setMarkers(mk);
+    R.mk=(o.markers||[]).map(m=>{const i=idx(m.date);if(i<0||(freq!=='week'&&m.date>D[n-1]))return null;return[m.key||'',{time:D[i],position:m.above?'aboveBar':'belowBar',color:colv(m.color)||cssv('--ink'),
+      shape:m.shape==='down'?'arrowDown':m.shape==='circle'?'circle':'arrowUp',text:m.text||''}];}).filter(Boolean).sort((a,b)=>a[1].time<b[1].time?-1:a[1].time>b[1].time?1:0);
+    const setMk=h=>main.setMarkers(R.mk.filter(([k])=>!k||!h.has(k)).map(x=>x[1]));if(R.mk.length)setMk(H);
     // 帯と縦線は下の層(.sc-zl)に描く。表示範囲・大きさが変わるたびに置き直す
     const zi=z&&z.from&&z.entry!=null?idx(z.from):-1,mi=o.mark&&o.mark.date?idx(o.mark.date):-1;
     if(zi>=0||mi>=0){const ts=ch.timeScale();let zr,zg,vl,vt;
-      if(zi>=0){zr=document.createElement('i');zg=document.createElement('i');zr.className='dn';zg.className='up';zl.append(zr,zg);}
+      if(zi>=0){zr=document.createElement('i');zg=document.createElement('i');zr.className='dn';zg.className='up';zr.hidden=H.has('zdn');zg.hidden=H.has('zup');zl.append(zr,zg);R.zr=zr;R.zg=zg;}
       if(mi>=0){vl=document.createElement('i');vl.className='vl';vt=document.createElement('b');vt.textContent=o.mark.label||'';zl.append(vl,vt);}
       let tm=0;const paint=()=>{clearTimeout(tm);tm=setTimeout(()=>{if(el._lc!==ch)return;const off=ch.priceScale('left').width(),W=ts.width(),bs=ts.options().barSpacing||6;
         if(zi>=0){let x0=ts.logicalToCoordinate(zi);const yE=main.priceToCoordinate(z.entry);
@@ -91,6 +100,9 @@
             e.style.left=(off+x0)+'px';e.style.width=Math.max(0,W-x0)+'px';e.style.top=Math.min(y,yE)+'px';e.style.height=Math.abs(y-yE)+'px';};put(zr,z.stop);put(zg,z.tgt);}}
         if(mi>=0){const x=ts.logicalToCoordinate(mi);const ok=x!=null&&x>=0&&x<=W;vl.hidden=vt.hidden=!ok;if(ok){vl.style.left=(off+x)+'px';vt.style.left=(off+x+4)+'px';}}},16);};
       ts.subscribeVisibleLogicalRangeChange(paint);if(window.ResizeObserver)new ResizeObserver(paint).observe(cv);paint();}
+    el._vis=h=>{if(el._lc!==ch)return;R.ma.forEach(([k,se])=>se.applyOptions({visible:!h.has(k)}));
+      R.pl.forEach(([k,t,pl])=>{const off=h.has(k);pl.applyOptions({lineVisible:!off,axisLabelVisible:!off,title:off?'':t});});
+      if(R.mk.length)setMk(h);if(R.zr)R.zr.hidden=h.has('zdn');if(R.zg)R.zg.hidden=h.has('zup');};
     // 表示範囲は幅が決まってから(autoSize の直後は幅0で、先に入れた範囲が捨てられるため)
     const bars=Math.min(freq==='week'?Math.ceil(per/5):per,n),setR=()=>{if(el._lc===ch)ch.timeScale().setVisibleLogicalRange({from:n-bars-0.5,to:n-1+3});};
     setR();setTimeout(setR,0);setTimeout(setR,120);
@@ -267,7 +279,11 @@
     .sc-lwc{position:relative;height:320px}.sc-lwc .sc-zl,.sc-lwc .sc-cv{position:absolute;inset:0}.sc-lwc .sc-zl{pointer-events:none;overflow:hidden}
     .sc-zl i{position:absolute;display:block;width:0}.sc-zl i.dn{background:rgba(var(--downrgb),.13)}.sc-zl i.up{background:color-mix(in srgb,var(--up) 14%,transparent)}
     .sc-zl i.vl{top:14px;bottom:24px;width:0;border-left:1.2px dashed var(--warn-ink,var(--brand))}.sc-zl b{position:absolute;top:0;font:700 11px var(--f-body);color:var(--warn-ink,var(--brand));white-space:nowrap}
-    .sc-lhint{color:var(--faint)}@media (hover:none){.sc-lhint{display:none}}`;document.head.appendChild(acss);
+    .sc-lhint{color:var(--faint)}@media (hover:none){.sc-lhint{display:none}}
+    .sc-lk{display:inline-flex;align-items:center;border:0;background:none;padding:0;font:inherit;color:inherit;cursor:pointer;white-space:nowrap}
+    .sc-lk:hover{color:var(--ink)}.sc-lk.off{opacity:.45;text-decoration:line-through}.sc-lm{font-size:10px;margin-right:4px}
+    /* チャートの部品は中で表(table)を使う。一覧の「行にカーソルで色」の指定(table.rk tbody tr:hover td など)が中まで届かないように */
+    .sc-lwc table,.sc-lwc tr,.sc-lwc td{background:transparent!important;box-shadow:none!important;outline:0!important}`;document.head.appendChild(acss);
 
   const PER=[['21','1か月'],['63','3か月'],['126','6か月'],['252','1年'],['520','2年']];
   const st={per:126,freq:'day'};
@@ -286,9 +302,19 @@
         <span class="legend sc-leg" style="margin:0"></span></div>
       <div class="sc-chart"><div class="phint">読み込み中…</div></div>${o.foot?`<div class="phint" style="margin-top:6px">${o.foot}</div>`:''}${o.post||''}</div></div>`;
     let cur={per,freq:st.freq};
-    const leg=()=>{const u=cur.freq==='week'?'週線':'日線',el=box.querySelector('.sc-leg');if(!el)return;
-      el.innerHTML=MAS.map(([w,c])=>`<span><i style="background:var(${c})"></i>${w}${u}</span>`).join('')+(o.lines||[]).filter(L=>L&&L.legend!==false&&L.title&&isFinite(L.price)).map(L=>`<span><i style="background:${L.color&&L.color.slice(0,2)==='--'?'var('+L.color+')':L.color};height:2px"></i>${esc(L.legend||L.title)}</span>`).join('')+
-        (o.mark?`<span><i style="background:var(--warn-ink,var(--brand));height:2px"></i>${esc(o.mark.label)}</span>`:'')+(o.legend||'')+'<span class="sc-lhint">ドラッグで移動・クリック後ホイールで拡大縮小</span>';};
+    // 凡例 = 押すと表示のオン・オフ(key ごと。消した key は全ページ共通で覚える)
+    const sw=c=>c&&c.slice(0,2)==='--'?'var('+c+')':c;
+    const leg=()=>{const u=cur.freq==='week'?'週線':'日線',el=box.querySelector('.sc-leg');if(!el)return;const H=hidGet(),it=[];
+      MAS.forEach(([w,c])=>it.push(['ma'+w,`<i style="background:var(${c})"></i>${w}${u}`]));
+      const z=o.zones;if(z&&z.entry!=null){if(z.stop!=null)it.push(['zdn','<i style="background:rgba(var(--downrgb),.22);box-shadow:inset 0 0 0 1px var(--down)"></i>エントリー〜損切ライン']);
+        if(z.tgt!=null)it.push(['zup','<i style="background:color-mix(in srgb,var(--up) 24%,transparent);box-shadow:inset 0 0 0 1px var(--up)"></i>エントリー〜利確ライン（点線）']);}
+      const seen=new Set();
+      (o.markers||[]).forEach(m=>{if(!m.key||!m.legend||seen.has(m.key))return;seen.add(m.key);it.push([m.key,`<b class="sc-lm" style="color:${sw(m.color)||'var(--ink)'}">${m.shape==='down'?'▼':'▲'}</b>${esc(m.legend)}`]);});
+      (o.lines||[]).forEach((L,k)=>{const key=L&&(L.key||'l'+k);if(!L||!L.legend||!isFinite(L.price)||seen.has(key))return;seen.add(key);it.push([key,`<i style="background:${sw(L.color)};height:2px"></i>${esc(L.legend)}`]);});
+      el.innerHTML=it.map(([k,h])=>`<button type="button" class="sc-lk${H.has(k)?' off':''}" data-k="${k}" aria-pressed="${!H.has(k)}" title="押すと表示・非表示を切り替え">${h}</button>`).join('')+
+        (o.mark?`<span><i style="background:var(--warn-ink,var(--brand));height:2px"></i>${esc(o.mark.label)}</span>`:'')+(o.legend||'')+'<span class="sc-lhint">ドラッグで移動・クリック後ホイールで拡大縮小・凡例を押すと表示を切り替え</span>';
+      el.querySelectorAll('.sc-lk').forEach(b=>b.onclick=()=>{const h=hidGet(),k=b.dataset.k;h.has(k)?h.delete(k):h.add(k);hidSet(h);
+        b.classList.toggle('off',h.has(k));b.setAttribute('aria-pressed',String(!h.has(k)));const c=box.querySelector('.sc-chart');if(c&&c._vis)c._vis(h);});};
     const draw=()=>{leg();return Promise.all([load(src),lwc().catch(()=>null)]).then(([oh,LC])=>{if(box._sc!==tok)return;const el=box.querySelector('.sc-chart');if(!el)return;
       if(!LC){el.innerHTML='<div class="phint" style="padding:16px 0">チャートの部品を読み込めませんでした。再読み込みしてください。</div>';return;}
       chart(el,oh,cur.per,cur.freq,o);});};
