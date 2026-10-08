@@ -76,7 +76,7 @@ if os.path.isdir(pages):
         dst_dir = SITE if rel == "." else os.path.join(SITE, rel)
         os.makedirs(dst_dir, exist_ok=True)
         for fn in files:
-            if fn.endswith((".html", ".js", ".css", ".png", ".webp", ".ico")):
+            if fn.endswith((".html", ".js", ".css", ".png", ".webp", ".ico", ".json")):  # .json = assets/us_exch.json(米国株の上場先)
                 shutil.copyfile(os.path.join(root, fn), os.path.join(dst_dir, fn))
 
 # 共通デザイン: template.html の<style>を assets/site.css として書き出す(ツールのページが読み込む)
