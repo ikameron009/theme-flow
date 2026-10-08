@@ -1,5 +1,7 @@
 /* 銘柄カード(「銘柄を探す」と同じ見た目のチャート＋情報)。ツールのページとnote紹介記事検証で共通に使う。
    StockCard.open(箱, {market, code, name, sub, m, kv, extra, src, mark:{date,label}, per, line, foot, onClose, val})
+   ★2026-10-08〜 チャートは TradingView Lightweight Charts(assets/lightweight-charts.js)。追加の指定 = lines / zones / markers / legend(チャート部の説明は chart() の上)、
+   pre / post = カードの中身の先頭・末尾に入れるHTML(監視銘柄・売買記録の「ポジション」段など)、onMount(箱) = 中身を入れたあとに呼ぶ(ボタンの結び付け用)
    StockCard.below(行, {同じ指定 + group}) = 選んだ行のすぐ下に開く(全ページこちらを使う。2026-10-07〜)
    1段目「株価・勢い」= 3行(いま/過去から今日まで/勢い・規模)。個別銘柄は card_{jp,us}.json を自動で読む。テーマ・業種・ETFは m で渡す。
    kv(旧4列) は card_*.json に無い銘柄の予備。extra = ページ固有の補足(note掲載時の株価など)
@@ -19,30 +21,85 @@
   function sma(a,w){const o=[];let s=0;for(let i=0;i<a.length;i++){s+=a[i];if(i>=w)s-=a[i-w];o.push(i>=w-1?s/w:null);}return o;}
   function weekly(oh){const R={d:[],o:[],h:[],l:[],c:[]};for(let i=0;i<oh.d.length;i+=5){const e=Math.min(i+5,oh.d.length);let hh=-1e18,ll=1e18;
     for(let j=i;j<e;j++){if(oh.h[j]>hh)hh=oh.h[j];if(oh.l[j]<ll)ll=oh.l[j];}R.d.push(oh.d[i]);R.o.push(oh.o[i]);R.h.push(hh);R.l.push(ll);R.c.push(oh.c[e-1]);}return R;}
-  function chart(oh,per,freq,W,mark,line){
-    if(!oh||!oh.c||!oh.c.length)return '<div class="phint" style="padding:16px 0">チャートのデータがありません。</div>';
-    if(!oh.o){oh={d:oh.d,c:oh.c,o:oh.c,h:oh.c,l:oh.c};line=true;}
-    const data=freq==='week'?weekly(oh):oh;let bars=Math.min(freq==='week'?Math.ceil(per/5):per,data.c.length);const s=data.c.length-bars;
-    const D=data.d.slice(s),O=data.o.slice(s),Hi=data.h.slice(s),Lo=data.l.slice(s),C=data.c.slice(s);
-    const m5=sma(data.c,5).slice(s),m20=sma(data.c,20).slice(s),m50=sma(data.c,50).slice(s);
-    const CH=320,L=58,R=8,T=14,B=20;let lo=Infinity,hi=-Infinity;Hi.forEach(v=>{if(v>hi)hi=v});Lo.forEach(v=>{if(v<lo)lo=v});
-    [m5,m20,m50].forEach(a=>a.forEach(v=>{if(v!=null){if(v>hi)hi=v;if(v<lo)lo=v;}}));const pad=(hi-lo)*0.04||1;lo-=pad;hi+=pad;
-    const ax=niceAxis(lo,hi,4);lo=ax.lo;hi=ax.hi;
-    const n=C.length,bw=(W-L-R)/Math.max(n,1),X=i=>L+bw*(i+0.5),Y=v=>T+(CH-T-B)*(1-(v-lo)/(hi-lo));
-    const cUp=cssv('--up'),cDn=cssv('--down');let g='';
-    ax.ticks.forEach(v=>{const y=Y(v);g+=`<line class="gl" x1="${L}" y1="${y.toFixed(1)}" x2="${W-R}" y2="${y.toFixed(1)}"/><text class="axl" x="${L-5}" y="${(y+3).toFixed(1)}" text-anchor="end">${fmt(v,ax.step<1?2:0)}</text>`;});
-    let lm='';D.forEach((d,i)=>{const mo=d.slice(0,7);if(mo!==lm){lm=mo;g+=`<text class="axl" x="${X(i).toFixed(1)}" y="${CH-6}" text-anchor="middle">${d.slice(2,7).replace('-','/')}</text>`;}});
-    if(mark&&mark.date){let mi=-1;for(let i=0;i<n;i++){if(D[i]<=mark.date)mi=i;}
-      if(mi>=0){const x=X(mi);g+=`<line x1="${x.toFixed(1)}" y1="${T}" x2="${x.toFixed(1)}" y2="${CH-B}" stroke="${cssv('--warn-ink')||cssv('--brand')}" stroke-width="1.2" stroke-dasharray="4 3"/>`+
-        `<text x="${(x+4).toFixed(1)}" y="${T-3}" font-size="11" font-weight="700" fill="${cssv('--warn-ink')||cssv('--brand')}">${esc(mark.label||'')}</text>`;}}
-    if(line){let p='';C.forEach((v,i)=>p+=(i?'L':'M')+X(i).toFixed(1)+' '+Y(v).toFixed(1)+' ');g+=`<path d="${p}" fill="none" stroke="${cssv('--ink-2')}" stroke-width="1.6"/>`;}
-    else{const wq=Math.max(0.6,bw*0.32);
-      for(let i=0;i<n;i++){const c=C[i]>=O[i]?cUp:cDn,x=X(i);g+=`<line x1="${x.toFixed(1)}" y1="${Y(Hi[i]).toFixed(1)}" x2="${x.toFixed(1)}" y2="${Y(Lo[i]).toFixed(1)}" stroke="${c}" stroke-width="1"/>`;
-        const ya=Y(Math.max(O[i],C[i])),yb=Y(Math.min(O[i],C[i]));g+=`<rect x="${(x-wq).toFixed(1)}" y="${ya.toFixed(1)}" width="${(wq*2).toFixed(1)}" height="${Math.max(0.8,yb-ya).toFixed(1)}" fill="${c}"/>`;}}
-    const ln=(a,col)=>{let p='',st=false;a.forEach((v,i)=>{if(v==null)return;p+=(st?'L':'M')+X(i).toFixed(1)+' '+Y(v).toFixed(1)+' ';st=true;});return p?`<path d="${p}" fill="none" stroke="${col}" stroke-width="1.3"/>`:'';};
-    g+=ln(m5,cssv('--c2'))+ln(m20,cssv('--brand'))+ln(m50,cssv('--c4'));
-    return `<svg viewBox="0 0 ${W} ${CH}" width="100%" style="display:block;overflow:visible">${g}</svg>`;
+  /* ---------- 株価チャート(TradingView Lightweight Charts。2026-10-08〜 旧SVGから差し替え) ----------
+     部品 = assets/lightweight-charts.js(v4.2.0・Apache 2.0)。左下のTradingViewロゴは無料で使う条件の表記なので消さない。最初に描くときだけ読み込む。
+     移動平均 = 5/20/50/150/200(週足のときは同じ本数の週線)。価格の目盛りは左。ドラッグで横に動かす・一度クリックするとホイールで拡大縮小(ページのスクロールを邪魔しないため)。
+     追加の指定(open の o):
+       lines:[{price,color:'--down'など,title,style:'dashed',width}] 横線＋左の目盛りに価格
+       zones:{from:'YYYY-MM-DD',entry,stop,tgt} 建値〜損切ライン=赤・建値〜利確ライン=緑の帯(from の足から右端まで)
+       markers:[{date,above:true/false,shape:'up'|'down'|'circle',color,text}]
+       mark:{date,label} 縦の点線(note掲載日など) */
+  let LWP=null;
+  function lwc(){return LWP||(LWP=new Promise((ok,ng)=>{if(window.LightweightCharts)return ok(window.LightweightCharts);
+    const s=document.createElement('script');s.src=ROOT+'assets/lightweight-charts.js';s.onload=()=>ok(window.LightweightCharts);s.onerror=()=>{LWP=null;ng(new Error('lwc'));};document.head.appendChild(s);}));}
+  const MAS=[[5,'--c2'],[20,'--brand'],[50,'--c4'],[150,'--c3'],[200,'--c8']];
+  const colv=c=>c&&c.slice(0,2)==='--'?cssv(c):c;
+  const ymd=t=>typeof t==='string'?t:t.year+'-'+String(t.month).padStart(2,'0')+'-'+String(t.day).padStart(2,'0');
+  function cleanOH(oh){const R={d:[],o:[],h:[],l:[],c:[]};let last='';
+    for(let i=0;i<oh.d.length;i++){const c=oh.c[i];if(c==null||!isFinite(c)||!oh.d[i]||oh.d[i]<=last)continue;last=oh.d[i];
+      const o=oh.o&&oh.o[i]!=null?oh.o[i]:c,h=oh.h&&oh.h[i]!=null?oh.h[i]:Math.max(o,c),l=oh.l&&oh.l[i]!=null?oh.l[i]:Math.min(o,c);
+      R.d.push(oh.d[i]);R.o.push(o);R.h.push(Math.max(h,o,c));R.l.push(Math.min(l,o,c));R.c.push(c);}return R;}
+  function chart(el,oh,per,freq,o){
+    if(el._lc){try{el._lc.remove();}catch(e){}el._lc=null;}
+    const none=()=>{el.innerHTML='<div class="phint" style="padding:16px 0">チャートのデータがありません。</div>';};
+    if(!oh||!oh.c||!oh.c.length)return none();
+    let line=!!o.line;if(!oh.o){oh={d:oh.d,c:oh.c};line=true;}
+    const data=freq==='week'?weekly(cleanOH(oh)):cleanOH(oh),D=data.d,n=D.length;if(!n)return none();
+    const LC=window.LightweightCharts;
+    el.innerHTML='<div class="sc-lwc"><div class="sc-zl"></div><div class="sc-cv"></div></div>';
+    const cv=el.querySelector('.sc-cv'),zl=el.querySelector('.sc-zl'),us=o.market==='us';
+    const pf=v=>fmt(v,us?2:Math.abs(v)<100?1:0);
+    const wheel=on=>({handleScale:{mouseWheel:on},handleScroll:{mouseWheel:on}});
+    const ch=LC.createChart(cv,{autoSize:true,
+      layout:{background:{type:'solid',color:'rgba(0,0,0,0)'},textColor:cssv('--faint'),fontFamily:cssv('--f-num')||'sans-serif',fontSize:11},
+      grid:{vertLines:{visible:false},horzLines:{color:cssv('--line')}},
+      leftPriceScale:{visible:true,borderVisible:false,scaleMargins:{top:0.06,bottom:0.05}},rightPriceScale:{visible:false},
+      timeScale:{borderVisible:false,rightOffset:3,minBarSpacing:0.5,tickMarkFormatter:t=>ymd(t).slice(2,7).replace('-','/')},
+      crosshair:{mode:LC.CrosshairMode.Normal},localization:{locale:'ja-JP',priceFormatter:pf,timeFormatter:t=>ymd(t).replace(/-/g,'/')},
+      handleScroll:{mouseWheel:false,pressedMouseMove:true,horzTouchDrag:true,vertTouchDrag:false},
+      handleScale:{mouseWheel:false,pinch:true,axisPressedMouseMove:{time:true,price:false},axisDoubleClickReset:true}});
+    el._lc=ch;
+    cv.addEventListener('click',()=>ch.applyOptions(wheel(true)));cv.addEventListener('mouseleave',()=>ch.applyOptions(wheel(false)));
+    // 横線・帯の価格も縦の範囲に入れる
+    const lv=[];(o.lines||[]).forEach(L=>{if(L&&isFinite(L.price))lv.push(L.price);});const z=o.zones;
+    if(z)[z.entry,z.stop,z.tgt].forEach(v=>{if(v!=null&&isFinite(v))lv.push(v);});
+    const asp=orig=>{const r=orig();if(r&&r.priceRange&&lv.length){r.priceRange.minValue=Math.min(r.priceRange.minValue,...lv);r.priceRange.maxValue=Math.max(r.priceRange.maxValue,...lv);}return r;};
+    const fmtP={type:'custom',formatter:pf,minMove:us?0.01:0.1};
+    let main;
+    if(line){main=ch.addLineSeries({priceScaleId:'left',color:cssv('--ink-2'),lineWidth:2,priceLineVisible:false,priceFormat:fmtP,autoscaleInfoProvider:asp});
+      main.setData(D.map((d,i)=>({time:d,value:data.c[i]})));}
+    else{const up=cssv('--up'),dn=cssv('--down');main=ch.addCandlestickSeries({priceScaleId:'left',upColor:up,downColor:dn,wickUpColor:up,wickDownColor:dn,borderVisible:false,priceLineVisible:false,priceFormat:fmtP,autoscaleInfoProvider:asp});
+      main.setData(D.map((d,i)=>({time:d,open:data.o[i],high:data.h[i],low:data.l[i],close:data.c[i]})));}
+    MAS.forEach(([w,c])=>{let s=0;const a=[];for(let i=0;i<n;i++){s+=data.c[i];if(i>=w)s-=data.c[i-w];if(i>=w-1)a.push({time:D[i],value:s/w});}
+        if(a.length)ch.addLineSeries({priceScaleId:'left',color:cssv(c),lineWidth:1,priceLineVisible:false,lastValueVisible:false,crosshairMarkerVisible:false,priceFormat:fmtP,autoscaleInfoProvider:asp}).setData(a);});
+    (o.lines||[]).forEach(L=>{if(!L||!isFinite(L.price))return;main.createPriceLine({price:L.price,color:colv(L.color)||cssv('--ink-2'),lineWidth:L.width||1,
+      lineStyle:L.style==='dashed'?LC.LineStyle.Dashed:L.style==='dotted'?LC.LineStyle.Dotted:LC.LineStyle.Solid,axisLabelVisible:true,title:L.title||''});});
+    const idx=d=>{let k=-1;for(let i=0;i<n;i++){if(D[i]<=d)k=i;else break;}return k;};
+    // 日足のデータより新しい日(当日の更新前など)の印は出さない
+    const mk=(o.markers||[]).map(m=>{const i=idx(m.date);if(i<0||(freq!=='week'&&m.date>D[n-1]))return null;return{time:D[i],position:m.above?'aboveBar':'belowBar',color:colv(m.color)||cssv('--ink'),
+      shape:m.shape==='down'?'arrowDown':m.shape==='circle'?'circle':'arrowUp',text:m.text||''};}).filter(Boolean).sort((a,b)=>a.time<b.time?-1:a.time>b.time?1:0);
+    if(mk.length)main.setMarkers(mk);
+    // 帯と縦線は下の層(.sc-zl)に描く。表示範囲・大きさが変わるたびに置き直す
+    const zi=z&&z.from&&z.entry!=null?idx(z.from):-1,mi=o.mark&&o.mark.date?idx(o.mark.date):-1;
+    if(zi>=0||mi>=0){const ts=ch.timeScale();let zr,zg,vl,vt;
+      if(zi>=0){zr=document.createElement('i');zg=document.createElement('i');zr.className='dn';zg.className='up';zl.append(zr,zg);}
+      if(mi>=0){vl=document.createElement('i');vl.className='vl';vt=document.createElement('b');vt.textContent=o.mark.label||'';zl.append(vl,vt);}
+      let tm=0;const paint=()=>{clearTimeout(tm);tm=setTimeout(()=>{if(el._lc!==ch)return;const off=ch.priceScale('left').width(),W=ts.width(),bs=ts.options().barSpacing||6;
+        if(zi>=0){let x0=ts.logicalToCoordinate(zi);const yE=main.priceToCoordinate(z.entry);
+          if(x0==null||yE==null){zr.style.width=zg.style.width='0';}
+          else{x0=Math.max(0,Math.min(W,x0-bs/2));const put=(e,v)=>{const y=v!=null&&isFinite(v)?main.priceToCoordinate(v):null;if(y==null){e.style.width='0';return;}
+            e.style.left=(off+x0)+'px';e.style.width=Math.max(0,W-x0)+'px';e.style.top=Math.min(y,yE)+'px';e.style.height=Math.abs(y-yE)+'px';};put(zr,z.stop);put(zg,z.tgt);}}
+        if(mi>=0){const x=ts.logicalToCoordinate(mi);const ok=x!=null&&x>=0&&x<=W;vl.hidden=vt.hidden=!ok;if(ok){vl.style.left=(off+x)+'px';vt.style.left=(off+x+4)+'px';}}},16);};
+      ts.subscribeVisibleLogicalRangeChange(paint);if(window.ResizeObserver)new ResizeObserver(paint).observe(cv);paint();}
+    // 表示範囲は幅が決まってから(autoSize の直後は幅0で、先に入れた範囲が捨てられるため)
+    const bars=Math.min(freq==='week'?Math.ceil(per/5):per,n),setR=()=>{if(el._lc===ch)ch.timeScale().setVisibleLogicalRange({from:n-bars-0.5,to:n-1+3});};
+    setR();setTimeout(setR,0);setTimeout(setR,120);
   }
+  // 明暗の切り替えで描き直す(色はCSSの変数から取るため)
+  const LIVE=new Set();
+  const relive=()=>LIVE.forEach(f=>{if(!f.el.isConnected){LIVE.delete(f);return;}f();});
+  try{matchMedia('(prefers-color-scheme: dark)').addEventListener('change',relive);}catch(e){}
+  try{new MutationObserver(relive).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});}catch(e){}
   function links(m,code){
     const tv='https://jp.tradingview.com/chart/?symbol='+encodeURIComponent(m==='us'?code.replace('-','.'):'TSE:'+code);
     const a=(u,t)=>`<a class="extl" href="${u}" target="_blank" rel="noopener">${t}↗</a>`;
@@ -206,7 +263,11 @@
     paint();}
   const acss=document.createElement('style');acss.textContent=`.sc-acts{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:10px 0 2px}
     .sc-ast{font-size:11.5px;font-weight:700;border-radius:999px;padding:2px 10px;white-space:nowrap}.sc-ast.w{background:var(--brand-soft);color:var(--brand)}.sc-ast.h{background:var(--warn-bg);color:var(--warn-ink)}
-    .sc-form{margin-top:12px}`;document.head.appendChild(acss);
+    .sc-form{margin-top:12px}
+    .sc-lwc{position:relative;height:320px}.sc-lwc .sc-zl,.sc-lwc .sc-cv{position:absolute;inset:0}.sc-lwc .sc-zl{pointer-events:none;overflow:hidden}
+    .sc-zl i{position:absolute;display:block;width:0}.sc-zl i.dn{background:rgba(var(--downrgb),.13)}.sc-zl i.up{background:color-mix(in srgb,var(--up) 14%,transparent)}
+    .sc-zl i.vl{top:14px;bottom:24px;width:0;border-left:1.2px dashed var(--warn-ink,var(--brand))}.sc-zl b{position:absolute;top:0;font:700 11px var(--f-body);color:var(--warn-ink,var(--brand));white-space:nowrap}
+    .sc-lhint{color:var(--faint)}@media (hover:none){.sc-lhint{display:none}}`;document.head.appendChild(acss);
 
   const PER=[['21','1か月'],['63','3か月'],['126','6か月'],['252','1年'],['520','2年']];
   const st={per:126,freq:'day'};
@@ -216,24 +277,30 @@
     const tok=Symbol();box._sc=tok;
     box.innerHTML=`<div class="panel sc-card" style="margin-top:14px;position:relative"><div class="shead" style="padding-right:76px"><b>${esc(o.name)}</b>${o.code&&o.showCode!==false?`<span class="num muted">${esc(o.code)}</span>`:''}${o.sub?`<span class="tag">${esc(o.sub)}</span>`:''}${o.links===false?'':links(o.market,o.code)}
         <button class="btn sm ghost" data-close style="position:absolute;top:12px;right:12px">閉じる</button></div>
-      <div class="sc-actbox"></div><div class="sc-form" hidden></div><div class="sc-main">
+      <div class="sc-actbox"></div><div class="sc-form" hidden></div><div class="sc-main">${o.pre||''}
       <div class="sc-kvbox"></div>
       ${o.extra&&o.extra.length?`<div class="sc-extra">${o.extraTitle?`<span class="t">${esc(o.extraTitle)}</span>`:''}${o.extra.map(k=>`<span>${k.l}<b class="${k.cls||''}">${k.v}</b></span>`).join('')}</div>`:''}
       <div class="sc-valbox"></div>
       <div class="ctlrow" style="margin:6px 0 4px"><div class="seg" data-g="per">${PER.map(p=>`<button data-v="${p[0]}" aria-pressed="${+p[0]===per}">${p[1]}</button>`).join('')}</div>
         <div class="seg" data-g="freq"><button data-v="day" aria-pressed="${st.freq==='day'}">日足</button><button data-v="week" aria-pressed="${st.freq==='week'}">週足</button></div>
-        <span class="legend" style="margin:0"><span><i style="background:var(--c2)"></i>5日線</span><span><i style="background:var(--brand)"></i>20日線</span><span><i style="background:var(--c4)"></i>50日線</span>${o.mark?`<span><i style="background:var(--warn-ink,var(--brand));height:2px"></i>${esc(o.mark.label)}</span>`:''}</span></div>
-      <div class="sc-chart"><div class="phint">読み込み中…</div></div>${o.foot?`<div class="phint" style="margin-top:6px">${o.foot}</div>`:''}</div></div>`;
+        <span class="legend sc-leg" style="margin:0"></span></div>
+      <div class="sc-chart"><div class="phint">読み込み中…</div></div>${o.foot?`<div class="phint" style="margin-top:6px">${o.foot}</div>`:''}${o.post||''}</div></div>`;
     let cur={per,freq:st.freq};
-    const draw=()=>load(src).then(oh=>{if(box._sc!==tok)return;const el=box.querySelector('.sc-chart');if(!el)return;
-      el.innerHTML=chart(oh,cur.per,cur.freq,Math.max(320,Math.round(el.clientWidth||700)),o.mark,o.line);});
+    const leg=()=>{const u=cur.freq==='week'?'週線':'日線',el=box.querySelector('.sc-leg');if(!el)return;
+      el.innerHTML=MAS.map(([w,c])=>`<span><i style="background:var(${c})"></i>${w}${u}</span>`).join('')+(o.lines||[]).filter(L=>L&&L.legend!==false&&L.title&&isFinite(L.price)).map(L=>`<span><i style="background:${L.color&&L.color.slice(0,2)==='--'?'var('+L.color+')':L.color};height:2px"></i>${esc(L.legend||L.title)}</span>`).join('')+
+        (o.mark?`<span><i style="background:var(--warn-ink,var(--brand));height:2px"></i>${esc(o.mark.label)}</span>`:'')+(o.legend||'')+'<span class="sc-lhint">ドラッグで移動・クリック後ホイールで拡大縮小</span>';};
+    const draw=()=>{leg();return Promise.all([load(src),lwc().catch(()=>null)]).then(([oh,LC])=>{if(box._sc!==tok)return;const el=box.querySelector('.sc-chart');if(!el)return;
+      if(!LC){el.innerHTML='<div class="phint" style="padding:16px 0">チャートの部品を読み込めませんでした。再読み込みしてください。</div>';return;}
+      chart(el,oh,cur.per,cur.freq,o);});};
+    draw.el=box;LIVE.add(draw);
     box.querySelectorAll('.seg').forEach(sg=>sg.onclick=e=>{const b=e.target.closest('button');if(!b)return;sg.querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b));
       if(sg.dataset.g==='per'){cur.per=+b.dataset.v;st.per=cur.per;}else{cur.freq=b.dataset.v;st.freq=cur.freq;}draw();});
-    box.querySelector('[data-close]').onclick=()=>{box._sc=null;box.innerHTML='';o.onClose&&o.onClose();};
+    box.querySelector('[data-close]').onclick=()=>{box._sc=null;const el=box.querySelector('.sc-chart');if(el&&el._lc){try{el._lc.remove();}catch(e){}}LIVE.delete(draw);box.innerHTML='';o.onClose&&o.onClose();};
     mountActs(box,o);
     mountKv(box.querySelector('.sc-kvbox'),o);
     if(o.val!==false&&o.code)mountVal(box.querySelector('.sc-valbox'),o.market,o.code);
     draw();
+    if(o.onMount)o.onMount(box);
     if(o.scroll!==false)setTimeout(()=>box.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'nearest'}),30);
   }
 

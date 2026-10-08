@@ -236,6 +236,47 @@ table.w-tbl td.w-ent{background:var(--j-hold-soft)}
 .w-dp{display:inline-block;min-width:52px;margin-left:6px;font-weight:500;font-size:11.5px}
 .w-u{font-size:10px;color:var(--faint);margin-left:2px}
 
+/* TradingView連携・保有中の銘柄カード(2026-10-08) */
+.j-tvbar{display:flex;justify-content:flex-end;margin:4px 0 -6px}
+.j-tvdot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--down);margin-left:2px}
+.j-tvexp{border:1px solid var(--brand);border-radius:12px;background:var(--surface);padding:14px 16px;margin:12px 0 4px}
+.j-tvexp h3{font:700 16px var(--f-display);margin:0}
+.j-tvexp .hd{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}
+.j-tvg{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:16px;margin-top:10px}
+@media (max-width:820px){.j-tvg{grid-template-columns:1fr}}
+.j-tvopt{display:flex;gap:6px 16px;flex-wrap:wrap;font-size:12.5px;margin-top:8px}
+.j-tvopt label{display:flex;align-items:center;gap:5px;cursor:pointer}
+.j-tvopt input{accent-color:var(--brand)}
+.j-code-pre{margin:0;background:var(--surface-2);border:1px solid var(--line);border-radius:8px;padding:9px 12px;font:12px/1.6 ui-monospace,Consolas,monospace;white-space:pre-wrap;word-break:break-all;color:var(--ink);max-height:240px;overflow:auto}
+.j-tvexp ol{margin:0;padding-left:1.3em;font-size:12.5px;color:var(--ink-2)}
+.j-tvexp ol li{margin:2px 0}
+.j-tvexp details summary{cursor:pointer;font-size:12.5px;font-weight:700;color:var(--ink-2);margin-top:8px}
+.j-selbar .j-sep{width:1px;align-self:stretch;background:var(--brand);opacity:.35}
+.j-cacts{margin-top:10px}
+.j-pz{border:1px solid var(--line);border-radius:8px;margin:12px 0 10px;overflow:hidden}
+.j-pzh{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;background:var(--surface-2);padding:5px 10px;font-size:11.5px;font-weight:700;color:var(--ink-2)}
+.j-pzh span{font-weight:500;color:var(--muted)}
+.j-pzg{display:grid;grid-template-columns:repeat(4,minmax(0,1fr))}
+.j-pzg>div{padding:7px 10px;border-left:1px solid var(--line);min-width:0}
+.j-pzg>div:first-child{border-left:0}
+.j-pzg small{display:block;font-size:11px;color:var(--muted)}
+.j-pzg b{font:600 17px/1.35 var(--f-num);font-variant-numeric:tabular-nums}
+.j-pzg em{display:block;font-style:normal;font:500 11.5px var(--f-num);color:var(--muted)}
+.j-pzg .dn{box-shadow:inset 0 3px 0 var(--down)}.j-pzg .uq{box-shadow:inset 0 3px 0 var(--up)}
+@media (max-width:620px){.j-pzg{grid-template-columns:repeat(2,minmax(0,1fr))}.j-pzg>div:nth-child(3){border-left:0}.j-pzg>div:nth-child(n+3){border-top:1px solid var(--line)}}
+.j-pzbar{padding:4px 12px 8px}
+.j-pzbar .b{display:flex;height:8px;border-radius:4px;overflow:hidden}
+.j-pzbar .b i{display:block;height:100%}
+.j-pzbar .b i.dn{background:rgba(var(--downrgb),.22)}.j-pzbar .b i.up{background:color-mix(in srgb,var(--up) 24%,transparent)}
+.j-pzbar .m{position:relative;height:18px;font:600 11px var(--f-num)}
+.j-pzbar .m span{position:absolute;top:2px;white-space:nowrap;color:var(--muted);font-weight:500}
+.j-pzbar .m .e0{left:0}.j-pzbar .m .e1{right:0}
+.j-pzbar .m .nw{transform:translateX(-50%);color:var(--ink);font-weight:700;background:var(--surface);padding:0 4px}
+details.j-rec{margin-top:10px;border-top:1px solid var(--line);padding-top:8px}
+details.j-rec summary{cursor:pointer;font-size:12.5px;font-weight:700;color:var(--ink-2)}
+.j-recg{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px;margin-top:8px}
+@media (max-width:860px){.j-recg{grid-template-columns:1fr}}
+
 </style>
 </head><body>
 
@@ -294,6 +335,46 @@ table.w-tbl td.w-ent{background:var(--j-hold-soft)}
 
   <div class="j-top" id="kpis"></div>
 
+  <div class="j-tvbar"><button class="btn sm ghost" type="button" id="tv-btn" aria-expanded="false" aria-controls="tv-exp">TradingViewへ書き出し <span class="j-tvdot" id="tv-dot" hidden title="前回の書き出しから保有・監視が変わっています"></span></button></div>
+  <div class="j-tvexp" id="tv-exp" hidden>
+    <div class="hd"><h3>TradingViewへ書き出し</h3><span class="phint num" id="tv-at"></span></div>
+    <div class="j-tvopt">
+      <label><input type="checkbox" name="tv-h" checked> 保有中（<span id="tv-hn"></span>）</label>
+      <label><input type="checkbox" name="tv-w" checked> 監視銘柄（<span id="tv-wn"></span>）</label>
+      <label><input type="checkbox" name="tv-s" checked> 「保有」「監視」の見出しで分ける</label>
+    </div>
+    <div class="j-tvg">
+      <div style="min-width:0">
+        <div class="phint" style="margin-bottom:4px">リスト用ファイル（hashibiro_list.txt）の中身</div>
+        <pre class="j-code-pre" id="tv-list"></pre>
+        <div class="j-btnrow" style="margin-top:8px"><button class="btn sm" type="button" id="tv-save">ファイルに保存</button><button class="btn sm ghost" type="button" data-tvcopy="tv-list">コピー</button></div>
+        <div class="j-warn" id="tv-warn" style="font-size:12px;margin-top:6px"></div>
+      </div>
+      <div style="min-width:0">
+        <div class="phint" style="margin-bottom:4px">TradingViewでの取り込み方</div>
+        <ol>
+          <li>右側のウォッチリスト名をクリック</li>
+          <li>「リストをインポート」を選び、保存した hashibiro_list.txt を指定</li>
+          <li>2回目以降は、古いリストを削除してから取り込み直す（上書きの取り込みができないため）</li>
+        </ol>
+        <div class="phint" style="margin-top:6px">日本株は TSE:7203、米国株は上場先を付けて NASDAQ:PLTR／NYSE:TSM の形にします。</div>
+      </div>
+    </div>
+    <div style="border-top:1px dashed var(--line-strong);margin:14px 0 10px"></div>
+    <div class="hd"><h3 style="font-size:14px">TradingViewに赤・緑の帯を出す（保有中のみ）</h3><span class="phint">並び＝銘柄=方向,損切,建値,利確,建てた日</span></div>
+    <pre class="j-code-pre" id="tv-zone" style="margin-top:6px"></pre>
+    <div class="j-btnrow" style="margin-top:8px"><button class="btn sm ghost" type="button" data-tvcopy="tv-zone">帯の文字列をコピー</button></div>
+    <details><summary>インジケーターの入れ方とスクリプト（最初の1回だけ）</summary>
+      <ol style="margin-top:6px">
+        <li>TradingViewの下の「Pineエディタ」を開き、下のスクリプトを貼って「チャートに追加」</li>
+        <li>インジケーターの設定（歯車）を開き、上の「帯の文字列」を貼る</li>
+        <li>損切・利確を変えたら、文字列をコピーし直して貼り替える（TradingViewのスクリプトは外のデータを読めないため）</li>
+      </ol>
+      <pre class="j-code-pre" id="tv-pine" style="margin-top:6px"></pre>
+      <div class="j-btnrow" style="margin-top:8px"><button class="btn sm ghost" type="button" data-tvcopy="tv-pine">スクリプトをコピー</button></div>
+    </details>
+  </div>
+
   <div class="j-tabs" role="tablist" id="tabs">
     <button role="tab" data-t="watch" aria-selected="true">監視銘柄<span class="cnt" id="c-watch"></span></button>
     <button role="tab" data-t="hold" aria-selected="false">保有中<span class="cnt" id="c-hold"></span></button>
@@ -326,7 +407,7 @@ table.w-tbl td.w-ent{background:var(--j-hold-soft)}
     </div>
     <div class="j-selbar" id="sb-hold" hidden></div>
     <div class="j-tblbox"><table class="j-tbl" id="tbl-hold"></table></div>
-    <div class="foot"><b>記録のしかた</b>：新規は「＋ 新しく建てる」。銘柄の行を押すと、右上に「決済を記録」（利確・損切りの反対売買。一部だけでも可）と「編集」が出ます。損切ライン・利確ライン・株数・平均取得単価の変更は「編集」から。全株を決済すると「取引完了」のボタンが出て、押すと売買履歴へ移ります。<br>
+    <div class="foot"><b>記録のしかた</b>：新規は「＋ 新しく建てる」。銘柄の行を押すと、すぐ下に銘柄カードが開き（チャートは建てた日に▲・建値〜損切ラインを赤・建値〜利確ラインを緑）、カードの上に「決済を記録」（利確・損切りの反対売買。一部だけでも可）と「編集」が出ます。損切ライン・利確ライン・株数・平均取得単価の変更は「編集」から。全株を決済すると「取引完了」のボタンが出て、押すと売買履歴へ移ります。<br>
       <b>利確ライン</b>：自分で決めた利確の価格と、現在値からの距離。<b>到達した段</b>：平均取得単価から +5〜+30%（ショートは −5〜−30%）のうち、保有中に一度でも届いた段が緑。<b>損切まで</b>：現在値から損切ラインまでの距離。<b>損切り幅の何倍</b>：いまの損益が、建てたときに決めた損切り幅（取得単価と損切ラインの差×株数）の何倍か。−1.0倍＝損切ラインどおりの負け、+2.0倍＝損切り幅の2倍の利益。<b>最大含み益／損</b>：保有中の高値・安値で見た最大値。<b>信用期日</b>：残り30日以内は赤。</div>
   </div>
 
@@ -381,7 +462,7 @@ table.w-tbl td.w-ent{background:var(--j-hold-soft)}
   </div>
 </footer>
 
-<script src="../assets/card.js?v=20261008"></script>
+<script src="../assets/card.js?v=20261008lw"></script>
 <script src="../assets/jr.js?v=20261009"></script>
 <script>
 (function(){
@@ -559,7 +640,7 @@ function renderHold(){
     if(!c.open){ // 全株決済ずみ・完了待ち
       h+=`<tr class="row j-done${sel}" data-id="${P.id}">${ckTd('hold',P.id)}<td class="l">${nameHTML(P)} <span class="j-st">取引完了待ち</span></td><td class="l">${tagsHTML(P)}</td><td>${c.d0.slice(2).replace(/-/g,'/')}</td><td>0（全株決済）</td><td>${px(P,c.avg)}</td><td>–</td><td>${px(P,c.exitAvg)}</td>
         <td class="${cls(c.realized)}">確定 ${yen(c.realized)}</td><td>${pct(c.retPct)}</td><td>–</td><td>–</td><td class="l">行を押して「取引完了」へ</td><td>${c.hold}日</td><td class="${cls(c.R)}">${sgn(c.R,2)}倍</td><td>${c.mfe==null?'–':`<span class="up">${sgn(c.mfe)}%</span> / <span class="down">${sgn(c.mae)}%</span>`}</td><td>–</td><td>–</td><td class="l"><span class="j-tg tag">${P.tag}</span></td>${delTd('hold',P.id,P.name)}</tr>`;
-      if(OPENED.hold===P.id)h+=detailRow(P,20,true);return;}
+      return;}
     tn+=c.notional;tu+=c.unreal;
     const dueDays=P.due?days(TODAY,P.due):null;const earnDays=P.nextEarn?days(TODAY,P.nextEarn):null;
     const tg=[5,10,15,20,25,30].map((t,k)=>`<i class="${c.hits[k]?'hit':''}" title="${P.dir==='S'?'−':'+'}${t}% = ${px(P,c.avg*(1+c.sh*t/100))}${c.hits[k]?'（'+c.hits[k]+' 到達）':''}">${t}</i>`).join('');
@@ -570,11 +651,11 @@ function renderHold(){
       <td class="l"><span class="j-tgt">${tg}</span></td><td>${c.hold}日</td><td class="${cls(c.R)}">${sgn(c.R,2)}倍</td><td>${c.mfe==null?'–':`<span class="up">${sgn(c.mfe)}%</span> / <span class="down">${sgn(c.mae)}%</span>`}</td>
       <td>${P.nextEarn?`${P.nextEarn.slice(5).replace('-','/')}${earnDays<=7?' <span class="j-warn">あと'+earnDays+'日</span>':''}`:'–'}</td>
       <td>${P.due?`<span class="${dueDays<=30?'j-warn':''}">${P.due.slice(2).replace(/-/g,'/')}</span>`:'–'}</td><td class="l"><span class="j-tg tag">${P.tag}</span></td>${delTd('hold',P.id,P.name)}</tr>`;
-    if(OPENED.hold===P.id)h+=detailRow(P,20,true);
   });
   if(!rows.length)h+=`<tr><td colspan="20" class="j-empty">${POS.some(P=>!P.done)?'絞り込みに合う銘柄がありません。':'保有中の銘柄はありません。「＋ 新しく建てる」から記録します。'}</td></tr>`;
   h+=`</tbody><tfoot><tr><td class="ck"></td><td class="l" colspan="5">合計 ${rows.filter(P=>P.c.open).length}銘柄</td><td>${yenAbs(tn)}</td><td></td><td class="${cls(tu)}">${yen(tu)}</td><td colspan="11"></td></tr></tfoot>`;
-  tbl.innerHTML=h;bindSort('hold',tbl);bindRows('hold',tbl);bindAct(tbl);bindSel('hold',tbl,rows.map(P=>P.id));
+  tbl.innerHTML=h;bindSort('hold',tbl);bindRows('hold',tbl);bindSel('hold',tbl,rows.map(P=>P.id));
+  const op=OPENED.hold!=null&&rows.find(P=>P.id===OPENED.hold);if(op)openHoldCard(op);else{OPENED.hold=null;StockCard.closeBelow('h');}
 }
 function renderHist(){
   const tbl=document.getElementById('tbl-hist');
@@ -595,24 +676,19 @@ function renderHist(){
   const avgR=rows.length?rows.reduce((s,P)=>s+P.c.R,0)/rows.length:null;
   document.getElementById('hist-sum').innerHTML=`<span>取引数<b>${rows.length}</b></span><span>勝率<b>${rows.length?(w/rows.length*100).toFixed(0)+'%':'–'}</b>（${w}勝${rows.length-w}敗）</span><span>損益の合計<b class="${cls(tp)}">${yen(tp)}</b></span><span>1取引の平均<b class="${cls(avgR)}">${sgn(avgR,2)}倍</b>（損切り幅に対して）</span>`;
 }
-function bindRows(key,tbl){tbl.querySelectorAll('tr.row').forEach(tr=>tr.onclick=e=>{if(e.target.closest('a,input,.j-del,td.ck'))return;const id=+tr.dataset.id;OPENED[key]=OPENED[key]===id?null:id;if(key==='hold')ACT=null;RENDER[key]();});}
+function bindRows(key,tbl){tbl.querySelectorAll('tr.row').forEach(tr=>tr.onclick=e=>{if(e.target.closest('a,input,.j-del,td.ck'))return;const id=+tr.dataset.id;OPENED[key]=OPENED[key]===id?null:id;if(key==='hold'){ACT=null;HSCROLL=OPENED.hold!=null;}RENDER[key]();});}
 
 /* ---------- 詳細(行の下) ---------- */
 // ライン(損切・利確)で決済したときの損益。米国株はドルと円(建てたときのドル円)
 function linePL(P,v){const c=P.c;if(v==null||!isFinite(v))return '–';const q=c.open?c.q:c.q;const d=c.sh*(v-c.avg)*q;
   if(P.mk!=='us')return `<span class="${cls(d)}">${yen(d)}</span>`;const fx=P.fills[0].fx;
   return `<span class="${cls(d)}">${d<0?'−':'+'}$${fmt(Math.abs(d),2)}（${yen(d*fx)}）</span>`;}
-function detailRow(P,span,canEdit){
+function recParts(P){
   const c=P.c,us=P.mk==='us';
   const fills=P.fills.map(f=>{const op=(f.t==='buy')===(P.dir==='L');return `<tr><td class="l">${f.d}</td><td class="l">${op?'新規':'決済'}（${f.t==='buy'?'買':'売'}）</td><td>${fmt(f.q)}</td><td>${px(P,f.p)}</td>${us?`<td>${f.fx.toFixed(2)}</td>`:''}<td>${addBD(f.d,2).slice(5).replace('-','/')}</td></tr>`;}).join('');
   const stops=P.stops.map(s=>`${s.d.slice(5).replace('-','/')} ${px(P,s.v)}${s.why?'（'+s.why+'）':''}`).join(' → ');
-  const btns=canEdit?`<div class="j-dbtns">${c.open?'<button class="btn sm" type="button" data-act="close">決済を記録</button>':''}<button class="btn ghost sm" type="button" data-act="edit">編集</button></div>`:'';
-  return `<tr class="j-detail" data-pid="${P.id}"><td colspan="${span}"><div class="j-dgrid">
-    <div class="j-dhead"><h4 style="margin:0">${esc(P.name)}<span class="j-code" style="margin-left:8px">${P.code}</span></h4>${btns}</div>
-    ${canEdit?`<div style="grid-column:1/-1">${actForm(P)}</div>`:''}
-    <div><h4>チャートと記録したライン</h4>${miniChart(P)}
-      <table class="j-mini"><thead><tr><th class="l">約定日</th><th class="l">内容</th><th>株数</th><th>単価</th>${us?'<th>ドル円</th>':''}<th>受渡日</th></tr></thead><tbody>${fills}</tbody></table></div>
-    <div><h4>エントリーの記録</h4><dl class="j-dl">
+  const fillsTbl=`<table class="j-mini"><thead><tr><th class="l">約定日</th><th class="l">内容</th><th>株数</th><th>単価</th>${us?'<th>ドル円</th>':''}<th>受渡日</th></tr></thead><tbody>${fills}</tbody></table>`;
+  const right=`<h4>エントリーの記録</h4><dl class="j-dl">
       <dt>口座</dt><dd>${P.acct}</dd>
       <dt>手法</dt><dd>${P.tag}</dd>
       <dt>入ったときの地合い</dt><dd>${P.regime}</dd>
@@ -625,8 +701,17 @@ function detailRow(P,span,canEdit){
       ${c.open?'':`<dt>同期間の${P.mk==='jp'?'TOPIX':'S&P500'}</dt><dd>${pct(c.idxRet)}</dd>`}
       </dl>
       <h4 style="margin-top:12px">エントリーの理由</h4><p class="j-memo">${esc(P.reason)}</p>
-      ${P.memo?`<h4>メモ</h4><p class="j-memo">${esc(P.memo)}</p>`:''}
-    </div></div></td></tr>`;
+      ${P.memo?`<h4>メモ</h4><p class="j-memo">${esc(P.memo)}</p>`:''}`;
+  return {fillsTbl,right};
+}
+function detailRow(P,span,canEdit){
+  const c=P.c,r=recParts(P);
+  const btns=canEdit?`<div class="j-dbtns">${c.open?'<button class="btn sm" type="button" data-act="close">決済を記録</button>':''}<button class="btn ghost sm" type="button" data-act="edit">編集</button></div>`:'';
+  return `<tr class="j-detail" data-pid="${P.id}"><td colspan="${span}"><div class="j-dgrid">
+    <div class="j-dhead"><h4 style="margin:0">${esc(P.name)}<span class="j-code" style="margin-left:8px">${P.code}</span></h4>${btns}</div>
+    ${canEdit?`<div style="grid-column:1/-1">${actForm(P)}</div>`:''}
+    <div><h4>チャートと記録したライン</h4>${miniChart(P)}${r.fillsTbl}</div>
+    <div>${r.right}</div></div></td></tr>`;
 }
 function miniChart(P){
   if(!P.oh||!P.oh.d.length)return '<p class="j-hide" style="font-size:12px">この銘柄は日々の値動きを取得していないため、チャートは出せません。</p>';
@@ -642,6 +727,129 @@ function miniChart(P){
   g+=`<text class="axl" x="${L}" y="${H-3}">${oh.d[0]}</text><text class="axl" x="${W-R}" y="${H-3}" text-anchor="end">${oh.d[n-1]}</text>`;
   return `<div class="j-chart" style="max-width:640px"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(P.name)}の日足と記録したライン">${g}</svg></div><div style="font-size:11px;color:var(--faint);margin:2px 0 8px">▲＝建て（買い・売り建て）　▼＝決済　実線＝取得単価・損切ライン　点線＝利確ライン</div>`;
 }
+
+/* ================= TradingView連携・保有中の銘柄カード(2026-10-08) ================= */
+// TradingViewの銘柄コード。日本株=TSE:7203。米国株は上場先(assets/us_exch.json=16_us_exchange.py)を付ける。見つからなければティッカーだけ
+let EXCH=null;
+const loadExch=()=>EXCH?Promise.resolve(EXCH):getJSON(ROOT+'assets/us_exch.json').then(d=>{EXCH={};if(d)Object.keys(d).forEach(k=>d[k].forEach(t=>EXCH[t]=k));return EXCH;});
+const tvTicker=(mk,code)=>mk==='us'?String(code).replace('-','.'):String(code);
+const tvSym=(mk,code)=>{const t=tvTicker(mk,code);if(mk!=='us')return 'TSE:'+t;const e=EXCH&&EXCH[t];return e?e+':'+t:t;};
+// 帯の文字列(TradingViewの自作インジケーターの設定に貼る) 銘柄=方向,損切,建値,利確,建てた日
+const n4=v=>v==null||!isFinite(v)?'':String(+(+v).toFixed(4));
+const zoneStr=P=>`${tvTicker(P.mk,P.code)}=${P.dir},${n4(P.c.stopNow)},${n4(P.c.avg)},${n4(P.target)},${String(P.c.d0||'').replace(/-/g,'')}`;
+const openPos=()=>POS.filter(P=>!P.done&&P.c&&P.c.open);
+async function copyText(t,msg){
+  try{await navigator.clipboard.writeText(t);toast(msg||'コピーしました');}
+  catch(e){const ta=document.createElement('textarea');ta.value=t;ta.style.cssText='position:fixed;top:0;left:0;opacity:0';document.body.appendChild(ta);ta.select();
+    let ok=false;try{ok=document.execCommand('copy');}catch(x){}ta.remove();toast(ok?(msg||'コピーしました'):'コピーできませんでした');}}
+async function copySyms(list){await loadExch();const s=[...new Set(list.map(([mk,code])=>tvSym(mk,code)))];
+  copyText(s.join(','),`${s.length}件をコピーしました（${s.slice(0,4).join(', ')}${s.length>4?' ほか':''}）。TradingViewのウォッチリストの「シンボルを追加」欄に貼り付けます`);}
+
+// ---- ページ上部「TradingViewへ書き出し」 ----
+const TVKEY='jr_tv_last';
+function tvListText(h,w,sec){const a=[],add=(lab,L)=>{const s=[...new Set(L)];if(!s.length)return;if(sec)a.push('###'+lab);a.push(...s);};
+  if(h)add('保有',openPos().map(P=>tvSym(P.mk,P.code)));if(w)add('監視',(JR.st.watch||[]).map(x=>tvSym(x.mk,x.code)));return a.join(',');}
+function tvDot(){const d=document.getElementById('tv-dot');if(!d)return;let last=null;try{last=localStorage.getItem(TVKEY);}catch(e){}
+  d.hidden=!EXCH||last===tvListText(true,true,true)||(!openPos().length&&!(JR.st.watch||[]).length);}
+function tvMark(){try{localStorage.setItem(TVKEY,tvListText(true,true,true));localStorage.setItem(TVKEY+'_at',new Date().toLocaleString('ja-JP',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}));}catch(e){}tvDot();renderTV();}
+function renderTV(){const box=document.getElementById('tv-exp');if(!box||box.hidden)return;
+  const g=n=>box.querySelector('[name="'+n+'"]').checked,txt=tvListText(g('tv-h'),g('tv-w'),g('tv-s'));
+  box.querySelector('#tv-hn').textContent=openPos().length;box.querySelector('#tv-wn').textContent=(JR.st.watch||[]).length;
+  box.querySelector('#tv-list').textContent=txt||'（書き出す銘柄がありません）';
+  box.querySelector('#tv-zone').textContent=openPos().map(zoneStr).join(';')||'（保有中の銘柄がありません）';
+  let at=null;try{at=localStorage.getItem(TVKEY+'_at');}catch(e){}box.querySelector('#tv-at').textContent=at?'前回の書き出し '+at:'まだ書き出していません';
+  const nx=EXCH?[...openPos().map(P=>[P.mk,P.code]),...(JR.st.watch||[]).map(x=>[x.mk,x.code])].filter(([mk,c])=>mk==='us'&&!EXCH[tvTicker(mk,c)]).map(x=>x[1]):[];
+  box.querySelector('#tv-warn').textContent=nx.length?`上場先が分からず、ティッカーだけで書き出す銘柄：${[...new Set(nx)].join('、')}（TradingViewで候補から選び直してください）`:'';}
+function initTV(){const btn=document.getElementById('tv-btn'),box=document.getElementById('tv-exp');if(!btn)return;
+  btn.onclick=()=>{box.hidden=!box.hidden;btn.setAttribute('aria-expanded',String(!box.hidden));if(!box.hidden)loadExch().then(renderTV);};
+  box.querySelectorAll('input[type=checkbox]').forEach(i=>i.onchange=renderTV);
+  box.querySelector('#tv-save').onclick=()=>{const t=box.querySelector('#tv-list').textContent;if(!t||t.startsWith('（'))return;
+    const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([t],{type:'text/plain'}));a.download='hashibiro_list.txt';document.body.appendChild(a);a.click();
+    setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},800);tvMark();toast('hashibiro_list.txt を保存しました。TradingViewの「リストをインポート」で取り込みます');};
+  box.querySelectorAll('[data-tvcopy]').forEach(b=>b.onclick=()=>{const el=box.querySelector('#'+b.dataset.tvcopy),t=el.textContent;if(!t||t.startsWith('（'))return;
+    copyText(t);if(b.dataset.tvcopy==='tv-list')tvMark();});
+  box.querySelector('#tv-pine').textContent=PINE;
+  loadExch().then(tvDot);}
+const PINE=`//@version=6
+// 投資家ハシビロコウの株式ダッシュボード「監視銘柄・売買記録」→「TradingViewへ書き出し」の帯の文字列を貼ると、
+// 表示中の銘柄の 建値〜損切ライン を赤、建値〜利確ライン を緑で、建てた日から右へ塗ります(売り建ては上下が逆)
+indicator("ハシビロコウ 損切・利確", overlay = true, max_boxes_count = 4, max_labels_count = 4)
+
+data = input.text_area("", "ダッシュボードからコピーした帯の文字列")
+ext  = input.int(15, "右へ延ばす本数", minval = 0)
+
+var string dir = na
+var float  stp = na
+var float  ent = na
+var float  tgt = na
+var int    t0  = na
+if barstate.isfirst
+    for item in str.split(data, ";")
+        kv = str.split(str.trim(item), "=")
+        if kv.size() == 2 and str.upper(str.trim(kv.get(0))) == syminfo.ticker
+            v = str.split(kv.get(1), ",")
+            if v.size() >= 5
+                dir := str.trim(v.get(0))
+                stp := str.tonumber(v.get(1))
+                ent := str.tonumber(v.get(2))
+                tgt := str.tonumber(v.get(3))
+                d    = str.trim(v.get(4))
+                t0  := timestamp(syminfo.timezone, int(str.tonumber(str.substring(d, 0, 4))),
+                         int(str.tonumber(str.substring(d, 4, 6))), int(str.tonumber(str.substring(d, 6, 8))))
+
+sgn  = dir == "L" ? 1.0 : -1.0
+risk = math.abs(ent - stp)
+
+if barstate.islast and not na(ent) and not na(stp)
+    r = time + ext * timeframe.in_seconds() * 1000
+    box.new(t0, math.max(ent, stp), r, math.min(ent, stp), xloc = xloc.bar_time,
+         border_color = color.new(color.red, 30), bgcolor = color.new(color.red, 80))
+    label.new(r, stp, "損切 " + str.tostring(stp) + "  " + str.tostring(sgn * (stp / ent - 1) * 100, "+0.0;-0.0") + "%",
+         xloc = xloc.bar_time, style = label.style_label_left, color = color.red, textcolor = color.white)
+    if not na(tgt)
+        box.new(t0, math.max(ent, tgt), r, math.min(ent, tgt), xloc = xloc.bar_time,
+             border_color = color.new(color.teal, 30), bgcolor = color.new(color.teal, 80))
+        label.new(r, tgt, "利確 " + str.tostring(tgt) + "  " + str.tostring(sgn * (tgt / ent - 1) * 100, "+0.0;-0.0") + "%  " + str.tostring(sgn * (tgt - ent) / risk, "+0.0") + "倍",
+             xloc = xloc.bar_time, style = label.style_label_left, color = color.teal, textcolor = color.white)
+
+// アラート条件: 終値が損切ライン・利確ラインに届いた
+hitStop = not na(stp) and (dir == "L" ? close <= stp : close >= stp)
+hitTgt  = not na(tgt) and (dir == "L" ? close >= tgt : close <= tgt)
+alertcondition(hitStop, "損切ライン到達", "{{ticker}} 終値が損切ラインに到達")
+alertcondition(hitTgt,  "利確ライン到達", "{{ticker}} 終値が利確ラインに到達")`;
+
+// ---- 保有中: 行を押すと、すぐ下に銘柄カード(ほかのページと同じ)。上に「ポジション」段、チャートに建てた日の▲と赤・緑の帯 ----
+let HSCROLL=false;
+function posBlock(P){const c=P.c;if(!c.open)return '';const tg=P.target,us=P.mk==='us',fx=us?(FXNOW||c.avgFx||0):1;
+  const lp=v=>c.sh*(v-c.avg)*c.q*fx,rt=tg&&c.risk?lp(tg)/c.risk:null;
+  let bar='';
+  if(tg){const lo=Math.min(c.stopNow,tg),hi=Math.max(c.stopNow,tg),f=v=>Math.min(Math.max((v-lo)/(hi-lo)*100,0),100),fe=f(c.avg),fn=f(c.last);
+    const L=P.dir==='L',lc=L?'dn':'up',rc=L?'up':'dn';
+    bar=`<div class="j-pzbar" aria-hidden="true"><div class="m"><span class="e0">${px(P,lo)}</span><span class="nw" style="left:${fn}%">▼ 現在値 ${px(P,c.last)}</span><span class="e1">${px(P,hi)}</span></div>
+      <div class="b"><i class="${lc}" style="width:${fe}%"></i><i class="${rc}" style="width:${100-fe}%"></i></div></div>`;}
+  return `<div class="j-pz"><div class="j-pzh">ポジション<span>${P.dir==='L'?'買い':'売り建て'} ${fmt(c.q)}株 ・ ${c.d0.slice(5).replace('-','/')} 建て ・ 平均取得単価 ${px(P,c.avg)}</span></div>
+    <div class="j-pzg">
+      <div class="dn"><small>損切ライン</small><b class="down">${px(P,c.stopNow)}</b><em>${sgn(c.sh*(c.stopNow/c.avg-1)*100)}% ／ ${linePL(P,c.stopNow)}</em></div>
+      <div><small>いまの含み損益</small><b class="${cls(c.unreal)}">${yen(c.unreal)}</b><em>${pct(c.retPct)}</em></div>
+      <div class="uq"><small>利確ライン</small><b class="up">${tg?px(P,tg):'–'}</b><em>${tg?sgn(c.sh*(tg/c.avg-1)*100)+'% ／ '+linePL(P,tg):'「編集」から入れられます'}</em></div>
+      <div><small>損切り幅の何倍</small><b class="${cls(c.R)}">${sgn(c.R,2)}倍</b><em>${rt!=null?'利確で '+sgn(rt,1)+'倍':'損切り幅＝建てたときの損切ラインまで'}</em></div>
+    </div>${bar}</div>`;}
+function openHoldCard(P){const tr=document.querySelector(`#tbl-hold tr.row[data-id="${P.id}"]`);if(!tr)return;const c=P.c,scroll=HSCROLL;HSCROLL=false;
+  const r=recParts(P),op=f=>(f.t==='buy')===(P.dir==='L');
+  const lines=[{price:c.avg,color:'--ink-2',title:'建値',legend:false}];
+  if(c.open){lines.unshift({price:c.stopNow,color:'--down',title:'損切',legend:false});if(P.target)lines.push({price:P.target,color:'--up',title:'利確',style:'dashed',legend:false});}
+  const markers=P.fills.map(f=>op(f)?{date:f.d,above:P.dir==='S',shape:P.dir==='L'?'up':'down',color:'--brand',text:'建て'}:{date:f.d,above:P.dir==='L',shape:P.dir==='L'?'down':'up',color:'--j-hold',text:'決済'});
+  const btns=`<button class="btn sm" type="button" data-act="${c.open?'close':'done'}"${c.open?'':' hidden'}>決済を記録</button><button class="btn ghost sm" type="button" data-act="edit">編集</button>
+    <button class="btn ghost sm" type="button" data-tv1>TradingView用にコピー（${esc(tvSym(P.mk,P.code))}）</button>${c.open?'<button class="btn ghost sm" type="button" data-tvz>帯の文字列をコピー</button>':''}`;
+  StockCard.below(tr,{group:'h',market:P.mk,code:P.code,name:P.name,sub:(P.mk==='jp'?'日本':'米国')+' ・ '+(P.dir==='L'?'ロング':'ショート'),scroll,acts:false,
+    lines,markers,zones:c.open?{from:c.d0,entry:c.avg,stop:c.stopNow,tgt:P.target||null}:null,
+    legend:c.open?`<span><i style="background:rgba(var(--downrgb),.22)"></i>建値〜損切ライン</span>${P.target?'<span><i style="background:color-mix(in srgb,var(--up) 24%,transparent)"></i>建値〜利確ライン（点線）</span>':''}<span>${P.dir==='L'?'▲':'▼'} 建てた日</span>`:'',
+    foot:P.nextEarn?'次の決算 '+P.nextEarn:'',
+    pre:`<div data-pid="${P.id}"><div class="sc-acts j-cacts">${btns}</div>${actForm(P)}${posBlock(P)}</div>`,
+    post:`<details class="j-rec"><summary>記録の詳細（約定・エントリーの理由・到達した段）</summary><div class="j-recg"><div>${r.fillsTbl}</div><div>${r.right}</div></div></details>`,
+    onMount:box=>{bindAct(box);box.querySelector('[data-tv1]').onclick=()=>copySyms([[P.mk,P.code]]);const z=box.querySelector('[data-tvz]');if(z)z.onclick=()=>copyText(zoneStr(P),'帯の文字列をコピーしました');
+      const f=box.querySelector('form.j-act');if(f&&ACT)f.scrollIntoView({block:'nearest'});},
+    onClose:()=>{OPENED.hold=null;ACT=null;document.querySelectorAll('#tbl-hold tr.sel').forEach(x=>x.classList.remove('sel'));}});}
 
 /* ================= 振り返り ================= */
 const RV={unit:'month',per:null,dim:'tag'};
@@ -851,8 +1059,7 @@ function actForm(P){
   return '';
 }
 function bindAct(tbl){
-  tbl.querySelectorAll('button[data-act]').forEach(bt=>bt.onclick=e=>{e.stopPropagation();const a=bt.dataset.act;const id=+bt.closest('[data-pid]').dataset.pid;if(a==='edit'){ACT=null;openPosPanel(POS.find(x=>x.id===id));return;}ACT=a==='cancel'||(ACT&&ACT.id===id&&ACT.act===a)?null:{id,act:a};renderHold();
-    const f=tbl.querySelector('form.j-act');if(f)f.scrollIntoView({block:'nearest'});});
+  tbl.querySelectorAll('button[data-act]').forEach(bt=>bt.onclick=e=>{e.stopPropagation();const a=bt.dataset.act;const id=+bt.closest('[data-pid]').dataset.pid;if(a==='edit'){ACT=null;openPosPanel(POS.find(x=>x.id===id));return;}ACT=a==='cancel'||(ACT&&ACT.id===id&&ACT.act===a)?null:{id,act:a};renderHold();});
   tbl.querySelectorAll('form.j-act').forEach(f=>{const P=POS.find(x=>x.id===+f.dataset.id);const v=n=>(f.querySelector('[name="'+n+'"]')||{}).value,vn=n=>JR.num(f.querySelector('[name="'+n+'"]'));
     f.onclick=e=>e.stopPropagation();
     if(f.dataset.act==='close'){const pv=()=>{const q=vn('x-qty'),p=vn('x-px');const r=P.mk==='us'?P.c.sh*q*(p*(FXNOW||P.c.avgFx)-P.c.avg*P.c.avgFx):P.c.sh*(p-P.c.avg)*q;
@@ -948,6 +1155,10 @@ function openWatchCard(k,scroll){const tr=document.querySelector(`#tbl-watch tr.
   document.querySelectorAll('#tbl-watch tr.w-row').forEach(x=>x.classList.toggle('sel',x===tr));
   const ne=EARN[k];
   StockCard.below(tr,{group:'w',market:w.mk,code:w.code,name:R.name,sub:(w.mk==='jp'?'日本':'米国')+(R.sector?'/'+R.sector:''),scroll,
+    lines:w.entry?[{price:w.entry,color:'--j-hold',title:'エントリー予定',style:'dashed',width:2}]:[],
+    legend:w.entry?'':'<span>エントリー予定株価を一覧の欄に入れると、チャートに点線が出ます</span>',
+    pre:`<div class="sc-acts j-cacts"><button class="btn ghost sm" type="button" data-tv1>TradingView用にコピー（${esc(tvSym(w.mk,w.code))}）</button></div>`,
+    onMount:box=>{box.querySelector('[data-tv1]').onclick=()=>copySyms([[w.mk,w.code]]);},
     foot:(R.themes.length?'テーマ：'+R.themes.map(esc).join('、'):'')+(ne?`${R.themes.length?' ・ ':''}次の決算 ${ne}`:''),
     onClose:()=>{WST.sel=null;document.querySelectorAll('#tbl-watch tr.sel').forEach(x=>x.classList.remove('sel'));}});}
 // 検索して追加
@@ -993,7 +1204,10 @@ function bindSel(key,tbl,ids){SHOWN[key]=ids;[...SEL[key]].forEach(i=>{if(!ids.i
   const all=tbl.querySelector('input[data-all]');
   const paint=()=>{const n=SEL[key].size;if(all){all.checked=ids.length>0&&n===ids.length;all.indeterminate=n>0&&n<ids.length;}
     const bar=document.getElementById('sb-'+key);bar.hidden=!n;
-    if(n)bar.innerHTML=`<b>${n}件</b>を選択中<button class="btn sm j-danger" type="button" data-bulk>選択した${n}件を削除</button><button class="btn sm ghost" type="button" data-clr>選択を解除</button>`;
+    if(n)bar.innerHTML=`<b>${n}件</b>を選択中${key!=='hist'?`<button class="btn sm" type="button" data-tvc>TradingView用にコピー（${n}件）</button>`:''}${key==='hold'?`<button class="btn sm ghost" type="button" data-tvz>帯の文字列をコピー（${n}件）</button>`:''}${key!=='hist'?'<span class="j-sep"></span>':''}<button class="btn sm j-danger" type="button" data-bulk>選択した${n}件を削除</button><button class="btn sm ghost" type="button" data-clr>選択を解除</button>`;
+    if(n&&key!=='hist'){const its=()=>itemsOf(key,[...SEL[key]]);
+      bar.querySelector('[data-tvc]').onclick=()=>copySyms(its().map(x=>[x.mk,x.code]));
+      const z=bar.querySelector('[data-tvz]');if(z)z.onclick=()=>{const L=its().filter(P=>P.c&&P.c.open);if(!L.length){toast('決済ずみの銘柄には帯がありません');return;}copyText(L.map(zoneStr).join(';'),`${L.length}件の帯の文字列をコピーしました`);};}
     if(n){bar.querySelector('[data-bulk]').onclick=()=>askDelete(key,[...SEL[key]]);bar.querySelector('[data-clr]').onclick=()=>{SEL[key].clear();tbl.querySelectorAll('input[data-sel]').forEach(c=>c.checked=false);paint();};}};
   if(all)all.onclick=e=>{e.stopPropagation();const on=ids.length>0&&SEL[key].size===ids.length;SEL[key].clear();if(!on)ids.forEach(i=>SEL[key].add(i));
     tbl.querySelectorAll('input[data-sel]').forEach(c=>c.checked=SEL[key].has(+c.value));paint();};
@@ -1033,6 +1247,7 @@ function toastUndo(msg,undo){document.querySelectorAll('.j-toast.u').forEach(x=>
 
 /* ================= つなぎ ================= */
 const RENDER={watch:renderWatch,hold:renderHold,hist:renderHist,rev:renderRev};
+initTV();
 function setSeg(id,v){document.querySelectorAll('#'+id+' button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.v===v));}
 function seg(id,items,cur,on){const el=document.getElementById(id);el.innerHTML=items.map(([v,t])=>`<button type="button" data-v="${v}" aria-pressed="${v===cur}">${t}</button>`).join('');el.querySelectorAll('button').forEach(b=>b.onclick=()=>{setSeg(id,b.dataset.v);on(b.dataset.v);});}
 seg('rv-unit',UNITS,RV.unit,v=>{RV.unit=v;renderRev();});
@@ -1044,7 +1259,7 @@ filterBar('rev',document.getElementById('f-rev'));
 document.querySelectorAll('#tabs button').forEach(b=>b.onclick=()=>{document.querySelectorAll('#tabs button').forEach(x=>x.setAttribute('aria-selected',x===b));
   ['watch','hold','hist','rev'].forEach(t=>document.getElementById('t-'+t).hidden=t!==b.dataset.t);try{localStorage.setItem('jr_tab',b.dataset.t);}catch(e){}});
 document.getElementById('pubview').onchange=e=>{PUB=e.target.checked;JR.st.pub=PUB;renderAll();};
-function renderAll(){JR.st.pos=POS;renderKpis();renderWatch();renderHold();renderHist();renderRev();const fn=document.getElementById('fxnote');if(fn)fn.textContent=FXNOW?'ドル円 '+FXNOW.toFixed(2)+(REF.fx&&REF.fx.date?'（'+REF.fx.date.slice(5).replace('-','/')+'）':''):'（ドル円を読み込めませんでした）';}
+function renderAll(){JR.st.pos=POS;renderKpis();renderWatch();renderHold();renderHist();renderRev();const fn=document.getElementById('fxnote');if(fn)fn.textContent=FXNOW?'ドル円 '+FXNOW.toFixed(2)+(REF.fx&&REF.fx.date?'（'+REF.fx.date.slice(5).replace('-','/')+'）':''):'（ドル円を読み込めませんでした）';tvDot();renderTV();}
 boot();
 try{const t=localStorage.getItem('jr_tab');if(t){const b=document.querySelector(`#tabs button[data-t="${t}"]`);if(b)b.click();}}catch(e){}
 })();
