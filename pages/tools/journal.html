@@ -28,7 +28,7 @@ main.wrap{padding-block:22px 40px}
 .j-kpi b{display:block;font:600 20px var(--f-num);font-variant-numeric:tabular-nums;line-height:1.35;white-space:nowrap}
 .j-kpi em{display:block;font-style:normal;font-size:11.5px;color:var(--faint);font-family:var(--f-num)}
 
-/* いちばん上: 左=保有(合計/現物・信用) 右=確定損益(今年/含み損益・成績) */
+/* いちばん上: 左=保有(合計/現物・信用) 右=今年の損益(確定＋暫定)・確定/暫定の内訳(1行目)・含み損益・成績(2行目) */
 .j-top{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:14px;overflow:hidden;margin-bottom:18px}
 .j-top>div{background:var(--surface);padding:12px 18px;min-width:0}
 .j-top .big{grid-column:span 2;padding:16px 18px}
@@ -41,6 +41,24 @@ main.wrap{padding-block:22px 40px}
 .j-top .hd small{white-space:nowrap}
 .j-top select{max-width:150px;font:12px var(--f-body);color:var(--ink);background:var(--surface);border:1px solid var(--line-strong);border-radius:6px;padding:1px 4px}
 .j-top .pair{display:flex;gap:14px;flex-wrap:wrap;align-items:baseline}
+/* 1行目右: 今年の損益(確定＋暫定) / 確定・暫定の内訳 */
+.j-top .yr,.j-top .fe{padding:16px 18px}
+.j-top .yr b{font-size:26px;line-height:1.25}
+.j-top .fe-r{display:flex;align-items:baseline;gap:8px;margin-top:5px}
+.j-top .fe-r i{font-style:normal;font:500 12px var(--f-num);color:var(--muted);min-width:2.6em}
+.j-top .fe-r b{font-size:17px;margin-left:auto}
+.j-pst{display:inline-block;font:700 10.5px var(--f-body);border-radius:4px;padding:1px 6px;white-space:nowrap}
+.j-pst.fix{background:var(--brand-soft);color:var(--brand)}
+.j-pst.est{background:var(--j-hold-soft);color:var(--j-hold)}
+.j-pend{display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;background:var(--j-hold-soft);border:1px solid var(--j-hold);border-radius:12px;padding:9px 14px;margin-bottom:10px;font-size:12.5px;color:var(--ink-2)}
+.j-pend b{color:var(--j-hold);font:700 15px var(--f-num)}
+.j-fixrow td{background:var(--surface-2)!important;padding:12px 14px!important}
+.j-fixf{display:flex;flex-wrap:wrap;align-items:flex-end;gap:10px 18px}
+.j-fixf .k{font-size:11.5px;color:var(--muted);display:block}
+.j-fixf .v{font:600 16px var(--f-num)}
+.j-fixf input{font:600 16px var(--f-num);width:150px;text-align:right;padding:5px 8px;border:1px solid var(--brand);border-radius:8px;background:var(--surface);color:var(--ink)}
+.j-fixf .note{flex-basis:100%;font-size:11.5px;color:var(--faint);margin:0}
+td .j-sub{display:block;font:500 10.5px var(--f-num);color:var(--faint)}
 @media (max-width:720px){.j-top{grid-template-columns:repeat(2,minmax(0,1fr))}.j-top .lt{border-right:0}.j-top .big b{font-size:24px}}
 .j-bar1{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
 .j-newbox{margin-bottom:14px}
@@ -415,10 +433,11 @@ details.j-rec summary{cursor:pointer;font-size:12.5px;font-weight:700;color:var(
   <!-- 売買履歴 -->
   <div id="t-hist" hidden>
     <div class="j-filters" id="f-hist"></div>
+    <div class="j-pend" id="hist-pend" hidden></div>
     <div class="j-sum" id="hist-sum"></div>
     <div class="j-selbar" id="sb-hist" hidden></div>
     <div class="j-tblbox"><table class="j-tbl" id="tbl-hist"></table></div>
-    <div class="foot"><b>損益</b>：株価の差による損益（円）。手数料・金利・配当は含みません。米国株は、建てた日と決済した日のドル円で円に換算し、「うち為替」に為替による分を表示。<b>損切り幅の何倍</b>：損益÷建てたときの損切り幅。<b>取り逃がし</b>：保有中の最大含み益から、実際に決済した損益率を引いた差。<b>指数との差</b>：同じ期間のTOPIX（米国株はS&amp;P500）の騰落率との差。</div>
+    <div class="foot"><b>損益（円）</b>：確定していれば確定損益、まだなら暫定損益。<b>暫定</b>＝決済した日に約定の値段から自動で計算した損益（手数料などを含まない。米国株は建てた日と決済した日のドル円で円に換算）。<b>確定</b>＝翌日に証券会社の「実現損益（円）」を見て入れた損益（手数料などを引いた後・税金を引く前）。「確定する」を押すと入力欄が開き、暫定損益と同じならそのまま確定できます。<b>損益（ドル）</b>：米国株だけ。ドルでの売買の損益（為替を含まず・手数料を含まず）。<b>損益率</b>：決済単価÷平均取得単価−1（米国株もドルの単価で計算）。<b>損切り幅の何倍</b>・<b>取り逃がし</b>：見出しの「?」で説明。</div>
   </div>
 
   <!-- 振り返り -->
@@ -433,7 +452,7 @@ details.j-rec summary{cursor:pointer;font-size:12.5px;font-weight:700;color:var(
     <div class="j-kpis" id="rv-kpis"></div>
     <div class="j-g2">
       <div class="panel"><div class="j-ph"><h3>期間ごとの損益</h3><span id="rv-bar-sub">棒を押すとその期間を選びます</span></div><div class="j-chart" id="ch-bar"></div></div>
-      <div class="panel"><div class="j-ph"><h3>資産の増え方（確定損益の累計）</h3><span>網掛け＝選んだ期間</span></div><div class="j-chart" id="ch-eq"></div></div>
+      <div class="panel"><div class="j-ph"><h3>資産の増え方（損益の累計）</h3><span>網掛け＝選んだ期間</span></div><div class="j-chart" id="ch-eq"></div></div>
       <div class="panel"><div class="j-ph"><h3>月別の損益</h3><span>年×月。押すとその月を選びます</span></div><div style="overflow-x:auto" id="ch-hm"></div></div>
       <div class="panel"><div class="j-ph"><h3>1回の取引の結果（損切り幅の何倍か）</h3><span>−1倍＝損切ラインどおりの負け</span></div><div class="j-chart" id="ch-r"></div></div>
       <div class="panel"><div class="j-ph"><h3>利確ラインに届いた割合</h3><span>保有中に一度でも到達した取引の割合</span></div><div class="j-chart" id="ch-tg"></div></div>
@@ -448,7 +467,7 @@ details.j-rec summary{cursor:pointer;font-size:12.5px;font-weight:700;color:var(
       <ul class="j-tips" id="rv-tips"></ul>
     </div>
     </div>
-    <div class="foot"><b>日付</b>：損益は決済した日（約定日）の期間に入ります。<b>勝率</b>：全株を決済し終えた取引のうち、損益がプラスだった割合（一部決済は数えない）。<b>ペイオフレシオ</b>：平均利益÷平均損失。<b>プロフィットファクター</b>：利益の合計÷損失の合計（1を超えれば全体でプラス）。<b>期待値</b>：1取引あたりの平均損益。<b>最大ドローダウン</b>：確定損益の累計が、それまでの最高から最も減った額。</div>
+    <div class="foot"><b>日付</b>：損益は決済した日（約定日）の期間に入ります。<b>勝率</b>：全株を決済し終えた取引のうち、損益がプラスだった割合（一部決済は数えない）。<b>ペイオフレシオ</b>：平均利益÷平均損失。<b>プロフィットファクター</b>：利益の合計÷損失の合計（1を超えれば全体でプラス）。<b>期待値</b>：1取引あたりの平均損益。<b>最大ドローダウン</b>：損益（確定＋暫定）の累計が、それまでの最高から最も減った額。</div>
   </div>
   </div>
 </section>
@@ -499,7 +518,7 @@ async function api(path,opt){opt=opt||{};
   if(r.status===401&&path!=='login'){showLogin();throw new Error(j.error||'ログインしてください');}
   if(!r.ok)throw new Error(j.error||'保存できませんでした（通信を確認してください）');return j;}
 // 保存する項目(表示のための計算値は保存しない)
-const KEYS=['mk','code','name','kind','dir','acct','tag','fills','stops','target','regime','reason','memo','exitReason','rule','done','due'];
+const KEYS=['mk','code','name','kind','dir','acct','tag','fills','stops','target','regime','reason','memo','exitReason','rule','done','due','pnlEst','pnlFix','fixD'];
 const pack=P=>{const o={};KEYS.forEach(k=>o[k]=P[k]===undefined?null:P[k]);return o;};
 // 表示の準備: 日足(建てた日から決済まで)・次の決算日
 async function prepare(P){
@@ -547,16 +566,20 @@ function calc(P){
     const fx=us?(f.fx||FXNOW||0):1;
     if(f.t===openT){avg=(avg*q+f.p*f.q)/(q+f.q);avgFx=us?(avgFx*q+fx*f.q)/(q+f.q):1;q+=f.q;if(!firstQ)firstQ=f.q;maxQ=Math.max(maxQ,q);}
     else{const st=sh*(f.p-avg)*f.q*fx; const fxp=us?sh*avg*f.q*(fx-avgFx):0; // 米国株: 株の損益(決済時レートで円換算)＋為替の損益
-      real.push({d:f.d,q:f.q,p:f.p,stock:st,fxp,fee:0,pnl:st+fxp});q-=f.q;}
+      real.push({d:f.d,q:f.q,p:f.p,stock:st,fxp,fee:0,pnl:st+fxp,usd:us?sh*(f.p-avg)*f.q:null});q-=f.q;}
   });
   const open=q>0;const pnow=priceOf(P.mk,P.code);
   const last=pnow!=null?pnow:(P.oh&&P.oh.c.length?P.oh.c[P.oh.c.length-1]:avg);
   const fxNow=us?(FXNOW||avgFx):1;
   const unreal=open?sh*(last-avg)*q*fxNow+(us?sh*avg*q*(fxNow-avgFx):0):0;
-  const realized=real.reduce((s,r)=>s+r.pnl,0);
+  // 損益: auto=約定の値段から計算(手数料など含まず)。暫定=auto(または手で直した値)・確定=翌日に証券会社の実現損益(円)を見て入れた値。表示や合計は 確定 → なければ暫定
+  const auto=real.reduce((s,r)=>s+r.pnl,0);
+  const est=P.pnlEst!=null?P.pnlEst:auto,fix=P.done&&P.pnlFix!=null?P.pnlFix:null,realized=fix!=null?fix:est;
+  const usd=us?real.reduce((s,r)=>s+r.usd,0):null;
   const d0=P.fills[0].d,d1=open||!real.length?null:real[real.length-1].d;
   const stop0=P.stops[0].v,stopNow=P.stops[P.stops.length-1].v;
-  const risk=Math.abs(P.fills[0].p-stop0)*firstQ*(us?(P.fills[0].fx||FXNOW||0):1);
+  const riskN=Math.abs(P.fills[0].p-stop0)*firstQ; // 損切り幅(円 or ドル)
+  const risk=riskN*(us?(P.fills[0].fx||FXNOW||0):1);
   // 保有中の最大含み益/損と利確の段への到達(日足の高値・安値で。日足が無い銘柄は出さない)
   let mfe=null,mae=null;const hits=[5,10,15,20,25,30].map(()=>null);
   if(P.oh&&avg)P.oh.d.forEach((d,i)=>{const hi=P.oh.h[i]??P.oh.c[i],lo=P.oh.l[i]??P.oh.c[i];
@@ -565,9 +588,11 @@ function calc(P){
   const exitAvg=real.length?real.reduce((s,r)=>s+r.p*r.q,0)/real.reduce((s,r)=>s+r.q,0):null;
   const retPct=open?sh*(last/avg-1)*100:(exitAvg!=null?sh*(exitAvg/avg-1)*100:0);
   const pnl=open?unreal:realized;
+  // 損切り幅の何倍: 値段の差で計算(手数料は含まず)。米国株はドルどうしで割る(為替の影響を除く)
+  const pnlN=open?sh*(last-avg)*q:(us?usd:auto);
   const i0=idxAt(P.mk,d0),i1=idxAt(P.mk,d1||TODAY);const idxRet=i0&&i1?(i1/i0-1)*100:null;
   const notional=avg*(open?q:maxQ)*(us?avgFx:1); // 建玉合計=建てたときのドル円で円に
-  return {sh,q:open?q:maxQ,avg,avgFx,real,realized,unreal,open,last,fxNow,d0,d1,hold:days(d0,d1||TODAY),risk,R:risk?pnl/risk:null,
+  return {sh,q:open?q:maxQ,avg,avgFx,real,realized,unreal,open,last,fxNow,d0,d1,hold:days(d0,d1||TODAY),risk,riskN,R:riskN?pnlN/riskN:null,auto,est,fix,usd,isFix:fix!=null,
     mfe,mae,hits,exitAvg,retPct,idxRet,vsIdx:idxRet==null?null:retPct-sh*idxRet,notional,fee:0,extra:0,stop0,stopNow,
     stockPnl:real.reduce((s,r)=>s+r.stock,0),fxPnl:real.reduce((s,r)=>s+r.fxp,0),
     distStop:open?sh*(last/stopNow-1)*100:null,distTgt:open&&P.target?sh*(P.target/last-1)*100:null,giveback:open||mfe==null?null:mfe-retPct,
@@ -582,10 +607,10 @@ function renderKpis(){
   const cash=sum(P=>P.kind==='現物'),mg=sum(P=>P.kind==='信用');const unreal=op.reduce((s,P)=>s+P.c.unreal,0);
   const mgL=op.filter(P=>P.kind==='信用'&&P.dir==='L').reduce((s,P)=>s+P.c.notional,0),mgS=mg-mgL;
   const y=TODAY.slice(0,4);const evAll=events(null);
+  // 今年の損益 = 確定損益 ＋ まだ確定していない暫定損益(決済した日=約定日の年)。件数は取引(建玉)の数
   const ey=evAll.filter(e=>e.d.slice(0,4)===y);const tot=ey.reduce((s,e)=>s+e.pnl,0);
-  // 確定申告の年は受渡日(約定日の2営業日後)で決まる。NISAは通算できないので別
-  const tax=evAll.filter(e=>addBD(e.d,2).slice(0,4)===y&&e.P.acct!=='NISA').reduce((s,e)=>s+e.pnl,0);
-  const nisa=ey.filter(e=>e.P.acct==='NISA').reduce((s,e)=>s+e.pnl,0);
+  const part=f=>{const a=ey.filter(f);return {n:new Set(a.map(e=>e.P)).size,v:a.reduce((s,e)=>s+e.pnl,0)};};
+  const fx1=part(e=>e.fix),es1=part(e=>!e.fix);
   const ty=stats(ey);
   // 成績の期間リスト
   const opts=[];const ms=[...new Set(evAll.map(e=>e.d.slice(0,7)))].sort().reverse();const qs=[...new Set(evAll.map(e=>perKey(e.d,'quarter')))].sort().reverse();
@@ -598,11 +623,12 @@ function renderKpis(){
   const box=document.getElementById('kpis');
   box.innerHTML=`
    <div class="big lt"><small>保有銘柄の合計（建玉）</small><b>${yenAbs(cash+mg)}</b><em>${op.length}銘柄${PUB?'':` ・ 運用資金 ${(CAPITAL/1e4).toLocaleString()}万円の ${((cash+mg)/CAPITAL*100).toFixed(0)}%`}</em></div>
-   <div class="big"><small>${y}年の確定損益</small><b class="${cls(tot)}">${PUB?(ty.n?sgn(ty.expR,2)+'倍／回':'–'):yen(tot)}</b><em>${PUB?`${ty.n}取引・勝率 ${ty.win==null?'–':ty.win.toFixed(0)+'%'}`:`課税対象 ${yen(tax)}（受渡日で${y}年分）・NISA ${yen(nisa)}`}</em></div>
+   <div class="yr"><small>${y}年の損益</small><b class="${cls(tot)}">${PUB?(ty.n?sgn(ty.expR,2)+'倍／回':'–'):yen(tot)}</b><em>${ty.n}取引・勝率 ${ty.win==null?'–':ty.win.toFixed(0)+'%'}</em></div>
+   <div class="fe"><small>確定・暫定</small><div class="fe-r"><span class="j-pst fix">確定</span><i>${fx1.n}件</i><b class="${cls(fx1.v)}">${yen(fx1.v)}</b></div><div class="fe-r"><span class="j-pst est">暫定</span><i>${es1.n}件</i><b class="${cls(es1.v)}">${yen(es1.v)}</b></div></div>
    <div class="lt-a"><small>現物</small><b>${yenAbs(cash)}</b><em>${op.filter(P=>P.kind==='現物').length}銘柄</em></div>
    <div class="lt"><small>信用</small><b>${yenAbs(mg)}</b><em>${PUB?'買建・売建':`買建 ${Math.round(mgL/1e4).toLocaleString()}万 ／ 売建 ${Math.round(mgS/1e4).toLocaleString()}万`}</em></div>
    <div><small>含み損益</small><b class="${cls(unreal)}">${yen(unreal)}</b><em>${op.length}銘柄</em></div>
-   <div><div class="hd"><small>成績</small>${sel}</div><div class="pair"><b class="${cls(ps.pnl)}">${PUB?(ps.n?sgn(ps.expR,2)+'倍／回':'–'):yen(ps.pnl)}</b><span style="font:600 16px var(--f-num)">勝率 ${ps.win==null?'–':ps.win.toFixed(0)+'%'}</span></div><em>${ps.n}取引（${ps.tr.filter(P=>P.c.realized>0).length}勝${ps.tr.filter(P=>P.c.realized<=0).length}敗）</em></div>`;
+   <div><div class="hd"><small>成績</small>${sel}</div><div class="pair"><b class="${cls(ps.pnl)}" title="確定損益＋まだ確定していない暫定損益">${PUB?(ps.n?sgn(ps.expR,2)+'倍／回':'–'):yen(ps.pnl)}</b><span style="font:600 16px var(--f-num)">勝率 ${ps.win==null?'–':ps.win.toFixed(0)+'%'}</span></div><em>${ps.n}取引（${ps.tr.filter(P=>P.c.realized>0).length}勝${ps.tr.filter(P=>P.c.realized<=0).length}敗）</em></div>`;
   box.querySelector('#top-per').onchange=e=>{TOPPER=e.target.value;renderKpis();};
   document.getElementById('asof').textContent='株価 '+((CARD.jp&&CARD.jp.updated)||'').slice(0,10).replace(/-/g,'/')+' 終値'+(FXNOW?' ・ ドル円 '+FXNOW.toFixed(2)+(REF.fx&&REF.fx.date?'（'+REF.fx.date.slice(5).replace('-','/')+'）':''):'');
   document.getElementById('c-hold').textContent=POS.filter(P=>!P.done).length;document.getElementById('c-hist').textContent=POS.filter(P=>P.done).length;
@@ -634,13 +660,13 @@ function renderHold(){
   // 全株決済したが「取引完了」を押していない建玉は、いちばん上に出す
   const rows=sortRows('hold',POS.filter(P=>!P.done&&pass(P,FILT.hold)),G).sort((a,b)=>(a.c.open?1:0)-(b.c.open?1:0));
   const th=(k,t,l,tip)=>`<th${l?' class="l"':''}${k?` data-s="${k}"`:''}${tip?` title="${tip}"`:''}>${t}${SORT.hold.k===k?(SORT.hold.dir>0?' ▲':' ▼'):''}</th>`;
-  let h=`<thead><tr>${ckTh('hold')}${th('code','銘柄',1)}${th('','区分',1)}${th('d0','購入日')}${th('','株数')}${th('','平均取得単価')}${th('notional','建玉合計')}${th('','現在値')}${th('unreal','含み損益')}${th('ret','損益率')}${th('dist','損切ライン（まで）')}${th('tdist','利確ライン（まで）')}${th('','到達した段 +5〜+30%',1)}${th('hold','保有日数')}${th('R','損切り幅の何倍',0,'いまの損益÷建てたときの損切り幅（取得単価と損切ラインの差×株数）。−1.0倍＝損切ラインどおりの負け')}${th('','最大含み益／損')}${th('earn','次の決算')}${th('due','信用期日')}${th('','手法',1)}<th></th></tr></thead><tbody>`;
+  let h=`<thead><tr>${ckTh('hold')}${th('code','銘柄',1)}${th('','区分',1)}${th('d0','購入日')}${th('','株数')}${th('','平均取得単価')}${th('notional','建玉合計')}${th('','現在値')}${th('unreal','含み損益')}${th('ret','損益率')}${th('dist','損切ライン（まで）')}${th('tdist','利確ライン（まで）')}${th('','到達した段 +5〜+30%',1)}${th('hold','保有日数')}${th('R','損切り幅の何倍')}${th('','最大含み益／損')}${th('earn','次の決算')}${th('due','信用期日')}${th('','手法',1)}<th></th></tr></thead><tbody>`;
   let tn=0,tu=0;
   rows.forEach(P=>{const c=P.c;
     const sel=OPENED.hold===P.id?' sel':'';
     if(!c.open){ // 全株決済ずみ・完了待ち
       h+=`<tr class="row j-done${sel}" data-id="${P.id}">${ckTd('hold',P.id)}<td class="l">${nameHTML(P)} <span class="j-st">取引完了待ち</span></td><td class="l">${tagsHTML(P)}</td><td>${c.d0.slice(2).replace(/-/g,'/')}</td><td>0（全株決済）</td><td>${px(P,c.avg)}</td><td>–</td><td>${px(P,c.exitAvg)}</td>
-        <td class="${cls(c.realized)}">確定 ${yen(c.realized)}</td><td>${pct(c.retPct)}</td><td>–</td><td>–</td><td class="l">行を押して「取引完了」へ</td><td>${c.hold}日</td><td class="${cls(c.R)}">${sgn(c.R,2)}倍</td><td>${c.mfe==null?'–':`<span class="up">${sgn(c.mfe)}%</span> / <span class="down">${sgn(c.mae)}%</span>`}</td><td>–</td><td>–</td><td class="l"><span class="j-tg tag">${P.tag}</span></td>${delTd('hold',P.id,P.name)}</tr>`;
+        <td class="${cls(c.realized)}">暫定 ${yen(c.realized)}</td><td>${pct(c.retPct)}</td><td>–</td><td>–</td><td class="l">行を押して「取引完了」へ</td><td>${c.hold}日</td><td class="${cls(c.R)}">${sgn(c.R,2)}倍</td><td>${c.mfe==null?'–':`<span class="up">${sgn(c.mfe)}%</span> / <span class="down">${sgn(c.mae)}%</span>`}</td><td>–</td><td>–</td><td class="l"><span class="j-tg tag">${P.tag}</span></td>${delTd('hold',P.id,P.name)}</tr>`;
       return;}
     tn+=c.notional;tu+=c.unreal;
     const dueDays=P.due?days(TODAY,P.due):null;const earnDays=P.nextEarn?days(TODAY,P.nextEarn):null;
@@ -660,22 +686,56 @@ function renderHold(){
 }
 function renderHist(){
   const tbl=document.getElementById('tbl-hist');
-  const G={d0:P=>P.c.d0,d1:P=>P.c.d1,code:P=>P.code,pnl:P=>P.c.realized,ret:P=>P.c.retPct,R:P=>P.c.R,hold:P=>P.c.hold,give:P=>P.c.giveback,vs:P=>P.c.vsIdx};
+  const G={d0:P=>P.c.d0,d1:P=>P.c.d1,code:P=>P.code,pnl:P=>P.c.realized,usd:P=>P.c.usd??-1e15,ret:P=>P.c.retPct,R:P=>P.c.R,hold:P=>P.c.hold,give:P=>P.c.giveback,st:P=>P.c.isFix?1:0};
   const rows=sortRows('hist',POS.filter(P=>P.done&&pass(P,FILT.hist)),G);
   const th=(k,t,l)=>`<th${l?' class="l"':''}${k?` data-s="${k}"`:''}>${t}${SORT.hist.k===k?(SORT.hist.dir>0?' ▲':' ▼'):''}</th>`;
-  let h=`<thead><tr>${ckTh('hist')}${th('code','銘柄',1)}${th('','区分',1)}${th('d0','購入日')}${th('d1','決済日')}${th('hold','保有日数')}${th('','株数')}${th('','平均取得単価')}${th('','決済単価')}${th('pnl','損益')}${th('ret','損益率')}${th('R','損切り幅の何倍')}${th('','うち為替')}${th('give','取り逃がし')}${th('vs','指数との差')}${th('','決済理由',1)}${th('','ルール',1)}${th('','手法',1)}<th></th></tr></thead><tbody>`;
-  let tp=0,w=0;
-  rows.forEach(P=>{const c=P.c;tp+=c.realized;if(c.realized>0)w++;
+  let h=`<thead><tr>${ckTh('hist')}${th('code','銘柄',1)}${th('','区分',1)}${th('d0','購入日')}${th('d1','決済日')}${th('hold','保有日数')}${th('','株数')}${th('','平均取得単価')}${th('','決済単価')}${th('pnl','損益（円）')}${th('st','状態',1)}${th('usd','損益（ドル）')}${th('ret','損益率')}${th('R','損切り幅の何倍')}${th('give','取り逃がし')}${th('','決済理由',1)}${th('','ルール',1)}${th('','手法',1)}<th></th></tr></thead><tbody>`;
+  let tp=0,w=0;const fx={n:0,v:0},es={n:0,v:0};
+  rows.forEach(P=>{const c=P.c;tp+=c.realized;if(c.realized>0)w++;const g=c.isFix?fx:es;g.n++;g.v+=c.realized;
+    const st=c.isFix?`<span class="j-pst fix" title="${P.fixD?P.fixD+' に確定':''}">確定</span> <button class="btn ghost sm" type="button" data-fix="${P.id}">直す</button>`
+      :`<span class="j-pst est">暫定</span> <button class="btn sm" type="button" data-fix="${P.id}">確定する</button>`;
     h+=`<tr class="row${OPENED.hist===P.id?' sel':''}" data-id="${P.id}">${ckTd('hist',P.id)}<td class="l">${nameHTML(P)}</td><td class="l">${tagsHTML(P)}</td><td>${c.d0.slice(2).replace(/-/g,'/')}</td><td>${c.d1.slice(2).replace(/-/g,'/')}${c.real.length>1?' <span class="j-dist">'+c.real.length+'回</span>':''}</td><td>${c.hold}日</td><td>${fmt(c.q)}</td><td>${px(P,c.avg)}</td><td>${px(P,c.exitAvg)}</td>
-      <td class="${cls(c.realized)}">${yen(c.realized)}</td><td>${pct(c.retPct)}</td><td class="${cls(c.R)}">${sgn(c.R,2)}倍</td><td>${P.mk==='us'?`<span class="${cls(c.fxPnl)}">${yen(c.fxPnl)}</span>`:'–'}</td>
-      <td>${c.giveback>0.05?sgn(-c.giveback)+'%':'–'}</td><td>${pct(c.vsIdx)}</td><td class="l">${P.exitReason==='ルール違反'?'<span class="j-ng">'+P.exitReason+'</span>':P.exitReason}</td><td class="l">${P.rule?'<span class="j-ok">○</span>':'<span class="j-ng">×</span>'}</td><td class="l"><span class="j-tg tag">${P.tag}</span></td>${delTd('hist',P.id,P.name)}</tr>`;
+      <td class="${cls(c.realized)}">${yen(c.realized)}${c.isFix&&Math.round(c.fix-c.est)?`<span class="j-sub">暫定との差 ${yen(c.fix-c.est)}</span>`:''}</td><td class="l" style="white-space:nowrap">${st}</td>
+      <td class="${cls(c.usd)}">${P.mk==='us'?usdF(c.usd):''}</td><td>${pct(c.retPct)}</td><td class="${cls(c.R)}">${sgn(c.R,2)}倍</td>
+      <td>${c.giveback>0.05?sgn(-c.giveback)+'%':'–'}</td><td class="l">${P.exitReason==='ルール違反'?'<span class="j-ng">'+P.exitReason+'</span>':P.exitReason}</td><td class="l">${P.rule?'<span class="j-ok">○</span>':'<span class="j-ng">×</span>'}</td><td class="l"><span class="j-tg tag">${P.tag}</span></td>${delTd('hist',P.id,P.name)}</tr>`;
+    if(FIXING===P.id)h+=fixRow(P,19);
     if(OPENED.hist===P.id)h+=detailRow(P,19,false);
   });
   if(!rows.length)h+=`<tr><td colspan="19" class="j-empty">${POS.some(P=>P.done)?'絞り込みに合う取引がありません。':'まだ売買履歴はありません。保有中の銘柄を全株決済して「取引完了」を押すと、ここに移ります。'}</td></tr>`;
-  tbl.innerHTML=h+'</tbody>';bindSort('hist',tbl);bindRows('hist',tbl);bindSel('hist',tbl,rows.map(P=>P.id));
-  // 合計は一覧の上に(絞り込みに連動)
+  tbl.innerHTML=h+'</tbody>';bindSort('hist',tbl);bindRows('hist',tbl);bindSel('hist',tbl,rows.map(P=>P.id));bindFix(tbl);
+  // 合計は一覧の上に(絞り込みに連動)。損益の合計＝確定損益＋まだ確定していない暫定損益
   const avgR=rows.length?rows.reduce((s,P)=>s+P.c.R,0)/rows.length:null;
-  document.getElementById('hist-sum').innerHTML=`<span>取引数<b>${rows.length}</b></span><span>勝率<b>${rows.length?(w/rows.length*100).toFixed(0)+'%':'–'}</b>（${w}勝${rows.length-w}敗）</span><span>損益の合計<b class="${cls(tp)}">${yen(tp)}</b></span><span>1取引の平均<b class="${cls(avgR)}">${sgn(avgR,2)}倍</b>（損切り幅に対して）</span>`;
+  document.getElementById('hist-sum').innerHTML=`<span>取引数<b>${rows.length}</b></span><span>勝率<b>${rows.length?(w/rows.length*100).toFixed(0)+'%':'–'}</b>（${w}勝${rows.length-w}敗）</span><span>損益の合計<b class="${cls(tp)}">${yen(tp)}</b>（確定 ${fx.n}件 ${yen(fx.v)}・暫定 ${es.n}件 ${yen(es.v)}）</span><span>1取引の平均<b class="${cls(avgR)}">${sgn(avgR,2)}倍</b>（損切り幅に対して）</span>`;
+  // 確定待ち(絞り込みに関係なく全部)
+  const pend=POS.filter(P=>P.done&&!P.c.isFix),pb=document.getElementById('hist-pend');
+  pb.hidden=!pend.length;
+  if(pend.length)pb.innerHTML=`<span>確定待ち<b>${pend.length}件</b></span><span>暫定損益の合計 <span class="${cls(pend.reduce((s,P)=>s+P.c.realized,0))}">${yen(pend.reduce((s,P)=>s+P.c.realized,0))}</span></span><span style="color:var(--muted)">決済した日の翌日、証券会社の「実現損益（円）」（手数料などを引いた後・税金を引く前）を見て「確定する」を押します。</span>`;
+}
+// 米国株のドルの損益
+const usdF=x=>PUB?'<span class="j-hide">非表示</span>':x==null||!isFinite(x)?'–':(x>0?'+':x<0?'−':'')+'$'+fmt(Math.abs(x),2);
+// ---- 確定損益の入力(売買履歴の行の下) ----
+let FIXING=null;
+function fixRow(P,span){const c=P.c,v=c.isFix?c.fix:c.est;
+  return `<tr class="j-fixrow"><td colspan="${span}"><form class="j-fixf" data-id="${P.id}">
+    <div><span class="k">暫定損益（約定から自動）</span><span class="v ${cls(c.est)}">${yen(c.est)}</span></div>
+    <div><label class="k" for="fx-in">確定損益（円）</label><input id="fx-in" inputmode="decimal" autocomplete="off" value="${Math.round(v)}"></div>
+    <div><span class="k">暫定との差（手数料など）</span><span class="v" id="fx-df">–</span></div>
+    <div class="j-btnrow" style="margin:0"><button class="btn" type="submit">${c.isFix?'直して保存':'この金額で確定'}</button><button class="btn ghost" type="button" data-fx="cancel">やめる</button>${c.isFix?'<button class="btn ghost" type="button" data-fx="undo">暫定に戻す</button>':''}</div>
+    <p class="note">${esc(P.name)}（${c.d1.slice(5).replace('-','/')} 決済）。証券会社の「実現損益（円）」をそのまま入れます（手数料などを引いた後・税金を引く前）。暫定損益と同じなら、そのまま「この金額で確定」を押します。${P.mk==='us'?'米国株は円の損益を入れます（ドルの損益は自動のまま）。':''}</p>
+  </form></td></tr>`;}
+function bindFix(tbl){
+  tbl.querySelectorAll('button[data-fix]').forEach(b=>b.onclick=e=>{e.stopPropagation();const id=+b.dataset.fix;FIXING=FIXING===id?null:id;renderHist();
+    setTimeout(()=>{const i=document.getElementById('fx-in');if(i){i.focus();i.select();}},30);});
+  const f=tbl.querySelector('form.j-fixf');if(!f)return;const P=POS.find(x=>x.id===+f.dataset.id);
+  f.onclick=e=>e.stopPropagation();
+  const inp=f.querySelector('#fx-in'),num=()=>{const v=Number(String(inp.value).replace(/[,，円\s]/g,'').replace(/[−－]/g,'-'));return isFinite(v)&&inp.value.trim()!==''?v:null;};
+  const df=()=>{const v=num();f.querySelector('#fx-df').innerHTML=v==null?'–':`<span class="${cls(v-P.c.est)}">${yen(v-P.c.est)}</span>`;};inp.oninput=df;df();
+  const save=async(fixV)=>{const before=JSON.stringify(pack(P));P.pnlFix=fixV;P.fixD=fixV==null?null:TODAY;
+    try{await savePos(P);}catch(x){Object.assign(P,JSON.parse(before));toast(x.message);return;}
+    FIXING=null;await refresh(P);renderAll();toast(fixV==null?P.name+'を暫定に戻しました':P.name+'の確定損益を保存しました');};
+  f.onsubmit=e=>{e.preventDefault();const v=num();if(v==null){toast('確定損益を入れてください');return;}save(Math.round(v));};
+  f.querySelector('[data-fx="cancel"]').onclick=()=>{FIXING=null;renderHist();};
+  const u=f.querySelector('[data-fx="undo"]');if(u)u.onclick=()=>save(null);
 }
 function bindRows(key,tbl){tbl.querySelectorAll('tr.row').forEach(tr=>tr.onclick=e=>{if(e.target.closest('a,input,.j-del,td.ck'))return;const id=+tr.dataset.id;OPENED[key]=OPENED[key]===id?null:id;if(key==='hold'){ACT=null;HSCROLL=OPENED.hold!=null;}RENDER[key]();});}
 
@@ -698,8 +758,8 @@ function recParts(P){
       <dt>損切ラインの変更</dt><dd>${stops}</dd>
       <dt>到達した段</dt><dd>${[5,10,15,20,25,30].map((t,k)=>c.hits[k]?`+${t}%=${c.hits[k].slice(5).replace('-','/')}`:null).filter(Boolean).join('・')||'まだなし'}</dd>
       <dt>最大含み益／損</dt><dd>${c.mfe==null?'–':`<span class="up">${sgn(c.mfe)}%</span> / <span class="down">${sgn(c.mae)}%</span>`}</dd>
-      ${us&&!c.open?`<dt>株／為替の損益</dt><dd>${yen(c.stockPnl)} / ${yen(c.fxPnl)}</dd>`:''}
-      ${c.open?'':`<dt>同期間の${P.mk==='jp'?'TOPIX':'S&P500'}</dt><dd>${pct(c.idxRet)}</dd>`}
+      ${!c.open&&P.done?`<dt>暫定損益</dt><dd><span class="${cls(c.est)}">${yen(c.est)}</span>（約定から自動）</dd><dt>確定損益</dt><dd>${c.isFix?`<span class="${cls(c.fix)}">${yen(c.fix)}</span>（暫定との差 ${yen(c.fix-c.est)}${P.fixD?'・'+P.fixD.slice(5).replace('-','/')+' 入力':''}）`:'<span class="j-pst est">確定待ち</span>'}</dd>`:''}
+      ${us&&!c.open?`<dt>損益（ドル）</dt><dd class="${cls(c.usd)}">${usdF(c.usd)}</dd>`:''}
       </dl>
       <h4 style="margin-top:12px">エントリーの理由</h4><p class="j-memo">${esc(P.reason)}</p>
       ${P.memo?`<h4>メモ</h4><p class="j-memo">${esc(P.memo)}</p>`:''}`;
@@ -822,7 +882,7 @@ alertcondition(hitTgt,  "利確ライン到達", "{{ticker}} 終値が利確ラ�
 // ---- 保有中: 行を押すと、すぐ下に銘柄カード(ほかのページと同じ)。上に「ポジション」段、チャートにエントリーした日の▲と赤・緑の帯 ----
 let HSCROLL=false;
 function posBlock(P){const c=P.c;if(!c.open)return '';const tg=P.target,us=P.mk==='us',fx=us?(FXNOW||c.avgFx||0):1;
-  const lp=v=>c.sh*(v-c.avg)*c.q*fx,rt=tg&&c.risk?lp(tg)/c.risk:null;
+  const rt=tg&&c.riskN?c.sh*(tg-c.avg)*c.q/c.riskN:null;
   let bar='';
   if(tg){const lo=Math.min(c.stopNow,tg),hi=Math.max(c.stopNow,tg),f=v=>Math.min(Math.max((v-lo)/(hi-lo)*100,0),100),fe=f(c.avg),fn=f(c.last);
     const L=P.dir==='L',lc=L?'dn':'up',rc=L?'up':'dn';
@@ -861,7 +921,7 @@ const shortLabel=(k,u)=>u==='month'?`${k.slice(2,4)}/${k.slice(5)}`:u==='quarter
 // 確定のイベント(一部決済も含む)。日付は約定日。f=null で絞り込みなし
 function events(f){if(f===undefined)f=FILT.rev;const ev=[];POS.forEach(P=>{if(f&&!pass(P,f))return;const c=P.c;const us=P.mk==='us';
   const openFee=P.fills.filter(f=>(f.t==='buy')===(P.dir==='L')).reduce((s,f)=>s+0,0);
-  c.real.forEach((r,i)=>{const last=P.done&&i===c.real.length-1;let pnl=r.pnl;if(last)pnl+=c.extra-openFee;const d=r.d;ev.push({d,pnl,P,last});});});
+  c.real.forEach((r,i)=>{const last=P.done&&i===c.real.length-1;let pnl=r.pnl;if(last)pnl+=c.extra-openFee+(c.realized-c.auto);const d=r.d;ev.push({d,pnl,P,last,fix:c.isFix});});});
   return ev.sort((a,b)=>a.d<b.d?-1:1);}
 function stats(ev){
   const tr=ev.filter(e=>e.last).map(e=>e.P);const pnl=ev.reduce((s,e)=>s+e.pnl,0);
@@ -886,13 +946,13 @@ function renderRev(){
   const prevK=keys[keys.indexOf(RV.per)-1];const ps=prevK?stats(ev.filter(e=>perKey(e.d,RV.unit)===prevK)):null;
   const diff=(a,b,f)=>b==null||a==null?'':`前の期間 ${f(b)}`;
   document.getElementById('rv-kpis').innerHTML=[
-    ['確定損益',`<span class="${cls(s.pnl)}">${PUB?(s.n?sgn(s.expR,2)+'倍／回':'–'):yen(s.pnl)}</span>`,ps?(PUB?'':diff(s.pnl,ps.pnl,x=>yen(x))):''],
+    ['損益（確定＋暫定）',`<span class="${cls(s.pnl)}">${PUB?(s.n?sgn(s.expR,2)+'倍／回':'–'):yen(s.pnl)}</span>`,ps?(PUB?'':diff(s.pnl,ps.pnl,x=>yen(x))):''],
     ['勝率',s.win==null?'–':s.win.toFixed(0)+'%',`${s.n}取引（${s.tr.filter(P=>P.c.realized>0).length}勝${s.tr.filter(P=>P.c.realized<=0).length}敗）`],
     ['平均利益／平均損失',`<span class="up">${sgn(s.awp)}%</span> / <span class="down">${sgn(s.alp)}%</span>`,PUB?'':`${yen(s.aw)} / ${yen(s.al)}`],
     ['ペイオフレシオ',s.aw&&s.al?(s.aw/-s.al).toFixed(2):'–','平均利益÷平均損失'],
     ['プロフィットファクター',s.pf?s.pf.toFixed(2):'–','利益合計÷損失合計'],
     ['期待値（1取引）',`<span class="${cls(s.expR)}">${sgn(s.expR,2)}倍</span>`,PUB?'':yen(s.exp)],
-    ['最大ドローダウン',PUB?'–':`<span class="down">${yen(s.dd)}</span>`,'確定損益の累計で'],
+    ['最大ドローダウン',PUB?'–':`<span class="down">${yen(s.dd)}</span>`,'損益の累計で（確定＋暫定）'],
     ['連勝／連敗（最大）',`${s.mw} / ${s.ml}`,''],
     ['平均保有日数',`${s.hw?Math.round(s.hw):'–'}日 / ${s.hl?Math.round(s.hl):'–'}日`,'勝ち／負け'],
     ['ルールを守れた割合',s.rule==null?'–':s.rule.toFixed(0)+'%',''],
@@ -1049,7 +1109,7 @@ function actForm(P){
   const c=P.c,us=P.mk==='us';
   if(!c.open)return `<form class="j-act" data-id="${P.id}" data-act="done"><h4>全株を決済しました。取引を完了して売買履歴へ移します</h4><div class="j-form">
     ${fld('x-er','決済理由',fsel('x-er',['利確','損切り','時間切れ','決算前の手仕舞い','ルール違反','その他'],c.realized>0?'利確':'損切り'))}${fld('x-rule','ルールを守れたか',fsel('x-rule',['○ 守れた','× 守れなかった'],'○ 守れた'))}
-    ${fld('x-pnl','確定した損益（自動）',`<div class="auto"><span class="${cls(c.realized)}">${yen(c.realized)}</span>（${sgn(c.retPct)}%・${sgn(c.R,2)}倍）</div>`)}
+    ${fld('x-pnl','暫定損益（約定から自動）',`<div class="auto"><span class="${cls(c.realized)}">${yen(c.realized)}</span>${us?`・<span class="${cls(c.usd)}">${usdF(c.usd)}</span>`:''}（${sgn(c.retPct)}%・${sgn(c.R,2)}倍）</div><div style="font-size:11.5px;color:var(--faint);margin-top:3px">売買履歴に「暫定」で移ります。翌日、手数料などを引いた確定損益を「確定する」から入れます。</div>`)}
     ${fld('x-memo','振り返りメモ','<textarea id="x-memo" name="x-memo" rows="3">'+esc(P.memo||'')+'</textarea>','w2')}</div>
     <div class="j-btnrow"><button class="btn" type="submit">取引完了（売買履歴へ移す）</button></div></form>`;
   if(!ACT||ACT.id!==P.id)return '';
@@ -1064,7 +1124,7 @@ function bindAct(tbl){
   tbl.querySelectorAll('form.j-act').forEach(f=>{const P=POS.find(x=>x.id===+f.dataset.id);const v=n=>(f.querySelector('[name="'+n+'"]')||{}).value,vn=n=>JR.num(f.querySelector('[name="'+n+'"]'));
     f.onclick=e=>e.stopPropagation();
     if(f.dataset.act==='close'){const pv=()=>{const q=vn('x-qty'),p=vn('x-px');const r=P.mk==='us'?P.c.sh*q*(p*(FXNOW||P.c.avgFx)-P.c.avg*P.c.avgFx):P.c.sh*(p-P.c.avg)*q;
-      f.querySelector('#x-pv').innerHTML=`<span class="${cls(r)}">${yen(r)}</span>（${sgn(P.c.sh*(p/P.c.avg-1)*100)}%・残り ${fmt(Math.max(0,P.c.q-q))}株${q>=P.c.q?' → 全株決済。続けて「取引完了」を押せます':''}）`;};
+      const ru=P.mk==='us'?P.c.sh*q*(p-P.c.avg):null;f.querySelector('#x-pv').innerHTML=`<span class="${cls(r)}">${yen(r)}</span>${ru!=null?`・<span class="${cls(ru)}">${usdF(ru)}</span>`:''}（${sgn(P.c.sh*(p/P.c.avg-1)*100)}%・残り ${fmt(Math.max(0,P.c.q-q))}株${q>=P.c.q?' → 全株決済。続けて「取引完了」を押せます':''}）`;};
       f.querySelectorAll('input').forEach(i=>i.oninput=pv);pv();}
     f.onsubmit=e=>{e.preventDefault();busy(f.querySelector('button[type=submit]'),async()=>{const a=f.dataset.act;const us=P.mk==='us';const before=JSON.stringify(pack(P));
       if(a==='close'){const q=Math.min(vn('x-qty'),P.c.q);if(!q){toast('株数を入れてください');return;}
@@ -1265,4 +1325,5 @@ boot();
 try{const t=localStorage.getItem('jr_tab');if(t){const b=document.querySelector(`#tabs button[data-t="${t}"]`);if(b)b.click();}}catch(e){}
 })();
 </script>
+<script src="../assets/help.js"></script>
 </body></html>

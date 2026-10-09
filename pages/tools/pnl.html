@@ -43,6 +43,10 @@ main.wrap{padding-block:22px 48px;display:flex;flex-direction:column;gap:22px}
 @media (max-width:560px){.kpi{padding:10px 12px}.kpi.big b{font-size:21px}.kpi b{font-size:17px}.kpi em{font-size:11px}}
 /* 年の表示切り替え */
 .ytog{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.ybar{display:flex;justify-content:space-between;align-items:flex-start;gap:8px 16px;flex-wrap:wrap}
+.ybar .seg{margin-bottom:12px}
+.kpi .tax{display:block;font:500 13px var(--f-num);color:var(--muted);margin-top:1px}
+.kpi .tax span{font-weight:600}
 .ytog label{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line-strong);border-radius:999px;padding:3px 12px 3px 8px;font:600 12.5px var(--f-num);cursor:pointer;background:var(--surface);user-select:none}
 .ytog label i{width:12px;height:12px;border-radius:3px;display:inline-block}
 .ytog input{accent-color:var(--brand);margin:0}
@@ -251,25 +255,26 @@ tfoot td{font-weight:700;border-top:2px solid var(--line-strong);border-bottom:0
       <h2 id="yh">年間の推移</h2>
       <span class="hint">月の損益は確定値だけを使います。今年の未確定の月は点線で日の合計を参考表示</span>
     </div>
-    <div class="ytog" id="ytog" aria-label="比べる年"></div>
+    <div class="ybar"><div class="ytog" id="ytog" aria-label="比べる年"></div>
+      <div class="seg" id="taxseg" role="group" aria-label="グラフの損益"><button type="button" data-tax="0">税引き前</button><button type="button" data-tax="1">税引き後</button></div></div>
     <div class="charts">
       <div class="chart">
-        <h3>月別の損益<span class="hint">（単位：万円）</span></h3>
+        <h3>月別の損益<span class="hint" id="h1u">（単位：万円）</span></h3>
         <div class="pl-sc" id="ch1"></div>
       </div>
       <div class="chart">
-        <h3>累計の損益<span class="hint">（単位：万円）</span></h3>
+        <h3>累計の損益<span class="hint" id="h2u">（単位：万円）</span></h3>
         <div class="pl-sc" id="ch2"></div>
       </div>
     </div>
     <div class="tblbox">
       <table>
-        <thead><tr><th>月</th><th>日の合計（自動）</th><th>月の確定損益（入力）</th><th>差額</th><th>取引日数</th><th>勝率</th><th>状態</th></tr></thead>
+        <thead><tr><th>月</th><th>日の合計（自動）</th><th>月の確定損益（入力）</th><th>月の確定損益（税引き後）</th><th>差額</th><th>取引日数</th><th>勝率</th><th>状態</th></tr></thead>
         <tbody id="mtbody"></tbody>
         <tfoot id="mtfoot"></tfoot>
       </table>
     </div>
-    <p class="hint" style="margin:8px 0 0">月の確定損益は、表の数字を押して入力できます。空欄で保存すると未確定に戻ります。</p>
+    <p class="hint" style="margin:8px 0 0">月の確定損益は、表の数字を押して入力できます。空欄で保存すると未確定に戻ります。税引き後は、1月からの累計に20.315%をかけた税金を引いた参考値です（このページの損益だけで計算）。</p>
   </section>
 </main>
 
@@ -421,7 +426,7 @@ function renderKpis(){
   const openSum=open.reduce((a,m)=>a+monthSum(data.daily,Y,m).sum,0);
   const diff=tot-prevTot;
   document.getElementById('kpis').innerHTML=
-   `<div class="kpi big"><small>${Y}年の合計（確定した月だけ）</small><b class="${cls(tot)}">${n?yen(tot):'—'}</b><em>${n?'確定した'+n+'か月の合計（最後は'+lastM+'月）':'確定した月はまだありません'}</em></div>`+
+   `<div class="kpi big"><small>${Y}年の合計（確定した月だけ）</small><b class="${cls(tot)}">${n?yen(tot):'—'}</b>${n?`<span class="tax">税引き後 <span class="${cls(yearTax(tot))}">${yen(yearTax(tot))}</span></span>`:''}<em>${n?'確定した'+n+'か月の合計（最後は'+lastM+'月）':'確定した月はまだありません'}</em></div>`+
    `<div class="kpi big"><small>前年の同じ月までと比べて</small><b class="${prevN?cls(diff):'muted'}">${prevN?yen(diff):'—'}</b><em>${prevN?'前年 '+yen(prevTot,true):'前年の記録なし'}</em></div>`+
    `<div class="kpi"><small>確定した月</small><b>${n}<span style="font-size:14px;color:var(--muted)"> / 12か月</span></b><em>プラスの月 ${won}・マイナスの月 ${n-won}</em></div>`+
    `<div class="kpi"><small>未確定の月</small><b>${open.length?open.map(m=>m+'月').join('・'):'なし'}</b><em>${open.length?'日の合計 <span class="'+cls(openSum)+'">'+yen(openSum,true)+'</span>（参考・年間合計には含めない）':'すべて確定済み'}</em></div>`;
@@ -536,8 +541,12 @@ function renderYear(){
       const c=confirmed(r.y,m),ms=monthSum(data.daily,r.y,m);
       pts.push(c!=null?{v:c,est:false}:(ms.entered?{v:ms.sum,est:true}:null));
     }
+    // 税引き後: 未確定の月(日の合計)も同じ並びで計算
+    if(TAX){const at=afterTax(pts.map(p=>p?p.v:null));pts.forEach((p,i)=>{if(p)p.v=at[i];});}
     return {...r,pts};
   });
+  document.querySelectorAll('#taxseg button').forEach(b=>b.setAttribute('aria-pressed',String((b.dataset.tax==='1')===TAX)));
+  document.getElementById('h1u').textContent=document.getElementById('h2u').textContent=TAX?'（税引き後・単位：万円）':'（単位：万円）';
   const n1=v=>(v>0?'+':v<0?'−':'±')+(Math.abs(v)/10000).toFixed(1);
   const empty='<p class="hint" style="padding:30px 0;text-align:center">表示する年を選んでください</p>';
 
@@ -565,7 +574,7 @@ function renderYear(){
   document.getElementById('ch1').innerHTML=ser.length?s:empty;
 
   // 累計(確定値だけ)
-  const cs=ser.map(r=>{let a=0,last=-1;const v=[];for(let m=0;m<12;m++){const c=confirmed(r.y,m+1);if(c!=null){a+=c;last=m}v.push(a)}return {...r,v:v.map((x,i)=>i<=last?x:null),last}}).filter(r=>r.last>=0);
+  const cs=ser.map(r=>{let a=0,last=-1;const v=[];const cm=[...Array(12)].map((_,m)=>confirmed(r.y,m+1));const cv=TAX?afterTax(cm):cm;for(let m=0;m<12;m++){const c=cv[m];if(c!=null){a+=c;last=m}v.push(a)}return {...r,v:v.map((x,i)=>i<=last?x:null),last}}).filter(r=>r.last>=0);
   const W2=1100,H2=260,L2=46,R2=120,T2=14,B2=24,iw2=W2-L2-R2,ih2=H2-T2-B2;
   const all2=[0];cs.forEach(r=>r.v.forEach(x=>{if(x!=null)all2.push(x)}));
   const mx2=Math.max(...all2),mn2=Math.min(...all2),pad=(mx2-mn2)*.1||1;
@@ -590,7 +599,8 @@ function renderYear(){
 
   // 月別表(表示中の年)
   let tb='',sumD=0,sumC=0,nC=0;
-  rows.forEach(r=>{
+  const atM=afterTax(rows.map(r=>r.c));
+  rows.forEach((r,i)=>{
     const diff=r.c!=null?r.c-r.ms.sum:null;
     if(r.ms.entered)sumD+=r.ms.sum;if(r.c!=null){sumC+=r.c;nC++}
     const dec=r.ms.win+r.ms.loss;
@@ -598,14 +608,21 @@ function renderYear(){
       <td><span class="mname">${r.m}月</span></td>
       <td class="n ${r.ms.entered?cls(r.ms.sum):'muted'}">${r.ms.entered?yen(r.ms.sum,true):'—'}</td>
       <td class="n cf" data-mk="${mkey(Y,r.m)}"><span class="${cls(r.c)}" tabindex="0" role="button" aria-label="${r.m}月の確定損益を入力">${r.c!=null?yen(r.c,true):(r.st==='open'?'未入力':'—')}</span></td>
+      <td class="n ${atM[i]==null?'muted':cls(atM[i])}">${atM[i]==null?'—':yen(atM[i],true)}</td>
       <td class="n ${diff==null?'muted':diff===0?'zero':'neg'}">${diff==null?'—':diff===0?'0':yen(diff,true)}</td>
       <td class="n">${r.ms.days||'—'}</td>
       <td class="n">${dec?Math.round(r.ms.win/dec*100)+'%':'—'}</td>
       <td>${CHIP[r.st]}</td></tr>`;
   });
   document.getElementById('mtbody').innerHTML=tb;
-  document.getElementById('mtfoot').innerHTML=`<tr><td>年間</td><td class="n ${cls(sumD)}">${yen(sumD,true)}</td><td class="n ${nC?cls(sumC):'muted'}">${nC?yen(sumC,true):'—'}</td><td></td><td class="n">${rows.reduce((a,r)=>a+r.ms.days,0)||'—'}</td><td></td><td style="font-weight:400;font-size:12px;color:var(--muted)">年間の合計＝確定値の合計（${nC}か月）</td></tr>`;
+  document.getElementById('mtfoot').innerHTML=`<tr><td>年間</td><td class="n ${cls(sumD)}">${yen(sumD,true)}</td><td class="n ${nC?cls(sumC):'muted'}">${nC?yen(sumC,true):'—'}</td><td class="n ${nC?cls(yearTax(sumC)):'muted'}">${nC?yen(yearTax(sumC),true):'—'}</td><td></td><td class="n">${rows.reduce((a,r)=>a+r.ms.days,0)||'—'}</td><td></td><td style="font-weight:400;font-size:12px;color:var(--muted)">年間の合計＝確定値の合計（${nC}か月）</td></tr>`;
 }
+// 税引き後(特定口座・源泉徴収ありと同じ考え方): 1月からの累計に税率をかけた額が、その時点までの税金。
+// 月の税引き後＝その月の損益−(今月までの税金−先月までの税金)。累計がマイナスなら税金0(損失の月は引かれた税金が戻る)
+const TAXR=0.20315;
+function afterTax(vals){let cum=0,tax=0;return vals.map(v=>{if(v==null)return null;cum+=v;const t=Math.round(Math.max(0,cum)*TAXR);const o=v-(t-tax);tax=t;return o;});}
+const yearTax=v=>v-Math.round(Math.max(0,v)*TAXR);
+let TAX=false;try{TAX=localStorage.getItem('pnl-tax')==='1'}catch(e){}
 function niceStep(x){const p=Math.pow(10,Math.floor(Math.log10(x))),f=x/p;return (f<1.5?1:f<3.5?2:f<7.5?5:10)*p}
 
 // 日の入力
@@ -662,6 +679,7 @@ function tblEvt(e){
 }
 tbody.addEventListener('click',tblEvt);tbody.addEventListener('keydown',tblEvt);
 
+document.getElementById('taxseg').addEventListener('click',e=>{const b=e.target.closest('button[data-tax]');if(!b)return;TAX=b.dataset.tax==='1';try{localStorage.setItem('pnl-tax',TAX?'1':'0')}catch(_){}renderYear()});
 document.getElementById('ytog').addEventListener('change',e=>{const o=e.target.dataset.o;if(o==null)return;SHOW[o]=e.target.checked;try{localStorage.setItem('pnl-ytog',JSON.stringify(SHOW))}catch(_){}renderYear()});
 document.getElementById('yprev').onclick=()=>{Y--;render()};
 document.getElementById('ynext').onclick=()=>{Y++;if(mkey(Y,M)>mkey(t.getFullYear(),t.getMonth()+1))M=t.getMonth()+1;render()};
@@ -672,4 +690,5 @@ render();
 load();
 })();
 </script>
+<script src="../assets/help.js"></script>
 </body></html>

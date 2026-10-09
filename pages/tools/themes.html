@@ -78,6 +78,11 @@ table.mt th:first-child,table.mt td:first-child{position:sticky;left:0;z-index:1
 table.mt tr.on td:first-child{background:var(--surface-2)}
 table.mt th,table.mt td{white-space:nowrap}
 table.mt td .tk{font:11px var(--f-num);color:var(--faint);margin-left:2px}
+/* 下へスクロールしても項目の行を出す(表は横スクロールの枠の中にあり position:sticky が画面に効かない→見出しの複製を上に固定) */
+.fhead{position:fixed;z-index:24;overflow:hidden;background:var(--bg);box-shadow:0 3px 6px -3px rgba(10,40,40,.18);pointer-events:auto}
+.fhead table{table-layout:fixed;max-width:none}
+.fhead.sx-f{background:var(--surface)}
+.fhead th{background:inherit}
 </style>
 </head><body>
 
@@ -298,6 +303,29 @@ function openMember(tr){const {c,t}=MSEL,s=D.stocks[c];if(!s)return;const n=s[0]
   StockCard.below(tr,{group:'m',market:mk,code:c,name:n,sub:t,scroll:!MSEL.shown,
     foot:ths.length>1?'ほかの所属テーマ：'+ths.filter(x=>x!==t).map(esc).join('、'):'',
     onClose:()=>{MSEL=null;drawTable(rows());}});MSEL.shown=true;}
+/* 項目の行の固定表示: 構成銘柄の表(table.mt)を優先、なければテーマの表(table.sx) */
+const FH={box:null,src:null,sig:''};
+function floatHead(){
+  const nav=document.querySelector('nav.jump')||document.querySelector('nav.tools')||document.querySelector('header.top');const top=nav?nav.getBoundingClientRect().bottom:0;
+  const pick=sel=>[...document.querySelectorAll(sel)].find(t=>{const r=t.getBoundingClientRect(),hh=t.tHead?t.tHead.getBoundingClientRect().height:0;return t.tHead&&r.top<top&&r.bottom>top+hh*2;});
+  const t=pick('table.mt')||pick('table.sx');
+  if(!t){if(FH.box)FH.box.hidden=true;return;}
+  const wrap=t.closest('.memwrap,.sx-wrap'),wr=wrap.getBoundingClientRect();
+  if(!FH.box){FH.box=document.createElement('div');FH.box.className='fhead';FH.box.setAttribute('aria-hidden','true');document.body.appendChild(FH.box);
+    // 複製の見出しを押したら元の見出しを押したのと同じに(並べ替え)。「?」は複製側で動く
+    FH.box.addEventListener('click',e=>{const th=e.target.closest('th');if(!th||e.target.closest('.hq'))return;const i=[...th.parentNode.children].indexOf(th);const o=FH.src&&FH.src.tHead.rows[0].cells[i];if(o)o.click();});}
+  const ths=[...t.tHead.rows[0].cells],sig=t.tHead.textContent+'|'+ths.map(c=>Math.round(c.getBoundingClientRect().width)).join(',');
+  if(FH.src!==t||FH.sig!==sig){
+    FH.box.className='fhead'+(t.classList.contains('sx')?' sx-f':'');
+    FH.box.innerHTML=`<table class="${t.className}" style="width:${t.getBoundingClientRect().width}px"><thead>${t.tHead.innerHTML}</thead></table>`;
+    const cl=[...FH.box.querySelector('tr').cells];
+    cl.forEach((c,i)=>{c.querySelectorAll('.hq').forEach(x=>x.remove());delete c.dataset.hqDone;const w=ths[i].getBoundingClientRect().width+'px';c.style.width=w;c.style.minWidth=w;c.style.maxWidth=w;});
+    FH.src=t;FH.sig=sig;}
+  FH.box.style.left=wr.left+'px';FH.box.style.top=top+'px';FH.box.style.width=wr.width+'px';FH.box.hidden=false;FH.box.scrollLeft=wrap.scrollLeft;
+}
+let FHt=0,FHq=null;const fhLater=()=>{const n=Date.now();if(n-FHt>=16){FHt=n;floatHead();return;}clearTimeout(FHq);FHq=setTimeout(()=>{FHt=Date.now();floatHead();},16);};
+addEventListener('scroll',fhLater,true);addEventListener('resize',fhLater);
+new MutationObserver(fhLater).observe(document.getElementById('tbody'),{childList:true});
 load(mk);
 </script>
 <script src="../assets/help.js"></script>
