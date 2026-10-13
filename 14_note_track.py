@@ -4,8 +4,13 @@ note紹介記事検証のデータ → note_track.json(無料公開・04 が sit
 
   python 14_note_track.py
 
-台帳: note_picks.csv(記事ごとに1行: 株価の基準日・市場・コード・名前・業種・急成長スコア・必須条件・状態ラベル)
+台帳: note_picks.csv(手書き・コミット。記事ごとに1行: 株価の基準日・市場・コード・名前・業種・急成長スコア・必須条件・状態ラベル)
+  ＋ note_picks_auto.csv(自動の台帳・2026-10-13〜)。手書きの台帳に無い記事は、noteの本文から
+    「現状：○○」「必須条件は ○/9」「急成長スコアは … ○点」「（○年○月○日終値基準）」を読んで1行足す。
+    社名・業種は銘柄一覧(ranking_universe.csv / us_industry.csv)から。読み取れない記事は足さずに「要確認」と出す。
+    自動の台帳は本文から作り直せるので、CIではキャッシュに置くだけ(消えても次の実行で作り直す)
 公開日とURL: note.com の公開API(認証不要)から自動取得し、タイトルの銘柄コードで台帳と突き合わせる。
+  - 手書きの行と組むのは、URLが同じか、株価基準日が公開日の14日前〜公開日の行(同じ銘柄の続報は別の記事=別の行)
   - noteで公開していない台帳の行(作成しただけの記事)は載せない
   - 取得に失敗したら前回の結果(note_published.json)を使う
 掲載時の株価: noteで公開した時点で確定していた最後の終値(日本 15:30・米国 16:00 ET の引け)
@@ -55,7 +60,7 @@ def note_articles():
                 j = json.load(f)["data"]
             for c in j.get("contents", []):
                 if c.get("publishAt") and c.get("noteUrl"):
-                    arts.append({"title": c.get("name", ""), "url": c["noteUrl"], "publish_at": c["publishAt"]})
+                    arts.append({"title": c.get("name", ""), "url": c["noteUrl"], "publish_at": c["publishAt"], "key": c.get("key", "")})
             if j.get("isLastPage", True):
                 break
             page += 1
@@ -70,28 +75,126 @@ def note_articles():
     return arts
 
 
+AUTO_COLS = ["date", "market", "code", "name", "sector", "score", "must", "label", "url", "note"]
+MATCH_DAYS = 14          # 手書きの行の株価基準日が、公開日の何日前までなら同じ記事とみなすか
+
+
+def get_json(url):
+    req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 (theme-flow note_track)"})
+    with urllib.request.urlopen(req, timeout=20) as f:
+        return json.load(f)
+
+
+def parse_body(html):
+    """記事本文から 状態ラベル・必須条件・急成長スコア・株価基準日 を読む。読めない項目は None"""
+    t = re.sub(r"<(br|/p|/h\d|/li|/div)[^>]*>", "\n", html or "")
+    t = re.sub(r"<[^>]+>", "", t).replace("&nbsp;", " ").replace(" ", " ")
+    lab = re.search(r"現状[：:]\s*([^\s（(、。]+)", t)
+    must = re.search(r"必須条件は\s*([0-9])\s*/\s*9", t)
+    sc = re.search(r"急成長スコアは[^\n]{0,60}?([0-9]{1,3})\s*点", t)
+    d = re.search(r"([0-9]{4})年([0-9]{1,2})月([0-9]{1,2})日終値基準", t)
+    return {"label": lab.group(1) if lab else None, "must": f"{must.group(1)}/9" if must else None,
+            "score": int(sc.group(1)) if sc else None,
+            "date": f"{d.group(1)}-{int(d.group(2)):02d}-{int(d.group(3)):02d}" if d else None}
+
+
+_UNIV = None
+def name_sector(market, code):
+    """社名・業種(日本=東証33業種、米国=業種の日本語名)。見つからなければ空欄"""
+    global _UNIV
+    if _UNIV is None:
+        _UNIV = {}
+        try:
+            u = pd.read_csv(P("ranking_universe.csv"), dtype=str, encoding="utf-8-sig").fillna("")
+            _UNIV.update({("jp", r.code): (r.name, r.sector) for r in u.itertuples()})
+        except Exception as e:
+            print(f"  日本の銘柄一覧を読めない({str(e)[:40]})")
+        try:
+            from us_01c_build_themes import IND
+            u = pd.read_csv(P("us_industry.csv"), dtype=str, encoding="utf-8-sig").fillna("")
+            nm = dict(pd.read_csv(P("us_ranking_universe.csv"), dtype=str, encoding="utf-8-sig").fillna("")[["ticker", "name"]].values)
+            _UNIV.update({("us", r.ticker): (nm.get(r.ticker) or r.name, IND.get(r.industry, (r.industry,))[0]) for r in u.itertuples()})
+        except Exception as e:
+            print(f"  米国の銘柄一覧を読めない({str(e)[:40]})")
+    return _UNIV.get((market, code), ("", ""))
+
+
+def auto_rows(arts, picks):
+    """手書きの台帳と組めない記事を、本文を読んで自動の台帳(note_picks_auto.csv)に足す。戻り値=自動の台帳"""
+    fp = P("note_picks_auto.csv")
+    auto = pd.read_csv(fp, dtype=str).fillna("") if os.path.exists(fp) else pd.DataFrame(columns=AUTO_COLS)
+    have = set(auto["url"])
+    add, check = [], []
+    for a in sorted(arts, key=lambda a: a["publish_at"]):
+        code = code_of(a["title"])
+        if not code or a["url"] in have or manual_match(picks, a, code, set()) is not None:
+            continue
+        key = a.get("key") or a["url"].rstrip("/").rsplit("/", 1)[-1]
+        try:
+            body = get_json(f"https://note.com/api/v3/notes/{key}")["data"].get("body") or ""
+            time.sleep(0.4)
+        except Exception as e:
+            check.append(f"{code}(本文を取得できない {str(e)[:30]})"); continue
+        v = parse_body(body)
+        miss = [k for k, l in (("score", "急成長スコア"), ("must", "必須条件"), ("label", "状態ラベル")) if v[k] is None]
+        if miss:
+            check.append(f"{code} {a['publish_at'][:10]}(読めない: {'・'.join(dict(score='急成長スコア', must='必須条件', label='状態ラベル')[k] for k in miss)})")
+            continue
+        market = "jp" if code[0].isdigit() else "us"
+        name, sector = name_sector(market, code)
+        add.append({"date": v["date"] or a["publish_at"][:10], "market": market, "code": code, "name": name or code,
+                    "sector": sector, "score": str(v["score"]), "must": v["must"], "label": v["label"],
+                    "url": a["url"], "note": "記事の本文から自動で追加"})
+    if add:
+        auto = pd.concat([auto, pd.DataFrame(add)], ignore_index=True)[AUTO_COLS]
+        auto.to_csv(fp, index=False, encoding="utf-8-sig")
+        print(f"  自動で台帳に追加: {', '.join(x['code'] + ' ' + x['score'] + '点' for x in add)}")
+    if check:
+        print(f"  要確認(台帳に足していない記事): {' / '.join(check)}")
+    return auto
+
+
+def manual_match(picks, a, code, used):
+    """手書きの台帳で、この記事と組む行(URLが同じ > 株価基準日が公開日の14日前〜公開日で一番近い行)"""
+    same = picks[(picks["url"] == a["url"]) & (~picks.index.isin(used))]
+    if len(same):
+        return same.index[0]
+    pub = datetime.fromisoformat(a["publish_at"]).astimezone(JST).date()
+    d = pd.to_datetime(picks["date"]).dt.date
+    cand = picks[(picks["code"] == code) & (picks["url"] == "") & (~picks.index.isin(used)) &
+                 (d <= pub) & (d >= pub - pd.Timedelta(days=MATCH_DAYS))]
+    return pd.to_datetime(cand["date"]).idxmax() if len(cand) else None
+
+
 def attach_published(picks, arts):
-    """台帳の行に公開日・URL・タイトルを付ける。同じ銘柄が複数回あれば、株価基準日が公開日以前で一番近い行と組む。"""
+    """台帳(手書き＋自動)の行に公開日・URL・タイトルを付ける。記事1本＝1行"""
     picks = picks.copy()
-    picks["publish_at"] = ""; picks["url"] = picks.get("url", ""); picks["title"] = ""
+    picks["url"] = picks["url"] if "url" in picks else ""
+    auto = auto_rows(arts, picks)
+    picks["src"] = "manual"
+    auto = auto.assign(src="auto")
+    picks = pd.concat([picks, auto[[c for c in auto.columns if c in AUTO_COLS] + ["src"]]], ignore_index=True).fillna("")
+    picks["publish_at"] = ""; picks["title"] = ""
     used = set()
     for a in sorted(arts, key=lambda a: a["publish_at"]):
         code = code_of(a["title"])
         if not code:
             continue
-        pub = datetime.fromisoformat(a["publish_at"]).astimezone(JST)
-        cand = picks[(picks["code"] == code) & (~picks.index.isin(used)) &
-                     (pd.to_datetime(picks["date"]).dt.date <= pub.date())]
-        if not len(cand):
-            print(f"  台帳にない記事: {code} {pub:%Y-%m-%d} {a['title'][:40]}")
+        man = picks[picks["src"] == "manual"]
+        i = manual_match(man, a, code, used)
+        if i is None:
+            hit = picks[(picks["src"] == "auto") & (picks["url"] == a["url"])]
+            i = hit.index[0] if len(hit) else None
+        if i is None:
+            print(f"  台帳にない記事: {code} {a['publish_at'][:10]} {a['title'][:40]}")
             continue
-        i = pd.to_datetime(cand["date"]).idxmax()
         used.add(i)
+        pub = datetime.fromisoformat(a["publish_at"]).astimezone(JST)
         picks.loc[i, ["publish_at", "url", "title"]] = [pub.isoformat(), a["url"], a["title"]]
     off = picks[picks["publish_at"] == ""]
     if len(off):
         print(f"  noteで未公開(載せない): {', '.join(off['code'] + ' ' + off['name'])}")
-    return picks[picks["publish_at"] != ""]
+    return picks[picks["publish_at"] != ""].drop(columns="src")
 
 
 def entry_date(s, market, publish_at):

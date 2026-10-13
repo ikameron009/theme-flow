@@ -29,6 +29,8 @@ cron_worker/.wrangler/
 pro_*.json
 us_info_cache.json
 note_track.json
+# note紹介記事検証の自動の台帳(記事本文から作り直せる・CIはキャッシュ)
+note_picks_auto.csv
 
 # 高配当・増配の計算フォルダ(データ・キャッシュ。公開するのは anshin_pub/ だけ)
 dividend/edinet_csv_cache/

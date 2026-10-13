@@ -79,6 +79,7 @@ jobs:
             ./card_*.json
             ./etf_aum.json
             ./note_track.json
+            ./note_picks_auto.csv
             ./calendar.json
             ./cal_shares.csv
             ./site/ohlc
