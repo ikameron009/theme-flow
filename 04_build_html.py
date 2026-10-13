@@ -8,7 +8,7 @@ site/ フォルダが公開サイトの中身。
                site_config.json(会員限定にする範囲。いまは全部公開)
   別ページ:     pages/*.html をそのまま site/ へコピー
 """
-import os, json, shutil, unicodedata
+import os, sys, json, shutil, unicodedata
 import pandas as pd
 from datetime import datetime, timezone
 
@@ -64,8 +64,13 @@ with open(dst, "w", encoding="utf-8") as f:
 # VCPスクリーナーの履歴(ページが表示時に読み込む)
 # 決算・経済カレンダー(15_calendar.py が作る calendar.json)も同じく表示時に読み込む
 # 銘柄カードの「株価・勢い」3行(13_tool_research.py が作る card_{jp,us}.json)も無料なので公開側
+# 読めないJSON(gitの衝突印の混入など)は公開しない=ビルドを止めて前回の公開を残す(2026-10-13 vcp_jp.json 事故)
 for fn in ("vcp_us.json", "vcp_jp.json", "note_track.json", "calendar.json", "card_jp.json", "card_us.json"):
     if os.path.exists(P(fn)):
+        try:
+            json.load(open(P(fn), encoding="utf-8"))
+        except ValueError as e:
+            sys.exit(f"::error::{fn} がJSONとして読めない({e}) → 公開を中止")
         shutil.copyfile(P(fn), os.path.join(SITE, fn))
 
 # 別ページ(会員案内・運営者情報・学ぶ・note紹介銘柄検証・ツール)。pages/ の下をそのまま site/ へ

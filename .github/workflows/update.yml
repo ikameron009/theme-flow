@@ -52,7 +52,10 @@ jobs:
       incomplete: ${{ steps.chk.outputs.incomplete }}
       detail: ${{ steps.chk.outputs.detail }}
     steps:
+      # 順番待ちのあいだにVCPの結果などがpushされることがあるので、起動時のコミットではなく開始時点の最新のmainを取る
       - uses: actions/checkout@v4
+        with:
+          ref: main
 
       - uses: actions/setup-python@v5
         with:

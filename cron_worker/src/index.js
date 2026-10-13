@@ -60,6 +60,17 @@ async function recentRuns(env, t, market, sinceH) {
   return workflow_runs.filter((x) => new RegExp(`\\[(${market}|both)\\]`).test(x.display_title || x.name || ""));
 }
 
+// Cloudflareの定時実行は同じ時刻に2回動くことがある(2026-10-13 08:00/09:00 UTC に7秒差で2回)。
+// 2回目は、直近 DEDUP_MIN 分に同じ市場の手動起動ランがあれば起動しない。
+// GitHubのラン一覧に出るまで数秒かかるので、少し待ってから確かめる(1回目と2回目の間隔は数秒)。
+const DEDUP_MIN = 15;
+async function justStarted(env, t, market) {
+  await new Promise((r) => setTimeout(r, 1000 + Math.random() * 4000));
+  const runs = await recentRuns(env, t, market, DEDUP_MIN / 60);
+  if (runs.length) console.log(`skip ${t.repo} ${market}: ${DEDUP_MIN}分以内に起動済み (${runs[0].created_at})`);
+  return runs.length > 0;
+}
+
 async function notify(env, text) {
   console.log(text);
   if (!env.NOTIFY_WEBHOOK) return;
@@ -74,6 +85,7 @@ async function runDispatch(env, market) {
   const errs = [];
   for (const t of TARGETS) {
     try {
+      if (await justStarted(env, t, market)) continue;
       await dispatch(env, t, market);
       console.log(`dispatched ${t.repo} ${market}`);
     } catch (e) {
@@ -95,6 +107,7 @@ async function runWatch(env, market, sinceH) {
       if (running) {
         lines.push(`⏳ ${t.repo} ${market}: まだ実行中`);
       } else {
+        if (await justStarted(env, t, market)) continue;
         await dispatch(env, t, market);
         const why = runs.length ? `前回=${runs[0].conclusion}` : "起動されていない";
         lines.push(`🔁 ${t.repo} ${market}: ${why} → 再実行しました`);
