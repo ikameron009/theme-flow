@@ -32,6 +32,24 @@ main.wrap{padding-block:22px 48px;display:flex;flex-direction:column;gap:22px}
 .yearnav button:disabled,.monthnav button:disabled{opacity:.3;cursor:default}
 .yearnav b,.monthnav b{font:600 15px var(--f-num);min-width:84px;text-align:center}
 .monthnav b{min-width:110px}
+/* 年月をまとめて選ぶ(月の表示を押すと開く) */
+.mnwrap{position:relative}
+.monthnav button.mlab{width:auto;min-width:124px;padding:0 10px;border-radius:999px;font:600 15px var(--f-num);color:var(--ink)}
+.monthnav button.mlab::after{content:"▾";font-size:11px;color:var(--muted);margin-left:5px}
+.monthnav button.mlab[aria-expanded="true"]{background:var(--brand-soft)}
+.mpick{position:absolute;right:0;top:calc(100% + 6px);z-index:30;width:300px;max-width:calc(100vw - 32px);background:var(--surface);border:1px solid var(--line-strong);border-radius:12px;box-shadow:0 10px 28px rgba(0,0,0,.14);padding:12px}
+.mpick .yrs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.mpick .yrs button{border:1px solid var(--line-strong);background:var(--surface);color:var(--ink-2);border-radius:999px;padding:2px 12px;font:600 13px var(--f-num)}
+.mpick .yrs button[aria-pressed="true"]{background:var(--brand);border-color:var(--brand);color:var(--brand-ink)}
+.mpick .mos{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.mpick .mos button{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:8px;padding:6px 0;font:600 13px var(--f-num)}
+.mpick .mos button:hover:not(:disabled){border-color:var(--brand)}
+.mpick .mos button.cur{background:var(--brand);border-color:var(--brand);color:var(--brand-ink)}
+.mpick .mos button:disabled{opacity:.3;cursor:default}
+.mpick .mos button small{display:block;font:500 10px var(--f-num);color:var(--faint)}
+.mpick .mos button.cur small{color:var(--brand-ink);opacity:.8}
+.mpick .ft{display:flex;justify-content:space-between;margin-top:10px}
+.mpick .ft button{border:0;background:transparent;color:var(--brand);font-size:12px;padding:0;text-decoration:underline;text-underline-offset:2px}
 
 /* 今年の数字 */
 .kpis{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line);border:1px solid var(--line);border-radius:14px;overflow:hidden}
@@ -199,6 +217,7 @@ tfoot td{font-weight:700;border-top:2px solid var(--line-strong);border-bottom:0
     <a href="../tools/journal.html" data-page="1">監視銘柄・売買記録<span class="j-lock">本人</span></a>
     <a href="../tools/pnl.html" data-page="1" class="on">損益カレンダー<span class="j-lock">本人</span></a>
     <a href="../note.html" data-page="1">note紹介記事検証</a>
+    <a href="../tools/side.html" data-page="1">副業収支<span class="j-lock">本人</span></a>
     </div>
   </div>
 </nav>
@@ -222,8 +241,11 @@ tfoot td{font-weight:700;border-top:2px solid var(--line-strong);border-bottom:0
   <section class="pl-panel" aria-labelledby="calh">
     <div class="sechead">
       <h2 id="calh">日々の損益</h2>
-      <div class="monthnav" aria-label="月の切り替え">
-        <button type="button" id="mprev" aria-label="前の月">◀</button><b id="mlabel"></b><button type="button" id="mnext" aria-label="次の月">▶</button>
+      <div class="mnwrap">
+        <div class="monthnav" aria-label="月の切り替え">
+          <button type="button" id="mprev" aria-label="前の月">◀</button><button type="button" class="mlab" id="mlabel" aria-haspopup="dialog" aria-expanded="false" aria-controls="mpick"></button><button type="button" id="mnext" aria-label="次の月">▶</button>
+        </div>
+        <div class="mpick" id="mpick" role="dialog" aria-label="年と月を選ぶ" hidden></div>
       </div>
     </div>
     <div class="calwrap">
@@ -685,6 +707,34 @@ document.getElementById('yprev').onclick=()=>{Y--;render()};
 document.getElementById('ynext').onclick=()=>{Y++;if(mkey(Y,M)>mkey(t.getFullYear(),t.getMonth()+1))M=t.getMonth()+1;render()};
 document.getElementById('mprev').onclick=()=>{M--;if(M<1){M=12;Y--}render()};
 document.getElementById('mnext').onclick=()=>{M++;if(M>12){M=1;Y++}render()};
+
+// 年月をまとめて選ぶ(月の表示を押すと開く)
+const mpick=document.getElementById('mpick'),mlab=document.getElementById('mlabel');
+let PY=Y;
+function renderPick(){
+  const curM=mkey(t.getFullYear(),t.getMonth()+1);
+  let h='<div class="yrs" role="group" aria-label="年">';
+  for(let y=MINY;y<=MAXY;y++)h+=`<button type="button" data-py="${y}" aria-pressed="${y===PY}">${y}年</button>`;
+  h+='</div><div class="mos" role="group" aria-label="月">';
+  for(let m=1;m<=12;m++){
+    const fut=mkey(PY,m)>curM,n=fut?0:monthSum(data.daily,PY,m).entered;
+    h+=`<button type="button" data-pm="${m}" class="${PY===Y&&m===M?'cur':''}" ${fut?'disabled':''}>${m}月<small>${fut?'—':n?n+'日':'記録なし'}</small></button>`;
+  }
+  h+='</div><div class="ft"><button type="button" id="pnow">今月へ</button><button type="button" id="pclose">閉じる</button></div>';
+  mpick.innerHTML=h;
+}
+function openPick(){PY=Y;renderPick();mpick.hidden=false;mlab.setAttribute('aria-expanded','true');const c=mpick.querySelector('.cur')||mpick.querySelector('[data-pm]');if(c)c.focus()}
+function closePick(focus){mpick.hidden=true;mlab.setAttribute('aria-expanded','false');if(focus)mlab.focus()}
+mlab.onclick=()=>{mpick.hidden?openPick():closePick()};
+mpick.addEventListener('click',e=>{
+  e.stopPropagation(); // 年を押すと中身を描き直すので、外側クリック判定に回さない
+  const yb=e.target.closest('[data-py]');if(yb){PY=+yb.dataset.py;renderPick();return}
+  const mb=e.target.closest('[data-pm]');if(mb&&!mb.disabled){Y=PY;M=+mb.dataset.pm;closePick(true);render();return}
+  if(e.target.id==='pnow'){Y=t.getFullYear();M=t.getMonth()+1;closePick(true);render();return}
+  if(e.target.id==='pclose')closePick(true);
+});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!mpick.hidden)closePick(true)});
+document.addEventListener('click',e=>{if(!mpick.hidden&&!e.target.closest('.mnwrap'))closePick()});
 
 render();
 load();

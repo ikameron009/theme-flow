@@ -1,5 +1,5 @@
 // テーマ別資金フロー: 公開サイトの入口。静的ファイルはそのまま返す。
-// /api/journal/* = 本人専用の監視銘柄・売買記録(保存先 D1: trade-journal。表 positions=建玉、watchlist=監視銘柄、pnl_daily/pnl_monthly=損益カレンダー)。パスワードは Worker の秘密の値 JOURNAL_PASSWORD
+// /api/journal/* = 本人専用の監視銘柄・売買記録(保存先 D1: trade-journal。表 positions=建玉、watchlist=監視銘柄、pnl_daily/pnl_monthly=損益カレンダー、side_items/side_entries=副業収支)。パスワードは Worker の秘密の値 JOURNAL_PASSWORD
 //   (登録: cd site_worker && npx wrangler@4 secret put JOURNAL_PASSWORD)。ログインすると署名つき Cookie を30日渡す。
 // ★いまはログインを省略中(wrangler.toml の [vars] JOURNAL_AUTH = "off")。戻すときは "on" にして push する。
 // ③C で /pro/* の会員確認(Cookie)もここに追加する。
@@ -155,6 +155,60 @@ async function journal(req, env, path) {
     }
     await db.batch(st);
     return json({ ok: true, saved: st.length });
+  }
+  // 副業収支(tools/side.html)。項目 side_items と明細 side_entries
+  if (path === "/api/journal/side" && method === "GET") {
+    const [i, e] = await Promise.all([
+      db.prepare("SELECT id, kind, name FROM side_items ORDER BY id").all(),
+      db.prepare("SELECT id, d, item_id, amount, memo FROM side_entries ORDER BY d, id").all(),
+    ]);
+    return json({ items: i.results, entries: e.results });
+  }
+  if (path === "/api/journal/side/items" && method === "POST") {
+    const b = await req.json().catch(() => null);
+    const kind = b && (b.kind === "in" || b.kind === "out") ? b.kind : null;
+    const name = b && typeof b.name === "string" ? b.name.trim().slice(0, 40) : "";
+    if (!kind || !name) return json({ error: "項目の形が正しくありません" }, 400);
+    // 同じ区分・同じ名前があればそれを返す
+    const r = await db
+      .prepare("INSERT INTO side_items (kind, name, created_at) VALUES (?, ?, ?) ON CONFLICT (kind, name) DO UPDATE SET name = excluded.name RETURNING id, kind, name")
+      .bind(kind, name, new Date().toISOString())
+      .first();
+    return json({ item: r });
+  }
+  const si = path.match(/^\/api\/journal\/side\/items\/(\d+)$/);
+  if (si && method === "DELETE") {
+    const used = await db.prepare("SELECT COUNT(*) AS n FROM side_entries WHERE item_id = ?").bind(Number(si[1])).first();
+    if (used && used.n) return json({ error: "明細で使っている項目は削除できません" }, 409);
+    await db.prepare("DELETE FROM side_items WHERE id = ?").bind(Number(si[1])).run();
+    return json({ ok: true });
+  }
+  // 明細の中身を確かめる(項目は登録済みのものだけ)
+  async function sideEntry(b) {
+    if (!b || typeof b !== "object") return null;
+    const d = String(b.d || ""), item = Number(b.item_id), amount = b.amount, memo = String(b.memo == null ? "" : b.memo).slice(0, 500);
+    if (!/^20\d\d-\d\d-\d\d$/.test(d) || !Number.isInteger(item) || !Number.isInteger(amount) || amount <= 0 || amount >= 1e11) return null;
+    const it = await db.prepare("SELECT id FROM side_items WHERE id = ?").bind(item).first();
+    return it ? { d, item, amount, memo } : null;
+  }
+  const SE = "id, d, item_id, amount, memo";
+  if (path === "/api/journal/side/entries" && method === "POST") {
+    const c = await sideEntry(await req.json().catch(() => null));
+    if (!c) return json({ error: "明細の形が正しくありません" }, 400);
+    const now = new Date().toISOString();
+    const r = await db.prepare(`INSERT INTO side_entries (d, item_id, amount, memo, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?) RETURNING ${SE}`).bind(c.d, c.item, c.amount, c.memo, now, now).first();
+    return json({ entry: r }, 201);
+  }
+  const se = path.match(/^\/api\/journal\/side\/entries\/(\d+)$/);
+  if (se && method === "PUT") {
+    const c = await sideEntry(await req.json().catch(() => null));
+    if (!c) return json({ error: "明細の形が正しくありません" }, 400);
+    const r = await db.prepare(`UPDATE side_entries SET d = ?, item_id = ?, amount = ?, memo = ?, updated_at = ? WHERE id = ? RETURNING ${SE}`).bind(c.d, c.item, c.amount, c.memo, new Date().toISOString(), Number(se[1])).first();
+    return r ? json({ entry: r }) : json({ error: "見つかりません" }, 404);
+  }
+  if (se && method === "DELETE") {
+    await db.prepare("DELETE FROM side_entries WHERE id = ?").bind(Number(se[1])).run();
+    return json({ ok: true });
   }
   return json({ error: "not found" }, 404);
 }

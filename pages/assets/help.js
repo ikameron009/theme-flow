@@ -4,7 +4,7 @@
    ・パソコン=マウスを近づけると表示 / スマホ=タップで表示・ほかをタップで閉じる。表の見出しの並べ替えは「?」以外を押したときだけ */
 (function(){
   const P=location.pathname;
-  const PAGE=/journal/.test(P)?'journal':/pnl/.test(P)?'pnl':/dividend/.test(P)?'dividend':/sectors/.test(P)?'sectors':/themes/.test(P)?'themes':/research/.test(P)?'research':/note/.test(P)?'note':'index';
+  const PAGE=/journal/.test(P)?'journal':/pnl/.test(P)?'pnl':/tools\/side/.test(P)?'side':/dividend/.test(P)?'dividend':/sectors/.test(P)?'sectors':/themes/.test(P)?'themes':/research/.test(P)?'research':/note/.test(P)?'note':'index';
 
   /* ---------- 説明文 [名前, 意味, 例・計算] ---------- */
   const DICT={
