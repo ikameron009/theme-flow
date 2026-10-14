@@ -3,7 +3,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <link rel="icon" href="../assets/icon-64.png">
-<title>セクター状況｜投資家ハシビロコウの株式ダッシュボード</title>
+<title>ETF・市場全体｜投資家ハシビロコウの株式ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@600;800&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 <link rel="stylesheet" href="../assets/site.css">
@@ -85,10 +85,11 @@ table.mt tr.on td{background:var(--surface-2)}
     <a href="../index.html#themes">テーマ別資金フロー</a>
     <a href="../index.html#stocks">銘柄を探す</a>
     <a href="../index.html#screening">スクリーニング</a>
-    <a href="../tools/sectors.html" data-page="1" class="on">セクター状況</a>
+    <a href="../tools/sectors.html" data-page="1" class="on">ETF・市場全体</a>
     </div>
     <div class="jrow">
-    <a href="../tools/themes.html" data-page="1">業種状況</a>
+    <a href="../tools/industry.html" data-page="1">業種</a>
+    <a href="../tools/themes.html" data-page="1">テーマ</a>
     <a href="../tools/research.html" data-page="1">業種銘柄リサーチ</a>
     <a href="../tools/dividend.html" data-page="1">高配当・増配銘柄リサーチ</a>
     <a href="../tools/calendar.html" data-page="1">決算・経済カレンダー</a>
@@ -103,17 +104,17 @@ table.mt tr.on td{background:var(--surface-2)}
 <main class="wrap">
 <section class="sec">
   <div class="sec-head">
-    <div><div class="eyebrow">Tools · Sector status</div><h2>セクター状況<span class="member">会員ツール</span><span class="tagline">主要ETFでマーケット全体のトレンドを確認</span></h2></div>
+    <div><div class="eyebrow">Tools · ETF & market</div><h2>ETF・市場全体<span class="member">会員ツール</span><span class="tagline">指数・債券・商品・国のETFで、相場全体の地合いとお金の向きを確認</span></h2></div>
     <div class="meta num" id="meta"></div>
   </div>
 
   <div class="panel">
-    <div class="ctlrow"><span class="ctl-label">テーマ</span><div class="seg" id="grp"></div></div>
+    <div class="ctlrow"><span class="ctl-label">分類</span><div class="seg" id="grp"></div></div>
     <div class="ctlrow" id="sub" hidden></div>
-    <div class="ctlrow"><span class="ctl-label">テーマを選ぶ</span><span class="search" style="min-width:260px"><input id="tpick" list="tlist" type="text" placeholder="入力すると候補が出ます" autocomplete="off"></span><datalist id="tlist"></datalist><span id="pickchip"></span></div>
+    <div class="ctlrow"><span class="ctl-label">ETFを選ぶ</span><span class="search" style="min-width:260px"><input id="tpick" list="tlist" type="text" placeholder="入力すると候補が出ます" autocomplete="off"></span><datalist id="tlist"></datalist><span id="pickchip"></span></div>
     <div class="ctlrow"><span class="ctl-label">表示</span>
       <div class="seg" id="view"><button data-v="list" aria-pressed="true">リスト</button><button data-v="heat" aria-pressed="false">ヒートマップ</button></div>
-      <span class="search" style="margin-left:6px;min-width:260px"><input id="q" type="text" placeholder="名前・ティッカー（例：半導体、SMH、銀行）" autocomplete="off"><span class="x" id="qx" hidden title="消す">✕</span></span>
+      <span class="search" style="margin-left:6px;min-width:260px"><input id="q" type="text" placeholder="名前・ティッカー（例：金、TLT、日経225）" autocomplete="off"><span class="x" id="qx" hidden title="消す">✕</span></span>
       <span class="phint" id="cnt"></span></div>
   </div>
 
@@ -247,8 +248,8 @@ function EXTRA(){const r=$('#repRow');if(!r)return;r.hidden=mk!=='us';if(mk!=='u
   $('#rep').innerHTML=`<button data-v="rep" aria-pressed="${!st.allEtf}">代表ETFだけ（${nRep}本）</button><button data-v="all" aria-pressed="${st.allEtf}">すべて（${D.rows.length}本）</button>`;
   $('#rep').onclick=e=>{const b=e.target.closest('button');if(!b)return;st.allEtf=b.dataset.v==='all';draw();};}
 function FOOT(){return (mk==='us'?'<b>データ</b>：各ETFの日次終値と出来高（Yahoo Finance）。<b>代表ETF</b>＝同じテーマの中で、日々の値動きの相関（直近1年）が0.85以上のETFを1つのグループにまとめ、売買代金が一番多いものを代表として表示（「すべて」で全部表示。名前の下の「似た動き」がまとめたETF）。'
-  :'<b>データ</b>：「（33業種）」は、各業種の構成銘柄（東証上場の内国普通株）を等しい重みで平均して自前で算出した指数（現在値は表示なし・チャートは終値の折れ線）。そのほかは東証上場ETFの日次終値と出来高（Yahoo Finance）。')+COMMON_FOOT+CARD_FOOT+'行を押すとその行のすぐ下に、ヒートマップはタイルを押すと図の下にカード。';}
-function drawTable(R){head([['key','銘柄','l'],['name','テーマ','l']]);
+  :'<b>データ</b>：東証上場ETFの日次終値と出来高（Yahoo Finance）。業種のETFは「業種」、テーマのETFは「テーマ」のページの「対応ETF」の列に出しています。')+COMMON_FOOT+CARD_FOOT+'行を押すとその行のすぐ下に、ヒートマップはタイルを押すと図の下にカード。';}
+function drawTable(R){head([['key','銘柄','l'],['name','名前','l']]);
   $('#tbody').innerHTML=R.map(x=>{const tw=mk==='us'&&!st.allEtf&&x.rep===x.key?twins(x):[],on=SEL===x.key;
     return `<tr class="xrow ${on?'open':''}" data-k="${esc(x.key)}"><td class="l"><span class="tk">${x.etf?esc(x.key):'<span class="muted">―</span>'}</span></td><td class="l"><span class="nm2">${esc(x.name)}</span><span style="font-size:11px;color:var(--faint)">${esc(x.group)}${tw.length?` ・ 似た動き：${tw.map(t=>esc(t.key)).join('・')}`:''}${mk==='us'&&x.rep&&x.rep!==x.key?` ・ 代表：${esc(x.rep)}`:''}</span></td>${cells(x)}</tr>`
       +(on?`<tr class="cardrow"><td colspan="17">${cardSlot('card')}</td></tr>`:'');}).join('')

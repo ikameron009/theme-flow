@@ -4,7 +4,7 @@
    ・パソコン=マウスを近づけると表示 / スマホ=タップで表示・ほかをタップで閉じる。表の見出しの並べ替えは「?」以外を押したときだけ */
 (function(){
   const P=location.pathname;
-  const PAGE=/journal/.test(P)?'journal':/pnl/.test(P)?'pnl':/tools\/side/.test(P)?'side':/dividend/.test(P)?'dividend':/sectors/.test(P)?'sectors':/themes/.test(P)?'themes':/research/.test(P)?'research':/note/.test(P)?'note':'index';
+  const PAGE=/journal/.test(P)?'journal':/pnl/.test(P)?'pnl':/tools\/side/.test(P)?'side':/dividend/.test(P)?'dividend':/sectors/.test(P)?'sectors':/industry/.test(P)?'industry':/themes/.test(P)?'themes':/research/.test(P)?'research':/note/.test(P)?'note':'index';
 
   /* ---------- 説明文 [名前, 意味, 例・計算] ---------- */
   const DICT={
@@ -72,12 +72,13 @@
     streak:['継続','この一覧に何日続けて載っているか。初めて載った日が1です。',''],
     recent:['最近の掲載','直近20日のうち、一覧に載った日を色で表した帯。右端が最新日です。',''],
     listing:['上場','上場してからの年数です。',''],
-    /* セクター状況 */
-    g_sectors:['セクター状況の見方','1. テーマのボタンで分野を絞る　2. 表の見出しを押して並べ替える（上位3つも連動）　3. 行を押すと、すぐ下にチャートが出る','色が濃いほど大きく動いたことを表します。'],
+    /* ETF・市場全体(旧セクター状況) */
+    g_industry:['業種の見方','1. 単位（大分類・小分類）を選ぶ　2. 大分類のボタンで絞る（押すと小分類に切り替わる）　3. 行を押すと業種のカードと構成銘柄が開き、銘柄名を押すとチャートが出る（構成銘柄の表も見出しで並べ替え）','大分類＝東証17業種（米国は11セクター）、小分類＝東証33業種（米国はYahooの業種）。'],
+    g_sectors:['ETF・市場全体の見方','1. 分類のボタンで絞る　2. 表の見出しを押して並べ替える（上位3つも連動）　3. 行を押すと、すぐ下にチャートが出る','色が濃いほど大きく動いたことを表します。'],
     repetf:['代表ETF','同じテーマの中で値動きがほぼ同じETF（日々の騰落の相関が0.85以上）を1つにまとめ、売買代金が一番多いものを代表として表示します。','「すべて」で、まとめたETFも全部表示します。'],
     price_sec:['現在値','ETFの最新の値段。「（33業種）」は自前で計算した指数なので、値段は出していません。',''],
-    /* 業種状況 */
-    g_themetool:['業種状況の見方','1. テーマのボタンや入力欄で分野を絞る　2. 見出しを押して並べ替える　3. 行を押すと構成銘柄が開き、銘柄名を押すとチャートが出る','上位3つは、構成5銘柄以上のテーマから選んでいます。'],
+    /* テーマ(旧業種状況) */
+    g_themetool:['テーマの見方','1. カテゴリのボタンや入力欄で分野を絞る　2. 見出しを押して並べ替える　3. 行を押すと構成銘柄が開き、銘柄名を押すとチャートが出る（構成銘柄の表も見出しで並べ替え）','上位3つは、構成5銘柄以上のテーマから選んでいます。'],
     price_th:['現在値（テーマ指数）','テーマの構成銘柄を同じ重みで平均して作った指数。2年前を100とした値です。','例：166＝2年前より66%上。'],
     /* 業種銘柄リサーチ */
     g_research:['業種銘柄リサーチの見方','1. 業種・テーマ・トレンド・条件で絞り込む　2. 表・ヒートマップ・ツリーマップで見比べる　3. 銘柄名を押すとチャート、左のチェックでコピー・CSVの対象を選ぶ',''],
@@ -157,6 +158,7 @@
       ['優先度','prio'],['Buy','buy'],['VCP','vcp'],['ピボット','pivot'],['継続','streak'],['最近の掲載','recent'],['上場','listing']],
     sectors:[['ETF','repetf'],['現在値','price_sec']],
     themes:[['現在値','price_th']],
+    industry:[['現在値','price_th']],
     research:[['バリュエーション','v_fil','.flabel'],['2か月前','ago'],['3か月前','ago'],['6か月前','ago'],['1年前','ago'],['現在値','price_stock'],['RS','rs_all'],['業種','f_sec'],['テーマ','f_th'],['条件を追加','f_cond'],['よく使う条件','f_preset'],['出来高倍率','volx'],[/^ADR%/,'adr'],
       ['50日線から','ma50x'],['200日線から','ma200x'],['5日線から','ma5x'],['25日線から','ma25x'],['150日線から','ma150x'],['トレンドの内訳','trend_mix'],[/^売買代金（20日平均/,'turnover'],['売買代金','turnover'],['時価総額','mcap'],['1か月','ago'],['3か月','ago'],['6か月','ago']],
     dividend:[['判定','d_label'],['安心スコア','d_score'],['利回り(5年平均)','d_yld'],['連続増配','d_inc'],['連続非減配','d_nd'],['配当5年成長','d_dg5'],['配当性向','d_payout'],['配当方針','d_policy'],['割安度','d_val'],['配当の推移(通常配当)','d_spark']],
@@ -170,7 +172,7 @@
   };
   /* ページの見出し → 「このツールの見方」 */
   const GUIDE={index:[['市場概況','g_market'],['テーマ別資金フロー','g_themes'],['銘柄を探す','g_stocks'],['スクリーニング','g_screen']],
-    sectors:[['セクター状況','g_sectors']],themes:[['業種状況','g_themetool']],research:[['業種銘柄リサーチ','g_research']],dividend:[['高配当・増配銘柄リサーチ','g_dividend']],note:[['note紹介記事検証','g_note']]};
+    sectors:[['ETF・市場全体','g_sectors']],industry:[['業種','g_industry']],themes:[['テーマ','g_themetool']],research:[['業種銘柄リサーチ','g_research']],dividend:[['高配当・増配銘柄リサーチ','g_dividend']],note:[['note紹介記事検証','g_note']]};
   const RULES=[...(BYPAGE[PAGE]||[]),...COMMON];
   /* 付ける場所(見出し・列名・ラベル)。統計の小さな表(table.st)は列名が何度も出るので付けない */
   const SEL='h3,th,.j-top small,.ctl-label,.flabel,.meter small,.kv small,.kpi small,.v-top .meta,.legend span,.sc-val .vt,.sc-val .vgrid small';

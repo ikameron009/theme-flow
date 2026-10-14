@@ -171,3 +171,53 @@ def group_scale(cols, turn, adr, mcap, mk):
     known = [mcap[c] for c in cols if c in mcap]
     mc = sum(known) if cols and len(known) >= len(cols) / 2 else np.nan
     return {"to20": r(to20, 1), "volx": r(volx, 2), "adr": r(a.mean(), 2) if len(a) else None, "mcap": r(mc, 1)}
+
+
+# ---------- 構成銘柄の表(業種・テーマの行を開いたときの銘柄一覧) ----------
+STOCK_COLS = ["name", "chg1", "w1", "m0", "ytd", "hi52", "rs", "trend", "last", "r1m", "r2m", "r3m", "r6m", "r12m", "surge", "spark"]
+TREND_NUM = {"up": 1, "flat": 0, "down": -1}
+
+
+def stock_payload(close, turn, used, months, names):
+    """構成銘柄ごとの数字(STOCK_COLS の順の配列)。RS は used の中の順位"""
+    used = sorted(used)
+    st = stock_table(close[used], months)
+    sg = surge_all(turn[used])
+    spk = spark_small(close[used].ffill(limit=3))
+    out = {}
+    for k, x in st.iterrows():
+        if not np.isfinite(x["last"]):
+            continue
+        out[k] = [names.get(k, k), r(x["chg1"]), r(x["w1"]), r(x["m0"]), r(x["ytd"]), r(x["hi52"]),
+                  None if not np.isfinite(x["rs"]) else int(x["rs"]), TREND_NUM.get(x["trend"], 0),
+                  r(x["last"]), r(x["r1m"]), r(x["r2m"]), r(x["r3m"]), r(x["r6m"]), r(x["r12m"]),
+                  r(sg.get(k, np.nan), 1), spk.get(k)]
+    return out
+
+
+# ---------- 米国株の業種(Yahooの業種分類) ----------
+def us_industries(base, min_mcap=3e8, min_n=5):
+    """業種ページの小分類: {日本語の業種名: (11セクターの日本語名, [ティッカー])}。us_01c_build_themes.py と同じ足切り
+    (時価総額3億ドル以上・5銘柄以上・日本語名を付けた業種だけ)"""
+    import os, importlib.util
+    def load(name, file):
+        spec = importlib.util.spec_from_file_location(name, os.path.join(base, file))
+        m = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(m)
+        return m
+    IND = load("us01c", "us_01c_build_themes.py").IND
+    SEC = load("tool13", "13_tool_research.py").US_SECTOR
+    ind = pd.read_csv(os.path.join(base, "us_industry.csv"), dtype=str).fillna("")
+    ind["mcap"] = pd.to_numeric(ind["mcap"], errors="coerce")
+    ind = ind[(ind["mcap"] >= min_mcap) & ind["sector"].isin(SEC)]
+    out = {}
+    for (s_en, i), g in ind.groupby(["sector", "industry"]):
+        if i in IND and len(g) >= min_n:
+            out[IND[i][0]] = (SEC[s_en], list(g["ticker"]))
+    return out
+
+
+def us_industry_theme_names(industries, theme_names):
+    """業種名 → 今のテーマ一覧(us_themes_map.csv)での名前。テーマと同じ名前の業種は「（業種）」付きになっている"""
+    return {n: (n + "（業種）" if n + "（業種）" in theme_names else n) for n in industries
+            if n in theme_names or n + "（業種）" in theme_names}

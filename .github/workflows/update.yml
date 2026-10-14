@@ -81,6 +81,7 @@ jobs:
             ./pro_*.json
             ./card_*.json
             ./etf_aum.json
+            ./etf_all_*.json
             ./note_track.json
             ./note_picks_auto.csv
             ./calendar.json
@@ -133,17 +134,21 @@ jobs:
         if: steps.mkt.outputs.market == 'jp' || steps.mkt.outputs.market == 'both'
         run: python 10_market.py --market jp || echo "JP市場概況スキップ; 前回分を維持"
 
-      - name: 11 日本株 ツール:セクター状況
+      - name: 11 日本株 ツール:ETF・市場全体
         if: steps.mkt.outputs.market == 'jp' || steps.mkt.outputs.market == 'both'
-        run: python 11_tool_sectors.py --market jp || echo "JPセクター状況スキップ; 前回分を維持"
+        run: python 11_tool_sectors.py --market jp || echo "JP ETF・市場全体スキップ; 前回分を維持"
 
-      - name: 12 日本株 ツール:業種状況
+      - name: 12 日本株 ツール:テーマ
         if: steps.mkt.outputs.market == 'jp' || steps.mkt.outputs.market == 'both'
-        run: python 12_tool_themes.py --market jp || echo "JP業種状況スキップ; 前回分を維持"
+        run: python 12_tool_themes.py --market jp || echo "JPテーマスキップ; 前回分を維持"
 
       - name: 13 日本株 ツール:業種銘柄リサーチ
         if: steps.mkt.outputs.market == 'jp' || steps.mkt.outputs.market == 'both'
         run: python 13_tool_research.py --market jp || echo "JP業種銘柄リサーチスキップ; 前回分を維持"
+
+      - name: 16 日本株 ツール:業種
+        if: steps.mkt.outputs.market == 'jp' || steps.mkt.outputs.market == 'both'
+        run: python 16_tool_industry.py --market jp || echo "JP業種スキップ; 前回分を維持"
 
       - name: 07 日本株OHLC(site/ohlc)
         if: steps.mkt.outputs.market == 'jp' || steps.mkt.outputs.market == 'both'
@@ -157,17 +162,21 @@ jobs:
         if: steps.mkt.outputs.market == 'us' || steps.mkt.outputs.market == 'both'
         run: python 10_market.py --market us || echo "US市場概況スキップ; 前回分を維持"
 
-      - name: US 11 米国株 ツール:セクター状況
+      - name: US 11 米国株 ツール:ETF・市場全体
         if: steps.mkt.outputs.market == 'us' || steps.mkt.outputs.market == 'both'
-        run: python 11_tool_sectors.py --market us || echo "USセクター状況スキップ; 前回分を維持"
+        run: python 11_tool_sectors.py --market us || echo "US ETF・市場全体スキップ; 前回分を維持"
 
-      - name: US 12 米国株 ツール:業種状況
+      - name: US 12 米国株 ツール:テーマ
         if: steps.mkt.outputs.market == 'us' || steps.mkt.outputs.market == 'both'
-        run: python 12_tool_themes.py --market us || echo "US業種状況スキップ; 前回分を維持"
+        run: python 12_tool_themes.py --market us || echo "USテーマスキップ; 前回分を維持"
 
       - name: US 13 米国株 ツール:業種銘柄リサーチ
         if: steps.mkt.outputs.market == 'us' || steps.mkt.outputs.market == 'both'
         run: python 13_tool_research.py --market us || echo "US業種銘柄リサーチスキップ; 前回分を維持"
+
+      - name: US 16 米国株 ツール:業種
+        if: steps.mkt.outputs.market == 'us' || steps.mkt.outputs.market == 'both'
+        run: python 16_tool_industry.py --market us || echo "US業種スキップ; 前回分を維持"
 
       - name: US 07 米国OHLC(site/us_ohlc)
         if: steps.mkt.outputs.market == 'us' || steps.mkt.outputs.market == 'both'

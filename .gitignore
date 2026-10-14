@@ -46,3 +46,4 @@ card_*.json
 etf_aum.json
 jp_shares_full.log
 site_worker/.dev.vars
+etf_all_*.json

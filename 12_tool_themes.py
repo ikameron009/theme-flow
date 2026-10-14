@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-有料ツール「業種状況」(全テーマ一覧)のデータ → pro_themes_jp.json / pro_themes_us.json
+有料ツール「テーマ」(旧業種状況・全テーマ一覧)のデータ → pro_themes_jp.json / pro_themes_us.json
+米国はYahooの業種を除く(業種は 16_tool_industry.py の「業種」ページへ)。
+テーマETF(tool_etf_map.THEME_ETF)は対応するテーマの行の etfs に付け、対応がないものはETFの行として加える(11 の etf_all_*.json)。
 
   python 12_tool_themes.py --market jp   (themes_map.csv + close.pkl/turnover.pkl + theme_flow.json)
   python 12_tool_themes.py --market us   (us_themes_map.csv + us_close.pkl/us_turnover.pkl + us_theme_flow.json)
@@ -14,7 +16,9 @@ warnings.filterwarnings("ignore")
 import numpy as np
 import pandas as pd
 from market_calendar import expected_session
-from tool_common import r, metrics, rs_rank, month_starts, equal_weight_index, stock_table, spark_small, surge_all,     stock_scale, group_scale, mcap_map, UNITS
+from tool_common import r, metrics, rs_rank, month_starts, equal_weight_index, stock_payload, STOCK_COLS, \
+    stock_scale, group_scale, mcap_map, us_industries, us_industry_theme_names, UNITS
+from tool_etf_map import THEME_ETF
 import hashlib
 
 BASE = os.path.dirname(os.path.abspath(__file__))
@@ -23,7 +27,6 @@ CFG = {
     "jp": dict(map="themes_map.csv", key="code", close="close.pkl", turn="turnover.pkl", flow="theme_flow.json", pre=""),
     "us": dict(map="us_themes_map.csv", key="ticker", close="us_close.pkl", turn="us_turnover.pkl", flow="us_theme_flow.json", pre="us_"),
 }
-TREND = {"up": 1, "flat": 0, "down": -1}
 
 
 def theme_key(name):
@@ -57,6 +60,11 @@ def main():
         cat_order = fj.get("categories", [])
     else:
         cat_order = []
+    # 米国: Yahooの業種は「業種」ページへ移したので除く
+    ind_names = set()
+    if mk == "us":
+        ind_names = set(us_industry_theme_names(us_industries(BASE), set(m["theme"])).values())
+        m = m[~m["theme"].isin(ind_names)]
     latest = close.index[-1]
     months = month_starts(latest)
     to20 = turn.iloc[-20:].mean()                     # 構成銘柄の並び順(売買代金20日平均)
@@ -82,37 +90,42 @@ def main():
         mt["key"] = theme_key(theme)
         write_line(mk, mt["key"], idx)
         rows.append(mt)
+    # テーマETF: 対応するテーマの行に付ける。対応がないものはETFの行(チャートは11が作る sec_<ティッカー>)
+    ef = P(f"etf_all_{mk}.json")
+    E = json.load(open(ef, encoding="utf-8"))["rows"] if os.path.exists(ef) else {}
+    tnames = {t["name"] for t in rows}
+    for t in rows:
+        t["etfs"] = [k for k, tg in THEME_ETF[mk].items() if tg == t["name"] and k in E]
+    groups = set(m["category"]) | set(cat_order)
+    for k, tg in THEME_ETF[mk].items():
+        if k not in E or tg in tnames or tg in ind_names:
+            continue  # 対応するテーマがある / 業種ページの対応ETF
+        x = E[k]
+        g = x["group"] if x["group"] in groups else {"エネルギー・資源": "素材・資源"}.get(x["group"], "その他成長")
+        rows.append(dict({kk: v for kk, v in x.items() if kk not in ("rs", "rs_raw", "rep", "date", "group")},
+                         _rs=x.get("rs_raw") or 0, group=g, key="sec_" + k, tk=k, etf=True, members=[], n=0, etfs=[]))
     rs_rank(rows)
 
     # 構成銘柄の騰落(展開表示用)
-    used = sorted({x for t in rows for x in t["members"]})
-    st = stock_table(close[used], months)
-    sg = surge_all(turn[used])
-    spk = spark_small(close[used].ffill(limit=3))
+    used = {x for t in rows for x in t["members"]}
     names = dict(zip(m[c["key"]], m["name"]))
     if mk == "jp" and os.path.exists(P("ranking_universe.csv")):
         import unicodedata
         u = pd.read_csv(P("ranking_universe.csv"), dtype=str)
         names.update({k: unicodedata.normalize("NFKC", v) for k, v in zip(u["code"], u["name"])})
-    stocks = {}
-    for k, x in st.iterrows():
-        if not np.isfinite(x["last"]):
-            continue
-        stocks[k] = [names.get(k, k), r(x["chg1"]), r(x["w1"]), r(x["m0"]), r(x["ytd"]), r(x["hi52"]),
-                     None if not np.isfinite(x["rs"]) else int(x["rs"]), TREND.get(x["trend"], 0),
-                     r(x["last"]), r(x["r1m"]), r(x["r2m"]), r(x["r3m"]), r(x["r6m"]), r(x["r12m"]),
-                     r(sg.get(k, np.nan), 1), spk.get(k)]
+    stocks = stock_payload(close, turn, used, months, names)
 
     cats = [cc for cc in cat_order if any(t["group"] == cc for t in rows)] + \
            sorted({t["group"] for t in rows} - set(cat_order))
     out = {"market": mk, "updated": latest.strftime("%Y-%m-%d"), "months": [f"{x.month}月" for x in months],
            "groups": cats, "rows": rows, "units": UNITS[mk],
-           "stock_cols": ["name", "chg1", "w1", "m0", "ytd", "hi52", "rs", "trend", "last", "r1m", "r2m", "r3m", "r6m", "r12m", "surge", "spark"], "stocks": stocks}
+           "stock_cols": STOCK_COLS, "stocks": stocks,
+           "etfinfo": {k: {"name": v["name"], "r1m": v.get("r1m"), "ytd": v.get("ytd")} for k, v in E.items()}}
     with open(P(f"pro_themes_{mk}.json"), "w", encoding="utf-8") as f:
         json.dump(out, f, ensure_ascii=False, separators=(",", ":"))
     up = sum(1 for t in rows if (t["chg1"] or 0) > 0)
     kb = os.path.getsize(P(f"pro_themes_{mk}.json")) / 1024
-    print(f"[{mk}] 業種状況 {out['updated']} {len(rows)}テーマ (上昇{up}/下落{len(rows) - up}) 銘柄{len(stocks)} {kb:.0f}KB")
+    print(f"[{mk}] テーマ {out['updated']} {len(rows)}テーマ (上昇{up}/下落{len(rows) - up}) 銘柄{len(stocks)} {kb:.0f}KB")
 
 
 if __name__ == "__main__":
