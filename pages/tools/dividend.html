@@ -150,10 +150,10 @@ table.dv tr.detail td{white-space:normal;text-align:left;background:var(--surfac
     <a href="../index.html#stocks">銘柄を探す</a>
     <a href="../index.html#screening">スクリーニング</a>
     <a href="../tools/sectors.html" data-page="1">ETF・市場全体</a>
-    </div>
-    <div class="jrow">
     <a href="../tools/industry.html" data-page="1">業種</a>
     <a href="../tools/themes.html" data-page="1">テーマ</a>
+    </div>
+    <div class="jrow">
     <a href="../tools/research.html" data-page="1">業種銘柄リサーチ</a>
     <a href="../tools/dividend.html" data-page="1" class="on">高配当・増配銘柄リサーチ</a>
     <a href="../tools/calendar.html" data-page="1">決算・経済カレンダー</a>
@@ -444,7 +444,7 @@ function detail(r) {
       <span>配当性向(3年)</span><span class="num">${fmt(r.payout, 0)}%</span><span>直近の決算期</span><span class="num">${r.fy}</span>
       <span>権利確定月</span><span class="soon">表示予定</span></div>
       ${r.chk ? '<p style="margin:6px 0 0;font-size:12px"><span class="ck">数値確認中</span> 株価と配当のデータに食い違いがあり、利回り・PER・PBRを確認中です</p>' : ''}
-      <a class="dlink" href="dividend_stock.html?code=${r.code}">銘柄の詳細ページへ →</a></div>
+      <a class="dlink" href="stock.html?code=${r.code}">銘柄の詳細ページへ →</a></div>
   </div></td></tr>`;
 }
 function syncBar() {
@@ -574,6 +574,6 @@ function init() {
   new MutationObserver(() => render()).observe(document.documentElement, {attributes: true, attributeFilter: ['data-theme']});
 }
 </script>
-<script src="../assets/card.js?v=20261008lg"></script><script src="../assets/jr.js?v=20261009"></script>
+<script src="../assets/card.js?v=20261015sd"></script><script src="../assets/jr.js?v=20261009"></script>
 <script src="../assets/help.js"></script>
 </body></html>

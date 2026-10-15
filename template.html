@@ -1,7 +1,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <link rel="icon" href="assets/icon-64.png">
-<script src="assets/card.js?v=20261008lg"></script><script src="assets/jr.js?v=20261009"></script>
+<script src="assets/card.js?v=20261015sd"></script><script src="assets/jr.js?v=20261009"></script>
 <title>投資家ハシビロコウの株式ダッシュボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -86,9 +86,12 @@ nav.jump{position:sticky;top:calc(env(safe-area-inset-top,0px) + 60px);z-index:2
 nav.jump .wrap{display:flex;align-items:center;gap:28px;overflow-x:auto;scrollbar-width:none}
 /* メニューは2行(1行目=このページの各セクション、2行目=ツールのページ)。各行は横にスクロールできる */
 /* メニュー=2段×6件。列をそろえる(1つの格子に12件)。狭い画面は横スクロール。段の間の線は背景で引く(横スクロールしても続くよう local) */
-nav.jump .wrap.jrows{display:grid;grid-template-columns:repeat(7,minmax(max-content,1fr));gap:0 28px;overflow-x:auto;scrollbar-width:none;background:linear-gradient(var(--line),var(--line)) 0 50%/100% 1px no-repeat local}
-nav.jump .wrap.jrows::-webkit-scrollbar{display:none}
-nav.jump .jrow{display:contents}
+/* メニュー2段(2026-10-15〜): 段ごとに1行で並べ、段と段の間に線(旧=7列の表＋高さの真ん中に線1本→項目が増えて3行になると線が文字にかぶった)。
+   1段目=市場を見る(トップの各欄・ETF・業種・テーマ)8個 / 2段目=調べる・記録する 7個。スマホは段ごとに横スクロール */
+nav.jump .wrap.jrows{display:block}
+nav.jump .jrow{display:flex;flex-wrap:wrap;gap:0 28px}
+nav.jump .jrow+.jrow{border-top:1px solid var(--line)}
+@media (max-width:720px){nav.jump .jrow{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}}
 nav.jump .jrow::-webkit-scrollbar{display:none}
 nav.jump a{padding:9px 0;font-size:14px;font-weight:500;color:var(--muted);border-bottom:2px solid transparent;white-space:nowrap}
 nav.jump a.on{color:var(--ink);border-bottom-color:var(--brand)}
@@ -431,10 +434,10 @@ footer a:hover{color:var(--brand)}
     <a href="#stocks">銘柄を探す</a>
     <a href="#screening">スクリーニング</a>
     <a href="tools/sectors.html" data-page="1">ETF・市場全体</a>
-    </div>
-    <div class="jrow">
     <a href="tools/industry.html" data-page="1">業種</a>
     <a href="tools/themes.html" data-page="1">テーマ</a>
+    </div>
+    <div class="jrow">
     <a href="tools/research.html" data-page="1">業種銘柄リサーチ</a>
     <a href="tools/dividend.html" data-page="1">高配当・増配銘柄リサーチ</a>
     <a href="tools/calendar.html" data-page="1">決算・経済カレンダー</a>

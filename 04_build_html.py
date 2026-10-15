@@ -111,7 +111,7 @@ for mk in ("jp", "us"):
 for _src, _dst in (("dividend_jp.json", "dividend_jp.json"), ("dividend_jp_pro.json", os.path.join("pro", "dividend_jp.json"))):
     if os.path.exists(os.path.join(BASE, "anshin_pub", _src)):
         shutil.copyfile(os.path.join(BASE, "anshin_pub", _src), os.path.join(SITE, _dst))
-# 銘柄詳細(tools/dividend_stock.html?code=): コードの先頭2桁ごとのまとめファイル。無料=チャート・配当・総合点 / 会員=A〜Dの内訳・採点基準
+# 銘柄詳細(tools/stock.html?code=・2026-10-15〜全銘柄。旧 dividend_stock.html は転送): コードの先頭2桁ごとのまとめファイル。無料=チャート・業績・配当・総合点 / 会員=A〜Dの内訳・採点基準
 #   カード(card.js)用のコード一覧 dividend_codes.json は無料側
 for _src, _dst in (("detail", "dividend_detail"), ("detail_pro", os.path.join("pro", "dividend_detail"))):
     _sd, _dd = os.path.join(BASE, "anshin_pub", _src), os.path.join(SITE, _dst)

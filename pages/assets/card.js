@@ -193,11 +193,11 @@
     return `<td style="color:var(--brand);font-weight:600">${vig(v.ig)}</td><td>${v.nolabel?d:pc(v.g3)}</td><td>${pc(v.g1)}</td>
       <td>${gp==null?d:(gp>=0?'+':'−')+Math.abs(gp*100).toFixed(1)+'pt'}</td><td class="l">${lb?`<span class="vpill ${lb[0]}">${lb[1]}</span>`:d}</td>
       <td>${v.pos!=null?vmini(v.pos)+' '+Math.round(v.pos*100)+'%':d}</td><td>${v.peg!=null?(+v.peg).toFixed(2):d}</td>`;}
-  /* 高配当・増配の詳細へのボタン: 日本株で高配当データ(dividend_codes.json={コード:[判定,安心スコア]})に載っている銘柄だけ */
+  /* 銘柄詳細へのボタン(2026-10-15〜 日本株は全銘柄。行き先 tools/stock.html)。高配当データ(dividend_codes.json={コード:[判定,安心スコア]})にある銘柄は判定と点数を併記 */
   const DIV_URL=ROOT+'dividend_codes.json';
   const DLAB={'とても安心':'low','安心':'low','あと一歩':'none','不安':'high','必須条件×':'none'};
-  function divhtml(C,mk,code){const x=mk==='jp'&&C&&C[code];if(!x)return '';
-    return `<div class="sc-div"><a class="btn sm ghost" href="${ROOT}tools/dividend_stock.html?code=${encodeURIComponent(code)}">高配当の詳細 →</a><span class="vpill ${DLAB[x[0]]||'none'}">${esc(x[0])}</span><span class="dvs">安心スコア <b>${x[1]}</b>点</span></div>`;}
+  function divhtml(C,mk,code){if(mk!=='jp'||!code)return '';const x=C&&C[code];
+    return `<div class="sc-div"><a class="btn sm ghost" href="${ROOT}tools/stock.html?code=${encodeURIComponent(code)}">銘柄詳細 →</a>${x?`<span class="vpill ${DLAB[x[0]]||'none'}">${esc(x[0])}</span><span class="dvs">安心スコア <b>${x[1]}</b>点</span>`:''}</div>`;}
   function mountVal(el,mk,code){if(!el)return;el.innerHTML='';
     Promise.all([vload(mk),mk==='jp'?load(DIV_URL):null]).then(([D,C])=>{const h=vhtml(D,mk,code),dv=divhtml(C,mk,code);if(!h&&!dv){el.innerHTML='';return;}el.innerHTML=(h?`<div class="sc-val">${h}</div>`:'')+dv;
       const b=el.querySelector('.vbtn');if(b)b.onclick=()=>{const m=el.querySelector('.vmore'),o=m.hidden;m.hidden=!o;b.setAttribute('aria-expanded',o);b.textContent=o?'グラフを閉じる ◂':'グラフで見る ▸';};});}
