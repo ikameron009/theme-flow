@@ -196,7 +196,7 @@
   /* 銘柄詳細へのボタン(2026-10-15〜 日本株は全銘柄。行き先 tools/stock.html)。高配当データ(dividend_codes.json={コード:[判定,安心スコア]})にある銘柄は判定と点数を併記 */
   const DIV_URL=ROOT+'dividend_codes.json';
   const DLAB={'とても安心':'low','安心':'low','あと一歩':'none','不安':'high','必須条件×':'none'};
-  function divhtml(C,mk,code){if(mk!=='jp'||!code)return '';const x=C&&C[code];
+  function divhtml(C,mk,code){if(!code)return '';if(mk==='us')return `<div class="sc-div"><a class="btn sm ghost" href="${ROOT}tools/stock.html?m=us&code=${encodeURIComponent(code)}">銘柄詳細 →</a></div>`;const x=C&&C[code];
     return `<div class="sc-div"><a class="btn sm ghost" href="${ROOT}tools/stock.html?code=${encodeURIComponent(code)}">銘柄詳細 →</a>${x?`<span class="vpill ${DLAB[x[0]]||'none'}">${esc(x[0])}</span><span class="dvs">安心スコア <b>${x[1]}</b>点</span>`:''}</div>`;}
   function mountVal(el,mk,code){if(!el)return;el.innerHTML='';
     Promise.all([vload(mk),mk==='jp'?load(DIV_URL):null]).then(([D,C])=>{const h=vhtml(D,mk,code),dv=divhtml(C,mk,code);if(!h&&!dv){el.innerHTML='';return;}el.innerHTML=(h?`<div class="sc-val">${h}</div>`:'')+dv;

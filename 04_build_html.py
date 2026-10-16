@@ -113,7 +113,8 @@ for _src, _dst in (("dividend_jp.json", "dividend_jp.json"), ("dividend_jp_pro.j
         shutil.copyfile(os.path.join(BASE, "anshin_pub", _src), os.path.join(SITE, _dst))
 # 銘柄詳細(tools/stock.html?code=・2026-10-15〜全銘柄。旧 dividend_stock.html は転送): コードの先頭2桁ごとのまとめファイル。無料=チャート・業績・配当・総合点 / 会員=A〜Dの内訳・採点基準
 #   カード(card.js)用のコード一覧 dividend_codes.json は無料側
-for _src, _dst in (("detail", "dividend_detail"), ("detail_pro", os.path.join("pro", "dividend_detail"))):
+#   米国株(2026-10-16〜 tools/stock.html?m=us&code=): anshin_pub/detail_us/{先頭2文字}.json → site/detail_us/(無料)
+for _src, _dst in (("detail", "dividend_detail"), ("detail_pro", os.path.join("pro", "dividend_detail")), ("detail_us", "detail_us")):
     _sd, _dd = os.path.join(BASE, "anshin_pub", _src), os.path.join(SITE, _dst)
     if os.path.isdir(_sd):
         shutil.rmtree(_dd, ignore_errors=True)
@@ -134,7 +135,7 @@ except Exception as e:
 # キャッシュ設定(Cloudflareの静的配信が読む _headers)
 HEADERS = [
     ("/", "no-cache"), ("/index.html", "no-cache"), ("/version.json", "no-store"),
-    ("/vcp_*.json", "no-cache"), ("/note_track.json", "no-cache"), ("/calendar.json", "no-cache"), ("/card_*.json", "no-cache"), ("/journal_ref.json", "no-cache"), ("/valuation_*.json", "no-cache"), ("/dividend_*.json", "no-cache"), ("/dividend_detail/*", "no-cache"), ("/pro/*", "no-cache"), ("/ohlc/*", "public, max-age=3600"), ("/us_ohlc/*", "public, max-age=3600"),
+    ("/vcp_*.json", "no-cache"), ("/note_track.json", "no-cache"), ("/calendar.json", "no-cache"), ("/card_*.json", "no-cache"), ("/journal_ref.json", "no-cache"), ("/valuation_*.json", "no-cache"), ("/dividend_*.json", "no-cache"), ("/dividend_detail/*", "no-cache"), ("/detail_us/*", "no-cache"), ("/pro/*", "no-cache"), ("/ohlc/*", "public, max-age=3600"), ("/us_ohlc/*", "public, max-age=3600"),
 ]
 with open(os.path.join(SITE, "_headers"), "w", encoding="utf-8") as f:
     for path, cc in HEADERS:

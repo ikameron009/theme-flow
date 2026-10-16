@@ -10,6 +10,7 @@
 <style>
 /* 銘柄詳細(?code= の1ファイル・2026-10-15〜。旧 dividend_stock.html=高配当の詳細 を全銘柄・4タブにしたもの。モック=_design/stock_detail/)
    タブ: #chart(銘柄カード＋PER・PBR＋配当込みリターン) #perf(業績) #eval(配当安心スコア) #div(配当 履歴・権利日)。配当の無い会社は #eval #div が「対象外」
+   ★米国株(2026-10-16〜): ?m=us&code=AAPL・データ ../detail_us/{先頭2文字}.json(dividend/us_detail_build.py)・配当安心スコアは対象外・金額は百万ドル(ドル以外で届け出る外国企業はその通貨・PER/PBRなし)
    データ: ../dividend_detail/{先頭2桁}.json(無料・全銘柄・dividend/detail_build.py)・../pro/dividend_detail/{先頭2桁}.json(会員=A〜Dの内訳・採点基準・必須条件)
    毎日変わる値(株価・利回り・割安度)は ../dividend_jp.json、配当の無い会社の株価は銘柄カードと同じ ../card_jp.json から */
 [hidden]{display:none!important}
@@ -321,7 +322,7 @@ ul.must li em{margin-left:auto;font-style:normal;color:var(--muted);font-size:12
   </div>
 </footer>
 
-<script src="../assets/card.js?v=20261015sd"></script>
+<script src="../assets/card.js?v=20261016us"></script>
 <script>
 const $ = s => document.querySelector(s);
 const fmt = (v, d = 0) => v == null || isNaN(v) ? '—' : Number(v).toLocaleString('ja-JP', {minimumFractionDigits: d, maximumFractionDigits: d});
@@ -343,11 +344,27 @@ const tgText = t => t[0] === '累進' ? '累進配当' : `${TGN[t[0]]} ${t[1]}`;
 const median = a => { const v = a.filter(x => x != null).sort((x, y) => x - y); return v.length ? (v.length % 2 ? v[(v.length - 1) / 2] : (v[v.length / 2 - 1] + v[v.length / 2]) / 2) : null; };
 
 const Q = new URLSearchParams(location.search);
-const CODE = (Q.get('code') || '').toUpperCase().replace(/[^0-9A-Z]/g, '');
+const US = Q.get('m') === 'us';   // 米国株(2026-10 モック): ?m=us&code=AAPL
+const CODE = (Q.get('code') || '').toUpperCase().replace(US ? /[^0-9A-Z.\-]/g : /[^0-9A-Z]/g, '');
+let UM = US ? '百万ドル' : '億円', UP = US ? 'ドル' : '円';   // 金額・1株の単位
+const CURN = {USD: 'ドル', JPY: '円', EUR: 'ユーロ', GBP: 'ポンド', CNY: '人民元', CAD: 'カナダドル', AUD: '豪ドル', CHF: 'スイスフラン', TWD: '台湾ドル', KRW: 'ウォン', BRL: 'レアル', MXN: 'メキシコペソ', INR: 'ルピー', HKD: '香港ドル', DKK: 'デンマーククローネ', SEK: 'スウェーデンクローナ', NOK: 'ノルウェークローネ', ILS: 'シェケル', ZAR: 'ランド', ARS: 'アルゼンチンペソ', CLP: 'チリペソ', COP: 'コロンビアペソ', PEN: 'ソル', IDR: 'ルピア', PHP: 'ペソ', SGD: 'シンガポールドル'};
+const PXU = US ? 'ドル' : '円';   // 株価の単位(届け出の通貨とは別)
+const PD = US ? 2 : 1, IDX = US ? 'S&P500' : 'TOPIX', IDXNOTE = US ? 'S&P500はETF(SPY)で代用' : 'TOPIXはETF(1306)で代用';
 let D = null, P = null, DATES = null, HAS_DIV = true;
 const get = u => fetch(u + '?cb=' + Date.now(), {cache: 'no-store'}).then(r => r.ok ? r.json() : null).catch(() => null);
-const cardData = () => window.StockCard ? StockCard.cardData('jp').catch(() => null) : Promise.resolve(null);   // 銘柄カードと共通の株価(配当の無い会社の株価に使う)
+const cardData = () => window.StockCard ? StockCard.cardData(US ? 'us' : 'jp').catch(() => null) : Promise.resolve(null);   // 銘柄カードと共通の株価(配当の無い会社の株価に使う)
 if (!CODE) $('#loading').innerHTML = '銘柄が指定されていません。<a href="../index.html#stocks" style="color:var(--brand)">銘柄を探す</a>から選んでください。';
+else if (US) Promise.all([get(`../detail_us/${CODE.slice(0, 2).replace(/[^0-9A-Z]/g, '_')}.json`), cardData()]).then(([f, C]) => {
+  D = f && f.stocks[CODE];
+  if (!D) { $('#loading').innerHTML = `この銘柄(${esc(CODE)})の詳細データはまだありません。<a href="../index.html#stocks" style="color:var(--brand)">銘柄を探す</a>`; return; }
+  DATES = {updated: null, price_asof: null};
+  const a = C && C.s && C.s[CODE]; D.price = a ? a[C.cols.indexOf('price')] : (D.MO ? D.MO.px.at(-1) : null);
+  if (D.cur && D.cur !== 'USD') { const cn = CURN[D.cur] || D.cur; UM = '百万' + cn; UP = cn; }   // ドル以外で届け出る外国企業: 金額・1株の値はその通貨(PER・PBRは出さない)
+  HAS_DIV = !D.nodiv;
+  if (HAS_DIV) { const last = D.dv.at(-1); D.yld = last && D.price ? 100 * last[2] / D.price : null; }
+  $('#loading').hidden = true; $('#app').hidden = false;
+  init();
+});
 else Promise.all([get(`../dividend_detail/${CODE.slice(0, 2)}.json`), get(`../pro/dividend_detail/${CODE.slice(0, 2)}.json`), get('../dividend_jp.json'), cardData()]).then(([f, p, L, C]) => {
   D = f && f.stocks[CODE];
   const rows = L ? Object.fromEntries(L.rows.map(r => [r[0], Object.fromEntries(L.cols.map((c, i) => [c, r[i]]))])) : {};
@@ -437,7 +454,7 @@ function chart(box, spec) {
       else { x = L + cw * (i + .5) - bw * nb / 2 + bw * j; y0 = yL(0); y1 = yL(v); }
       el('rect', {x: x + .5, y: Math.min(y0, y1), width: Math.max(bw - 1, 1), height: Math.max(Math.abs(y1 - y0), .5), fill: (b.colorAt && b.colorAt(i)) || b.color, rx: 1.5}, svg);
     });
-    if (spec.barLabels && stacked && pos > 0 && n <= 20) el('text', {x: L + cw * (i + .5), y: yL(pos) - 4, 'text-anchor': 'middle', style: 'font-size:10px;fill:var(--ink-2)'}, svg).textContent = fmt(pos, pos < 10 ? 1 : 0);
+    if (spec.barLabels && stacked && pos > 0 && n <= 20) el('text', {x: L + cw * (i + .5), y: yL(pos) - 4, 'text-anchor': 'middle', style: 'font-size:10px;fill:var(--ink-2)'}, svg).textContent = fmt(pos, spec.dec ?? (pos < 10 ? 1 : 0));
   }
   lines.forEach(l => {
     const y = l.axis === 'r' ? yR : yL; if (!y) return;
@@ -542,27 +559,29 @@ function init() {
   if (MO) ['per', 'pbr'].forEach(k => { if (!MO[k]) MO[k] = MO.m.map(() => null); });
   document.title = `${D.name}(${D.code})の銘柄詳細｜投資家ハシビロコウの株式ダッシュボード`;
   $('#c-sec').textContent = D.sector; $('#c-code').textContent = D.code; $('#h-name').textContent = D.name;
-  $('#h-meta').innerHTML = `<span>コード <span class="num">${D.code}</span></span><span>${esc(D.sector)}</span><span>${MKT[D.mkt] || ''}</span><span>${D.fm}月決算</span><span>株価 <span class="num">${fmt(D.price, D.price < 100 ? 1 : 0)}円</span>${DATES.price_asof ? `(${md(DATES.price_asof)}終値)` : ''}</span>`;
+  $('#h-meta').innerHTML = `<span>コード <span class="num">${D.code}</span></span><span>${esc(D.sector)}</span><span>${US ? '米国株' + (D.tax === 'ifrs-full' ? '(国際会計基準)' : '') : MKT[D.mkt] || ''}</span><span>${D.fm}月決算</span><span>株価 <span class="num">${US ? '$' + fmt(D.price, 2) : fmt(D.price, D.price < 100 ? 1 : 0) + '円'}</span>${DATES.price_asof ? `(${md(DATES.price_asof)}終値)` : ''}</span>`;
   const c = D.code;
-  $('#ext').innerHTML = [['IR BANK', `https://irbank.net/${c}`], ['株探', `https://kabutan.jp/stock/?code=${c}`], ['みんかぶ', `https://minkabu.jp/stock/${c}`], ['Yahoo!ファイナンス', `https://finance.yahoo.co.jp/quote/${c}.T`]]
+  $('#ext').innerHTML = (US ? [['Yahoo Finance', `https://finance.yahoo.com/quote/${c}`], ['Finviz', `https://finviz.com/quote.ashx?t=${c}`], ['株探(米国株)', `https://us.kabutan.jp/stocks/${c}`], ['SEC EDGAR', `https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=${c}`]]
+    : [['IR BANK', `https://irbank.net/${c}`], ['株探', `https://kabutan.jp/stock/?code=${c}`], ['みんかぶ', `https://minkabu.jp/stock/${c}`], ['Yahoo!ファイナンス', `https://finance.yahoo.co.jp/quote/${c}.T`]])
     .map(([n, u]) => `<a href="${u}" target="_blank" rel="noopener">${n}</a>`).join('');
-  if (HAS_DIV) $('#verdict').textContent = D.verdict; else $('#verdict-box').hidden = true;
+  if (US) document.querySelector('.jpbadge').textContent = '米国株';
+  if (HAS_DIV && !US) $('#verdict').textContent = D.verdict; else $('#verdict-box').hidden = true;
   if (document.referrer && new URL(document.referrer).origin === location.origin) $('#back').addEventListener('click', e => { e.preventDefault(); history.back(); });
-  $('#src').textContent = `データ: 有価証券報告書(EDINET API)・株価はサイトの日次終値${DATES.price_asof ? `(${DATES.price_asof})` : ''}・月次株価と古い年の配当は Yahoo Finance(TOPIXはETF 1306で代用)。有報 ${md(DATES.updated)}更新。本業の利益が経常利益の無い国際会計基準の会社は税引前利益。`;
+  $('#src').textContent = US ? `データ: 米国SEC EDGAR(年度の決算=10-K・外国企業は20-F/40-F)・株価と配当は Yahoo Finance(${IDXNOTE})。金額は${UM}・1株の値は株式分割を今の株数に合わせて調整。` : `データ: 有価証券報告書(EDINET API)・株価はサイトの日次終値${DATES.price_asof ? `(${DATES.price_asof})` : ''}・月次株価と古い年の配当は Yahoo Finance(TOPIXはETF 1306で代用)。有報 ${md(DATES.updated)}更新。本業の利益が経常利益の無い国際会計基準の会社は税引前利益。`;
 
   /* ===== チャート: PER・PBR・配当込みリターン ===== */
   if (MO) {
     const yrs = Math.round(MO.m.length / 12), mPer = median(MO.per), mPbr = median(MO.pbr), lp = MO.per.at(-1), lb = MO.pbr.at(-1);
     CH.chart.push(
-      {id: 'c-val', line: true, t: `PERとPBRの推移(${yrs}年)`, s: `今のPER ${fmt(lp, 1)}倍(${yrs}年の中央値 ${fmt(mPer, 1)}倍)・PBR ${fmt(lb, 2)}倍(中央値 ${fmt(mPbr, 2)}倍)。月末の株価 ÷ その時点で直近に終わった決算期の実績`, f: () => ({
+      {id: 'c-val', line: true, t: `PERとPBRの推移(${yrs}年)`, s: US && D.cur !== 'USD' ? `${CURN[D.cur] || D.cur}で届け出ている外国企業のため、PER・PBRは出していません(株価はドル、1株利益は${CURN[D.cur] || D.cur}で比べられないため)` : `今のPER ${fmt(lp, 1)}倍(${yrs}年の中央値 ${fmt(mPer, 1)}倍)・PBR ${fmt(lb, 2)}倍(中央値 ${fmt(mPbr, 2)}倍)。月末の株価 ÷ その時点で直近に終わった決算期の実績`, f: () => ({
         key: 'val', labels: MO.m, unitL: '倍', unitR: '倍', right: true,
         lines: [{name: 'PER', color: css('--c1'), vals: MO.per, unit: '倍', dec: 1, w: 2.4}, {name: 'PERの中央値', color: css('--c1'), vals: MO.per.map(() => mPer), unit: '倍', dec: 1, dash: true, noEnd: true},
                 {name: 'PBR', color: css('--c2'), vals: MO.pbr, right: true, unit: '倍', dec: 2, w: 2}, {name: 'PBRの中央値', color: css('--c2'), vals: MO.pbr.map(() => mPbr), right: true, unit: '倍', dec: 2, dash: true, noEnd: true}],
         foot: ['赤字の年(1株利益が0以下)はPERを空けています。銘柄カードの「過去5年PERの位置」は直近4四半期の利益で計算するため、この線(年度の実績)とは少しずれます']})},
       {id: 'c-tr', line: true, t: `配当込みのリターン(${yrs}年)`, s: `${MO.m[0].replace('-', '年')}月を100とした値。配当を再投資した場合と、株価だけの場合`, f: () => ({
         key: 'tr', labels: MO.m, unitL: `${MO.m[0].slice(0, 4)}年=100`,
-        lines: [{name: `${D.name} 配当込み`, color: css('--c1'), vals: MO.tr, dec: 0, w: 2.6}, {name: `${D.name} 株価のみ`, color: css('--c1'), vals: MO.pr, dash: true, dec: 0, noEnd: true}, ...(MO.tpx ? [{name: 'TOPIX 配当込み', color: css('--grey-line'), vals: MO.tpx, dec: 0, w: 2}] : [])],
-        foot: [`配当込みで${esc(D.name)} ${fmt(MO.tr.at(-1))}${MO.tpx ? `、TOPIX ${fmt(MO.tpx.at(-1))}` : ''}。TOPIXはETF(1306)で代用`]})},
+        lines: [{name: `${D.name} 配当込み`, color: css('--c1'), vals: MO.tr, dec: 0, w: 2.6}, {name: `${D.name} 株価のみ`, color: css('--c1'), vals: MO.pr, dash: true, dec: 0, noEnd: true}, ...(MO.tpx ? [{name: `${IDX} 配当込み`, color: css('--grey-line'), vals: MO.tpx, dec: 0, w: 2}] : [])],
+        foot: [`配当込みで${esc(D.name)} ${fmt(MO.tr.at(-1))}${MO.tpx ? `、${IDX} ${fmt(MO.tpx.at(-1))}` : ''}。${IDXNOTE}`]})},
     );
   }
 
@@ -570,8 +589,8 @@ function init() {
   if (S) {
   const regDv = HAS_DIV ? D.dv.map(x => x[2]) : [];
   const ifrs = S.ord.every(v => v == null) && S.op.some(v => v != null);
-  const G = [['売上', S.rev], ['粗利(売上総利益)', S.gross], ['営業利益', S.op], [ifrs ? '税引前利益(国際会計基準)' : '経常利益', ifrs ? S.pt : S.ord], ['純利益', S.ni],
-    ['1株利益(EPS)', S.eps], ['1株配当(通常)', regDv], ['営業CF', S.ocf]];
+  const G = [['売上', S.rev], ['粗利(売上総利益)', S.gross], ['営業利益', S.op], [US ? '税引前利益' : ifrs ? '税引前利益(国際会計基準)' : '経常利益', US || ifrs ? S.pt : S.ord], ['純利益', S.ni],
+    ['1株利益(EPS)', S.eps], [US ? '1株配当' : '1株配当(通常)', regDv], ['営業CF', S.ocf]];
   $('#growth').innerHTML = '<tr><th>項目</th><th>直近</th><th>3年</th><th>5年</th><th>10年</th></tr>' + G.map(([k, v]) =>
     `<tr><td>${k}</td>` + [1, 3, 5, 10].map(n => {
       const k2 = n === 10 && v.length - 1 < 10 && v.length - 1 >= 7 ? v.length - 1 : n;
@@ -583,27 +602,27 @@ function init() {
   const LB = S.l, NOTE = S.notes, r = (a, b) => a.map((x, i) => x != null && b[i] ? +(100 * x / b[i]).toFixed(1) : null);
   const cashYears = (() => { const i = S.cash.length - 1; return S.cash[i] && S.divtot[i] ? `(直近は約${fmt(S.cash[i] / S.divtot[i], 1)}年分)` : ''; })();
   CH.perf.push(
-    {id: 'c-pl', t: '売上と利益', s: '棒は金額、線は売上に対する割合(右の目盛り)。「売上」を消すと利益どうしの差が見やすくなります', f: () => ({key: 'pl', labels: LB, unitL: '億円', unitR: '%', notes: NOTE,
-      bars: [{name: '売上', color: css('--grey-line'), vals: S.rev, unit: '億円'}, {name: '粗利', color: css('--c3'), vals: S.gross, unit: '億円'}, {name: '営業利益', color: css('--c1'), vals: S.op, unit: '億円'}, {name: '純利益', color: css('--c5'), vals: S.ni, unit: '億円'}],
+    {id: 'c-pl', t: '売上と利益', s: '棒は金額、線は売上に対する割合(右の目盛り)。「売上」を消すと利益どうしの差が見やすくなります', f: () => ({key: 'pl', labels: LB, unitL: UM, unitR: '%', notes: NOTE,
+      bars: [{name: '売上', color: css('--grey-line'), vals: S.rev, unit: UM}, {name: '粗利', color: css('--c3'), vals: S.gross, unit: UM}, {name: '営業利益', color: css('--c1'), vals: S.op, unit: UM}, {name: '純利益', color: css('--c5'), vals: S.ni, unit: UM}],
       lines: [{name: '営業利益率', color: css('--c2'), vals: r(S.op, S.rev), axis: 'r', unit: '%', dec: 1}, {name: '純利益率', color: css('--c4'), vals: r(S.ni, S.rev), axis: 'r', unit: '%', dec: 1}]})},
-    {id: 'c-dps', t: '1株利益・1株配当・配当性向', s: '1株の値は今の株数に合わせて調整。配当性向の線が100%を超えた年は利益以上に配当した年', f: () => ({key: 'dps', labels: LB, unitL: '円', unitR: '%', notes: NOTE, rMax: 150,
-      bars: [{name: '1株利益(EPS)', color: css('--grey-line'), vals: S.eps, unit: '円', dec: 1}, {name: '1株配当', color: css('--c1'), vals: S.dps, unit: '円', dec: 1}],
+    {id: 'c-dps', t: '1株利益・1株配当・配当性向', s: '1株の値は今の株数に合わせて調整。配当性向の線が100%を超えた年は利益以上に配当した年', f: () => ({key: 'dps', labels: LB, unitL: UP, unitR: '%', notes: NOTE, rMax: 150,
+      bars: [{name: '1株利益(EPS)', color: css('--grey-line'), vals: S.eps, unit: UP, dec: PD}, {name: '1株配当', color: css('--c1'), vals: S.dps, unit: UP, dec: PD}],
       lines: [{name: '配当性向', color: css('--c2'), vals: S.payout, axis: 'r', unit: '%', dec: 1}]})},
-    {id: 'c-bs', t: '純資産・負債・自己資本比率', s: '積み上げの高さが総資産', f: () => ({key: 'bs', labels: LB, unitL: '億円', unitR: '%',
-      bars: [{name: '純資産', color: css('--c1'), vals: S.na, stack: true, unit: '億円'}, {name: '負債', color: css('--grey-line'), vals: S.li, stack: true, unit: '億円'}],
+    {id: 'c-bs', t: '純資産・負債・自己資本比率', s: '積み上げの高さが総資産', f: () => ({key: 'bs', labels: LB, unitL: UM, unitR: '%',
+      bars: [{name: '純資産', color: css('--c1'), vals: S.na, stack: true, unit: UM}, {name: '負債', color: css('--grey-line'), vals: S.li, stack: true, unit: UM}],
       lines: [{name: '自己資本比率', color: css('--c2'), vals: S.eqr, axis: 'r', unit: '%', dec: 1}]})},
-    {id: 'c-cf', t: 'キャッシュフロー', s: 'フリーCF=営業CF+投資CF。営業CFマージン=営業CF÷売上(右の目盛り)', f: () => ({key: 'cf', labels: LB, unitL: '億円', unitR: '%',
-      bars: [{name: '営業CF', color: css('--c1'), vals: S.ocf, unit: '億円'}, {name: '投資CF', color: css('--c3'), vals: S.icf, unit: '億円'}, {name: '財務CF', color: css('--grey-line'), vals: S.fcf, unit: '億円'}],
-      lines: [{name: 'フリーCF', color: css('--c2'), vals: S.free, unit: '億円'}, {name: '営業CFマージン', color: css('--c4'), vals: r(S.ocf, S.rev), axis: 'r', unit: '%', dec: 1}]})},
-    {id: 'c-cash', t: '現金と配当総額', s: `現金で配当を何年分払えるか${cashYears}`, f: () => ({key: 'cash', labels: LB, unitL: '億円',
-      bars: [{name: '現金同等物', color: css('--grey-line'), vals: S.cash, unit: '億円'}, {name: '配当総額', color: css('--c1'), vals: S.divtot, unit: '億円'}],
-      lines: [{name: 'フリーCF', color: css('--c2'), vals: S.free, unit: '億円'}]})},
-    {id: 'c-re', t: '利益剰余金と現金同等物', s: '利益剰余金=これまでの利益のうち配当などで出さずに積み上げた分。現金はその一部', f: () => ({key: 're', labels: LB, unitL: '億円',
-      bars: [{name: '利益剰余金', color: css('--c1'), vals: S.re, unit: '億円'}, {name: '現金同等物', color: css('--grey-line'), vals: S.cash, unit: '億円'}]})},
+    {id: 'c-cf', t: 'キャッシュフロー', s: 'フリーCF=営業CF+投資CF。営業CFマージン=営業CF÷売上(右の目盛り)', f: () => ({key: 'cf', labels: LB, unitL: UM, unitR: '%',
+      bars: [{name: '営業CF', color: css('--c1'), vals: S.ocf, unit: UM}, {name: '投資CF', color: css('--c3'), vals: S.icf, unit: UM}, {name: '財務CF', color: css('--grey-line'), vals: S.fcf, unit: UM}],
+      lines: [{name: 'フリーCF', color: css('--c2'), vals: S.free, unit: UM}, {name: '営業CFマージン', color: css('--c4'), vals: r(S.ocf, S.rev), axis: 'r', unit: '%', dec: 1}]})},
+    {id: 'c-cash', t: '現金と配当総額', s: `現金で配当を何年分払えるか${cashYears}`, f: () => ({key: 'cash', labels: LB, unitL: UM,
+      bars: [{name: '現金同等物', color: css('--grey-line'), vals: S.cash, unit: UM}, {name: '配当総額', color: css('--c1'), vals: S.divtot, unit: UM}],
+      lines: [{name: 'フリーCF', color: css('--c2'), vals: S.free, unit: UM}]})},
+    {id: 'c-re', t: '利益剰余金と現金同等物', s: '利益剰余金=これまでの利益のうち配当などで出さずに積み上げた分。現金はその一部', f: () => ({key: 're', labels: LB, unitL: UM,
+      bars: [{name: '利益剰余金', color: css('--c1'), vals: S.re, unit: UM}, {name: '現金同等物', color: css('--grey-line'), vals: S.cash, unit: UM}]})},
     {id: 'c-roe', t: 'ROE・ROA', s: 'ROE=純利益÷自己資本、ROA=純利益÷総資産(どちらも期首と期末の平均)', f: () => ({key: 'roe', labels: LB, unitL: '%', notes: NOTE, bars: [],
       lines: [{name: 'ROE', color: css('--c1'), vals: S.roe, unit: '%', dec: 1}, {name: 'ROA', color: css('--c2'), vals: S.roa, unit: '%', dec: 1}]})},
-    {id: 'c-ar', t: '売掛金と、売上に対する割合', s: '売掛金=売ったが代金をまだ受け取っていない分。割合が上がり続けるときは回収が遅れていないか注意', f: () => ({key: 'ar', labels: LB, unitL: '億円', unitR: '%',
-      bars: [{name: '売掛金', color: css('--c1'), vals: S.ar, unit: '億円'}],
+    {id: 'c-ar', t: '売掛金と、売上に対する割合', s: '売掛金=売ったが代金をまだ受け取っていない分。割合が上がり続けるときは回収が遅れていないか注意', f: () => ({key: 'ar', labels: LB, unitL: UM, unitR: '%',
+      bars: [{name: '売掛金', color: css('--c1'), vals: S.ar, unit: UM}],
       lines: [{name: '売掛金÷売上', color: css('--c2'), vals: r(S.ar, S.rev), axis: 'r', unit: '%', dec: 1}],
       foot: ['2022年3月期ごろから新しい収益認識の基準で「契約資産」を含む会社が多く、その前後で少し段差が出ることがあります']})},
     {id: 'c-cost', t: '販管費と研究開発費(売上に対する割合)', s: '販管費=販売費及び一般管理費。研究開発費は製造原価に入る分も含めた総額(有報の注記)。前年分を載せていない会社は1年おきになり、その間は線でつないでいます', f: () => ({key: 'cost', labels: LB, unitL: '%', bars: [],
@@ -617,15 +636,22 @@ function init() {
     const avg5 = MO.yld.map((_, i) => { const w = MO.yld.slice(Math.max(0, i - 59), i + 1).filter(v => v != null); return i >= 59 && w.length >= 24 ? +(w.reduce((a, b) => a + b, 0) / w.length).toFixed(2) : null; });
     const yrs = Math.round(MO.m.length / 12);
     CH.div.push({id: 'c-yld', line: true, t: `株価と配当利回り(${yrs}年)`, s: yv.length ? `今の利回りが過去と比べて高いか。網かけは過去${yrs}年の利回りの幅(${fmt(ymin, 1)}〜${fmt(ymax, 1)}%)` : '利回りのデータなし', f: () => ({
-      key: 'yld', labels: MO.m, unitL: '%', unitR: '円', right: true, band: yv.length ? [ymin, ymax] : null, bandName: `過去${yrs}年の幅`, bandOf: '配当利回り(実績)',
-      lines: [{name: '配当利回り(実績)', color: css('--c1'), vals: MO.yld, unit: '%', dec: 2, w: 2.4}, {name: '利回りの5年平均', color: css('--c2'), vals: avg5, unit: '%', dec: 2, dash: true, noEnd: true}, {name: '株価(月末)', color: css('--grey-line'), vals: MO.px, right: true, unit: '円', w: 1.6}],
-      foot: ['利回りは各月末時点で直近に終わった決算期の通常配当(実績)÷株価。会社予想での利回りは表示予定']})});
+      key: 'yld', labels: MO.m, unitL: '%', unitR: PXU, right: true, band: yv.length ? [ymin, ymax] : null, bandName: `過去${yrs}年の幅`, bandOf: '配当利回り(実績)',
+      lines: [{name: '配当利回り(実績)', color: css('--c1'), vals: MO.yld, unit: '%', dec: 2, w: 2.4}, {name: '利回りの5年平均', color: css('--c2'), vals: avg5, unit: '%', dec: 2, dash: true, noEnd: true}, {name: '株価(月末)', color: css('--grey-line'), vals: MO.px, right: true, unit: PXU, w: 1.6}],
+      foot: [US ? '利回りは各月末時点の直近12か月の配当÷株価' : '利回りは各月末時点で直近に終わった決算期の通常配当(実績)÷株価。会社予想での利回りは表示予定']})});
   }
   $('#charts-chart').innerHTML = panels(CH.chart);
   $('#charts-perf').innerHTML = panels(CH.perf);
   $('#charts-div').innerHTML = panels(CH.div);
 
-  if (HAS_DIV) { initEval(); initDiv(); }
+  if (US) {
+    const na = t => `<div class="panel"><h2 class="pt">対象外</h2><p class="sub" style="margin:6px 0 0">${t}</p></div>`;
+    $('#eval-na').innerHTML = na('米国株は配当安心スコアの対象外です。点数は日本の有価証券報告書の項目(配当方針・記念配当など)と日本企業の点数の分布で作っているためです。');
+    $('#eval-na').hidden = false; $('#eval-body').hidden = true; $('#t-eval-s').textContent = '対象外';
+    if (HAS_DIV) initDivUS();
+    else { $('#div-na').innerHTML = na(D.divgap ? '決算書では配当を払っていますが、株価データの提供元(Yahoo Finance)に最近の配当の記録がないため、配当の履歴を表示できません。' : 'この銘柄は配当を出していないため、配当の履歴はありません。'); $('#div-na').hidden = false; $('#div-body').hidden = true; $('#t-div-s').textContent = D.divgap ? 'データなし' : '対象外'; }
+  }
+  else if (HAS_DIV) { initEval(); initDiv(); }
   else {
     const na = t => `<div class="panel"><h2 class="pt">対象外</h2><p class="sub" style="margin:6px 0 0">${t}</p></div>`;
     $('#eval-na').innerHTML = na('この銘柄は配当を出していない(または高配当データの対象外の)ため、配当安心スコアは計算していません。'); $('#eval-na').hidden = false; $('#eval-body').hidden = true;
@@ -724,19 +750,56 @@ function initDiv() {
   $('#sh').addEventListener('input', sim); sim();
 }
 
+/* ---------- 配当 履歴(米国株) ---------- */
+function initDivUS() {
+  const R = D.rights, dv = D.dv, reg = dv.map(x => x[2]);
+  let inc = 0, nd = 0;   // 連続増配・連続非減配(決算期ごとの配当で数える)
+  for (let i = reg.length - 1; i > 0 && reg[i] > reg[i - 1] * 1.001; i--) inc++;
+  for (let i = reg.length - 1; i > 0 && reg[i] >= reg[i - 1] * 0.99; i--) nd++;
+  const g5 = cagr(reg, 5), last = dv.at(-1);
+  $('#kpis').innerHTML = [
+    ['利回り(実績)', `<span class="v">${fmt(D.yld, 2)}<small>%</small></span>`, `前期(${D.fy})の配当 $${fmt(last[2], 2)} ÷ 株価`, 'main'],
+    ['連続増配', `<span class="v">${inc}<small>年${inc >= reg.length - 1 ? '以上' : ''}</small></span>`, '決算期ごとの配当を前年より増やした年数'],
+    ['連続非減配', `<span class="v">${nd}<small>年${nd >= reg.length - 1 ? '以上' : ''}</small></span>`, '前年以上に保った年数(表示は最大10年)'],
+    ['配当の伸び(5年)', `<span class="v">${g5 == null ? '—' : pct(g5)}</span>`, '1株配当の年率'],
+    ['配当の回数', `<span class="v txt">年${R.n}回</span>`, `直近 $${fmt(R.last, 4)}(${md(R.last_date)})`],
+    ['次の配当落ち日', `<span class="v txt">${R.ex ? jdate(R.ex) + (R.ex_est ? '(目安)' : '') : '発表待ち'}</span>`, R.ex ? 'この日の前営業日までに買って持っていると受け取れる(米国の受け渡しは翌営業日)' : '', 'main'],
+    ['次の支払日', `<span class="v txt">${R.pay ? jdate(R.pay) : '発表待ち'}</span>`, R.ex_est ? '配当落ち日は前回の間隔からの目安' : '会社の発表(Yahoo Finance)'],
+    ['配当性向(前期)', `<span class="v">${fmt(D.S.payout.at(-1), 0)}<small>%</small></span>`, '1株配当 ÷ 1株利益'],
+  ].map(([k, v, s, cl]) => `<div class="kpi ${cl || ''}"><span class="k">${k}</span>${v}<span class="s">${s}</span></div>`).join('');
+  const ev = [];
+  for (let i = dv.length - 1; i >= Math.max(1, dv.length - 10); i--) {
+    const [y, , r] = dv[i], pr = dv[i - 1][2];
+    if (!pr) continue;
+    if (r > pr * 1.001) ev.push([`${y}年度`, 'inc', '増配', `$${fmt(pr, 2)} → $${fmt(r, 2)}(${pct(100 * (r / pr - 1))})`, String(y)]);
+    else if (r < pr * 0.99) ev.push([`${y}年度`, 'cut', '減配', `$${fmt(pr, 2)} → $${fmt(r, 2)}(${pct(100 * (r / pr - 1))})`, String(y)]);
+  }
+  $('#timeline').innerHTML = ev.map(([d, c, t, x]) => `<li><span class="d">${d}</span><span><span class="dtag ${c}">${t}</span>${x}</span></li>`).join('') || '<li class="soon">履歴なし</li>';
+  document.querySelector('#timeline').closest('.panel').querySelector('h2').textContent = '増配・減配の履歴';
+  document.querySelector('#timeline').closest('.panel').querySelector('.sub').textContent = '決算期ごとの1株配当で判定(米国株は配当方針の文章・特別配当の区別なし)';
+  $('#dps-sub').textContent = '決算期ごとの1株配当(ドル)。赤は前年より減った年。株式分割は今の株数に合わせて調整';
+  $('#sh').value = 10; $('#sh').min = 1; $('#sh').step = 1;
+  const sim = () => {
+    const n = Math.max(0, +$('#sh').value || 0), y = n * last[2], fx = y * 0.9;   // 米国で10%を源泉徴収
+    $('#o-cost').textContent = '$' + fmt(n * D.price, 2); $('#o-nisa').textContent = '$' + fmt(fx, 2); $('#o-tax').textContent = '$' + fmt(fx * (1 - .20315), 2);
+    $('#sim-note').textContent = `株価$${fmt(D.price, 2)}・前期の配当$${fmt(last[2], 2)}で計算。NISAでも米国の源泉税10%は引かれます。課税口座は10%を引いたあとさらに20.315%(確定申告の外国税額控除で一部戻ることがあります)。`;
+  };
+  $('#sh').addEventListener('input', sim); sim();
+}
+
 function drawAll() {
   if (!$('#chart').hidden && !cardOpened && window.StockCard) {   // 銘柄カードは最初にチャートタブを開いたときに描く(隠れたままだと幅0で描かれるため)
     cardOpened = true;
-    StockCard.open('card', {market: 'jp', code: D.code, name: D.name, sub: D.sector, scroll: false});
+    StockCard.open('card', {market: US ? 'us' : 'jp', code: D.code, name: D.name, sub: D.sector, scroll: false});
   }
   for (const p of ['chart', 'perf', 'div']) if (!$('#' + p).hidden) CH[p].forEach(c => (c.line ? lineChart : chart)($('#' + c.id), c.f()));
   if (!$('#div').hidden && HAS_DIV) {
     const H = D.dv.slice(-20), cut = new Set(H.map((h, i) => i > 0 && h[2] < H[i - 1][2] * 0.99 ? i : -1));
-    chart($('#dps-chart'), {key: 'dvh', labels: H.map(h => String(h[0])), labelSuffix: '年度', unitL: '円', barLabels: true,
+    chart($('#dps-chart'), {key: 'dvh', labels: H.map(h => String(h[0])), labelSuffix: '年度', unitL: UP, barLabels: true, dec: PD,
       extraLegend: `<span><i style="background:${css('--down')}"></i>減配した年(通常配当で判定)</span>`,
-      bars: [{name: '通常配当', color: css('--c1'), stack: true, colorAt: i => cut.has(i) ? css('--down') : null, vals: H.map(h => h[2]), unit: '円', dec: 1},
-             {name: '特別・記念配当', color: css('--c2'), stack: true, vals: H.map(h => h[1] - h[2] > 0.01 ? +(h[1] - h[2]).toFixed(2) : null), unit: '円', dec: 1}],
-      foot: ['10年より古い年は Yahoo Finance の配当でつないでいます(決算期を変えた会社では古い年がずれることがあります)。会社予想の配当は表示予定']});
+      bars: [{name: '通常配当', color: css('--c1'), stack: true, colorAt: i => cut.has(i) ? css('--down') : null, vals: H.map(h => h[2]), unit: UP, dec: PD},
+             ...(US ? [] : [{name: '特別・記念配当', color: css('--c2'), stack: true, vals: H.map(h => h[1] - h[2] > 0.01 ? +(h[1] - h[2]).toFixed(2) : null), unit: UP, dec: 1}])],
+      foot: [US ? '決算期ごとの合計(Yahoo Finance・株式分割は今の株数に合わせて調整)' : '10年より古い年は Yahoo Finance の配当でつないでいます(決算期を変えた会社では古い年がずれることがあります)。会社予想の配当は表示予定']});
   }
 }
 </script>
