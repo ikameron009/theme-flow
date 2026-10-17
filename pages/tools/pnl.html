@@ -99,6 +99,7 @@ main.wrap{padding-block:22px 48px;display:flex;flex-direction:column;gap:22px}
 .day.ed:hover{box-shadow:inset 0 0 0 2px var(--brand-soft)}
 .day.p{background:var(--up-soft)} .day.n{background:var(--down-soft)}
 .day.off{background:var(--off);cursor:default}
+.day.off.ed{cursor:pointer}
 .day.off .dn{color:var(--off-ink)}
 .day.out{background:var(--bg)}
 .day.fut .dn{color:var(--faint)}
@@ -259,7 +260,7 @@ tfoot td{font-weight:700;border-top:2px solid var(--line-strong);border-bottom:0
         <div class="pl-legend">
           <span><i style="background:var(--up-soft)"></i>プラスの日</span>
           <span><i style="background:var(--down-soft)"></i>マイナスの日</span>
-          <span><i style="background:var(--off)"></i>土日・祝日（休場）</span>
+          <span><i style="background:var(--off)"></i>土日・祝日（休場・入力もできます）</span>
           <span><i style="background:var(--surface);box-shadow:inset 0 0 0 2px var(--brand)"></i>今日</span>
         </div>
       </div>
@@ -457,7 +458,7 @@ function renderKpis(){
 
 function dayState(y,m,d){
   const k=key(y,m,d),off=isOff(y,m,d),fut=k>TODAY,v=data.daily[k];
-  return {k,off,fut,v,hol:hol(k),today:k===TODAY,ed:!off&&!fut};
+  return {k,off,fut,v,hol:hol(k),today:k===TODAY,ed:!fut};
 }
 
 function renderCal(){
@@ -475,7 +476,7 @@ function renderCal(){
       if(s.v!=null){ws+=s.v;wn++}
       const c=['day'];if(s.off)c.push('off');if(s.fut)c.push('fut');if(s.today)c.push('today');if(s.ed)c.push('ed');
       if(s.v>0)c.push('p');else if(s.v<0)c.push('n');
-      const amt=s.off?'':s.v!=null?`<span class="${cls(s.v)}">${yen(s.v,true)}</span>`:(s.ed?'<span class="empty">取引なし</span>':'');
+      const amt=s.v!=null?`<span class="${cls(s.v)}">${yen(s.v,true)}</span>`:(s.ed&&!s.off?'<span class="empty">取引なし</span>':'');
       h+=`<div class="${c.join(' ')}" data-k="${s.k}" ${s.ed?'tabindex="0" role="button" aria-label="'+M+'月'+d+'日の損益を入力"':''}><span class="dn"><b>${d}</b></span>${s.hol?`<span class="hn">${esc(s.hol)}</span>`:''}<span class="amt">${amt}</span></div>`;
     }
     h+=`<div class="wsum"><small>${wn?wn+'日':''}</small><b class="${wn?cls(ws):'muted'}">${wn?yen(ws,true):'—'}</b></div>`;
@@ -483,16 +484,16 @@ function renderCal(){
   }
   el.innerHTML=h;
 
-  // スマホ用: 週ごとの縦リスト(土日は省き、祝日は灰色で残す)
+  // スマホ用: 週ごとの縦リスト(土日祝は灰色で残し、入力もできる)
   let L='';
   weeks.forEach(w=>{
-    const ds=w.days.filter(d=>d!=null&&dow(Y,M,d)%6!==0);
+    const ds=w.days.filter(d=>d!=null);
     if(!ds.length)return;
     L+=`<div class="wk"><div class="wkh"><span>${M}/${ds[0]}〜${M}/${ds[ds.length-1]}</span><span>週の合計 <b class="${w.wn?cls(w.ws):'muted'}">${w.wn?yen(w.ws,true):'—'}</b></span></div>`;
     ds.forEach(d=>{
       const s=dayState(Y,M,d);
       const c=['wrow'];if(s.off)c.push('off');if(s.today)c.push('today');if(s.ed)c.push('ed');if(s.v>0)c.push('p');else if(s.v<0)c.push('n');
-      const amt=s.off?'休場':s.v!=null?`<span class="${cls(s.v)}">${yen(s.v,true)}</span>`:s.fut?'':'<span class="muted" style="font-size:12px;font-weight:400">取引なし</span>';
+      const amt=s.v!=null?`<span class="${cls(s.v)}">${yen(s.v,true)}</span>`:s.off?'休場':s.fut?'':'<span class="muted" style="font-size:12px;font-weight:400">取引なし</span>';
       L+=`<div class="${c.join(' ')}" data-k="${s.k}" ${s.ed?'tabindex="0" role="button"':''}><span class="dl">${M}/${d}(${WD[dow(Y,M,d)]})${s.hol?'<small>'+esc(s.hol)+'</small>':''}</span><span class="amt">${amt}</span></div>`;
     });
     L+='</div>';
