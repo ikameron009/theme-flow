@@ -187,6 +187,18 @@ tr.mrow td.cf span:hover{border-color:var(--line-strong)}
 tr.mrow input{max-width:150px;font-size:13px}
 tfoot td{font-weight:700;border-top:2px solid var(--line-strong);border-bottom:0;background:var(--surface-2)}
 .mname{font-weight:700}
+/* 年の合計(確定/未確定込み × 税引き前/後)。合計カードを1行目いっぱいに、残り3枚を2行目に */
+.kpis{grid-template-columns:repeat(3,1fr)}
+.kpi.ytotal{grid-column:1/-1}
+.ytot{width:100%;max-width:720px;border-collapse:collapse;margin-top:6px;font-variant-numeric:tabular-nums}
+.ytot th,.ytot td{padding:5px 0;text-align:right;white-space:nowrap}
+.ytot thead th{font:500 11.5px var(--f-body);color:var(--muted);padding-top:0}
+.ytot tbody th{text-align:left;font:700 12.5px var(--f-body);color:var(--ink-2);padding-right:10px}
+.ytot tbody th span{display:block;font-weight:400;font-size:11px;color:var(--faint)}
+.ytot tbody td{font:600 24px var(--f-num);padding-left:14px}
+.ytot tbody tr+tr th,.ytot tbody tr+tr td{border-top:1px dashed var(--line-strong)}
+.ytot tr.est td{font-size:18px;opacity:.85}
+@media (max-width:560px){.kpis{grid-template-columns:1fr 1fr}.kpi.yoy{grid-column:1/-1}.ytot tbody td{font-size:17px;padding-left:8px}.ytot tr.est td{font-size:14px}.ytot tbody th{font-size:11.5px}}
 </style>
 </head><body>
 <header class="top">
@@ -448,12 +460,16 @@ function renderKpis(){
   }
   const lastM=n?Math.max(...[...Array(12)].map((_,i)=>confirmed(Y,i+1)!=null?i+1:0)):0;
   const openSum=open.reduce((a,m)=>a+monthSum(data.daily,Y,m).sum,0);
-  const diff=tot-prevTot;
+  const diff=tot-prevTot,allTot=tot+openSum;
   document.getElementById('kpis').innerHTML=
-   `<div class="kpi big"><small>${Y}年の合計（確定した月だけ）</small><b class="${cls(tot)}">${n?yen(tot):'—'}</b>${n?`<span class="tax">税引き後 <span class="${cls(yearTax(tot))}">${yen(yearTax(tot))}</span></span>`:''}<em>${n?'確定した'+n+'か月の合計（最後は'+lastM+'月）':'確定した月はまだありません'}</em></div>`+
-   `<div class="kpi big"><small>前年の同じ月までと比べて</small><b class="${prevN?cls(diff):'muted'}">${prevN?yen(diff):'—'}</b><em>${prevN?'前年 '+yen(prevTot,true):'前年の記録なし'}</em></div>`+
+   `<div class="kpi big ytotal"><small>${Y}年の合計</small>`+
+   `<table class="ytot"><thead><tr><th></th><th>税引き前</th><th>税引き後</th></tr></thead><tbody>`+
+   `<tr><th>確定した月だけ<span>${n?n+'か月（最後は'+lastM+'月）':'まだありません'}</span></th><td class="${n?cls(tot):'muted'}">${n?yen(tot):'—'}</td><td class="${n?cls(yearTax(tot)):'muted'}">${n?yen(yearTax(tot)):'—'}</td></tr>`+
+   `<tr class="est"><th>未確定の月も含む<span>${open.length?'＋'+open.map(m=>m+'月').join('・')+'（日の合計）':'未確定の月なし'}</span></th><td class="${n||open.length?cls(allTot):'muted'}">${n||open.length?yen(allTot):'—'}</td><td class="${n||open.length?cls(yearTax(allTot)):'muted'}">${n||open.length?yen(yearTax(allTot)):'—'}</td></tr>`+
+   `</tbody></table></div>`+
+   `<div class="kpi yoy"><small>前年の同じ月までと比べて（確定した月）</small><b class="${prevN?cls(diff):'muted'}">${prevN?yen(diff):'—'}</b><em>${prevN?'前年 '+yen(prevTot,true):'前年の記録なし'}</em></div>`+
    `<div class="kpi"><small>確定した月</small><b>${n}<span style="font-size:14px;color:var(--muted)"> / 12か月</span></b><em>プラスの月 ${won}・マイナスの月 ${n-won}</em></div>`+
-   `<div class="kpi"><small>未確定の月</small><b>${open.length?open.map(m=>m+'月').join('・'):'なし'}</b><em>${open.length?'日の合計 <span class="'+cls(openSum)+'">'+yen(openSum,true)+'</span>（参考・年間合計には含めない）':'すべて確定済み'}</em></div>`;
+   `<div class="kpi"><small>未確定の月</small><b>${open.length?open.map(m=>m+'月').join('・'):'なし'}</b><em>${open.length?'日の合計 <span class="'+cls(openSum)+'">'+yen(openSum,true)+'</span>（参考・「未確定の月も含む」だけに入れる）':'すべて確定済み'}</em></div>`;
 }
 
 function dayState(y,m,d){
