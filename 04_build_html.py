@@ -65,7 +65,8 @@ with open(dst, "w", encoding="utf-8") as f:
 # 決算・経済カレンダー(15_calendar.py が作る calendar.json)も同じく表示時に読み込む
 # 銘柄カードの「株価・勢い」3行(13_tool_research.py が作る card_{jp,us}.json)も無料なので公開側
 # 読めないJSON(gitの衝突印の混入など)は公開しない=ビルドを止めて前回の公開を残す(2026-10-13 vcp_jp.json 事故)
-for fn in ("vcp_us.json", "vcp_jp.json", "note_track.json", "calendar.json", "card_jp.json", "card_us.json"):
+# SNS話題銘柄(17_sns_buzz.py が作る sns_jp.json)も表示時に読み込む
+for fn in ("vcp_us.json", "vcp_jp.json", "note_track.json", "calendar.json", "card_jp.json", "card_us.json", "sns_jp.json"):
     if os.path.exists(P(fn)):
         try:
             json.load(open(P(fn), encoding="utf-8"))
@@ -135,7 +136,7 @@ except Exception as e:
 # キャッシュ設定(Cloudflareの静的配信が読む _headers)
 HEADERS = [
     ("/", "no-cache"), ("/index.html", "no-cache"), ("/version.json", "no-store"),
-    ("/vcp_*.json", "no-cache"), ("/note_track.json", "no-cache"), ("/calendar.json", "no-cache"), ("/card_*.json", "no-cache"), ("/journal_ref.json", "no-cache"), ("/valuation_*.json", "no-cache"), ("/dividend_*.json", "no-cache"), ("/dividend_detail/*", "no-cache"), ("/detail_us/*", "no-cache"), ("/pro/*", "no-cache"), ("/ohlc/*", "public, max-age=3600"), ("/us_ohlc/*", "public, max-age=3600"),
+    ("/vcp_*.json", "no-cache"), ("/sns_jp.json", "no-cache"), ("/note_track.json", "no-cache"), ("/calendar.json", "no-cache"), ("/card_*.json", "no-cache"), ("/journal_ref.json", "no-cache"), ("/valuation_*.json", "no-cache"), ("/dividend_*.json", "no-cache"), ("/dividend_detail/*", "no-cache"), ("/detail_us/*", "no-cache"), ("/pro/*", "no-cache"), ("/ohlc/*", "public, max-age=3600"), ("/us_ohlc/*", "public, max-age=3600"),
 ]
 with open(os.path.join(SITE, "_headers"), "w", encoding="utf-8") as f:
     for path, cc in HEADERS:

@@ -47,3 +47,8 @@ etf_aum.json
 jp_shares_full.log
 site_worker/.dev.vars
 etf_all_*.json
+
+# SNS話題銘柄: 出力(CIはキャッシュ+公開中から復元)と試作フォルダ(YouTube APIキーあり・絶対に上げない)
+sns_jp.json
+sns_jp.json.tmp
+sns_buzz/

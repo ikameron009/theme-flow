@@ -85,6 +85,7 @@ jobs:
             ./note_track.json
             ./note_picks_auto.csv
             ./calendar.json
+            ./sns_jp.json
             ./cal_shares.csv
             ./site/ohlc
             ./site/us_ohlc
@@ -196,6 +197,15 @@ jobs:
       - name: 15 決算・経済カレンダー
         timeout-minutes: 8
         run: python 15_calendar.py || echo "カレンダー取得スキップ; 前回分を維持"
+
+      # SNS話題銘柄(日本株のみ): YouTubeの予測候補・動画数から3つのスコア → sns_jp.json。
+      # 同じ株価日付の2回目は何もしない(YouTube APIの1日の枠を守る)。失敗しても前回分(キャッシュ/公開中)のまま
+      - name: 17 SNS話題銘柄
+        if: steps.mkt.outputs.market == 'jp' || steps.mkt.outputs.market == 'both'
+        timeout-minutes: 25
+        env:
+          YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
+        run: python 17_sns_buzz.py || echo "SNS話題銘柄スキップ; 前回分を維持"
 
       - name: 04 index.html 生成
         run: python 04_build_html.py

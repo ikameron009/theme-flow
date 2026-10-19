@@ -7,3 +7,4 @@ lxml>=5.0
 holidays
 pykakasi              # 業種銘柄リサーチ: ひらがなで業種・テーマを探す読み
 openpyxl              # 決算・経済カレンダー: JPX決算発表予定日(xlsx)を読む
+pytrends              # SNS話題銘柄: Googleトレンド(YouTube検索の伸び)。止められた日は使わない

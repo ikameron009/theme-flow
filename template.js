@@ -565,7 +565,116 @@ function drawVcp(){
 function openVcCard(scroll){const tr=state.vcCode&&[...document.querySelectorAll('#vcp-body tr[data-code]')].find(t=>t.dataset.code===state.vcCode);
   if(!tr){StockCard.closeBelow('vc');return;}
   const box=StockCard.below(tr,cardOpts(state.vcCode,{group:'vc',scroll,onClose:()=>{state.vcCode=null;}}));bindChips(box);}
-function drawScreening(){const mk=market;loadVcp(mk).then(()=>{if(market===mk)drawVcp();});}
+function drawScreening(){const mk=market;loadVcp(mk).then(()=>{if(market===mk&&sn.tab!=='sns')drawVcp();});if(sn.tab==='sns')drawSns();}
+
+/* ================= スクリーニング: SNS話題銘柄(日本株のみ・sns_jp.json) ================= */
+const SN_T=['news','earn','anal','chart','div'];
+const SN_TJ={news:'なぜ動いた？',earn:'決算の中身',anal:'今後どうなる？',chart:'どこで買う・売る？',div:'配当・優待・長期'};
+const SN_TJME={news:'ニュース解説',earn:'決算解説',anal:'銘柄分析',chart:'チャート・売買',div:'配当・長期'};
+const SN_SC={att:'var(--sn-att)',sup:'var(--sn-sup)',gap:'var(--sn-gap)'};
+const SN_KW={news:['なぜ','理由','急騰','暴落','急落','下落','上昇','ストップ高','ストップ安','ニュース','tob','買収','提携','発表','爆上げ','材料','速報','破産'],
+  earn:['決算','上方修正','下方修正','業績','増益','減益','増収','四半期','通期','赤字','黒字'],
+  anal:['今後','将来性','買い時','分析','割安','見通し','成長','評価','注目','期待','予想','どうなる','買うべき','やばい'],
+  chart:['チャート','テクニカル','目標株価','押し目','空売り','信用','デイトレ','掲示板','売り時'],
+  div:['配当','優待','増配','減配','nisa','利回り','高配当','長期','権利','自社株買い','分割']};
+const snStore={get(k){try{return localStorage.getItem(k);}catch(e){return null;}},set(k,v){try{localStorage.setItem(k,v);}catch(e){}}};
+let SNS=null,snLoading=false;
+const sn={tab:snStore.get('sc_tab')||'vcp',sort:snStore.get('sns_sort')||'att',idx:null,q:'',tf:'all',open:null};
+/* 本人(動画を作る人)だけ: 足りない動画の型・既存動画の型との比較・動画の切り口 */
+const snMe=()=>!!(window.JR&&JR.st&&JR.st.me);
+const snTL=()=>snMe()?SN_TJME:SN_TJ;
+const snFmtV=v=>v>=10000?(v/10000).toFixed(v>=100000?0:1)+'万':String(v||0);
+const snLv=v=>v>=70?['h','高']:v>=40?['m','中']:['l','低'];
+function loadSns(){if(SNS||snLoading)return;snLoading=true;
+  fetch('sns_jp.json?cb='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.json():{sessions:[]}).catch(()=>({sessions:[]})).then(j=>{SNS=j;snLoading=false;drawSns();});
+  if(window.JR&&JR.init)Promise.resolve(JR.init()).then(()=>{if(SNS)drawSns();}).catch(()=>{});}
+function setScTab(t){sn.tab=t;snStore.set('sc_tab',t);
+  $$('.sn-sub button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.t===t));
+  $('#vcp-pane').hidden=t!=='vcp';$('#sns-pane').hidden=t!=='sns';
+  if(t==='sns'){loadSns();drawSns();}else drawVcp();}
+function snRsn(s){const c=/ストップ|急騰|急落/.test(s)?'hot':/決算/.test(s)?'earn':'';return `<span class="sn-rsn ${c}">${esc(s)}</span>`;}
+function snTbar(need){return `<span class="sn-tbar">${SN_T.map((t,i)=>`<i style="width:${need[i]||0}%;background:var(--sn-${t})" title="${SN_TJ[t]} ${need[i]||0}%"></i>`).join('')}</span>`;}
+function snCell(k,v,sub){const[c,l]=snLv(v);
+  return `<td class="${sn.sort===k?'sn-on':''} ${k==='sup'?'sn-hide':''}"><div class="sn-sc" style="--sc:${SN_SC[k]}"><span class="sn-lv ${c}">${l}</span><span class="sn-bar"><i style="width:${v}%"></i></span><span class="n">${v}</span></div>${sub?`<span class="sn-cs" style="text-align:right">${sub}</span>`:''}</td>`;}
+function snStreak(sess,idx,code){let n=0;for(let i=idx;i>=0;i--){if(sess[i].rows.some(r=>r.code===code))n++;else break;}return n;}
+function drawSns(){
+  if(sn.tab!=='sns')return;
+  const us=market!=='jp';$('#sn-usnote').hidden=!us;$('#sn-main').hidden=us;
+  const sess=(SNS&&SNS.sessions)||[];
+  $('#sc-meta').textContent=SNS&&SNS.updated?`日本株 ・ ${SNS.updated}更新`:'';
+  if(us)return;
+  const me=snMe(),TL=snTL(),body=$('#sn-body');
+  $('#sn-thtype').textContent=me?'足りない動画の型':'みんなが知りたいこと';$('#sn-tflabel').textContent=$('#sn-thtype').textContent;
+  $('#sn-tf').innerHTML=[['all','すべて'],...SN_T.map(t=>[t,TL[t]])].map(([k,l])=>`<button type="button" aria-pressed="${k===sn.tf}" data-k="${k}">${l}</button>`).join('');
+  $('#sn-legend').innerHTML='知りたいことの割合：'+SN_T.map(t=>`<span><i style="background:var(--sn-${t})"></i>${TL[t]}</span>`).join('');
+  $$('#sn-sort button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.k===sn.sort));
+  $$('#sntbl th.sn-th').forEach(th=>th.classList.toggle('on',th.dataset.k===sn.sort));
+  if(!sess.length){body.innerHTML=`<tr><td colspan="8" style="padding:16px;color:var(--faint)">${SNS?'データを準備中です（毎日17時台に更新）。':'読み込み中…'}</td></tr>`;
+    ['#sn-n','#sn-new','#sn-open'].forEach(s=>$(s).textContent='–');$('#sn-daylabel').textContent='–';$('#sn-lock').innerHTML='';return;}
+  if(sn.idx==null||sn.idx>sess.length-1)sn.idx=sess.length-1;
+  const sl=$('#sn-day');sl.max=sess.length-1;sl.value=sn.idx;
+  const idx=sn.idx,cur=sess[idx],prev=idx>0?sess[idx-1]:null,pc=new Set(prev?prev.rows.map(r=>r.code):[]),latest=idx===sess.length-1;
+  $('#sn-daylabel').textContent=cur.date;$('#sn-prev').disabled=idx<=0;$('#sn-next').disabled=idx>=sess.length-1;
+  const L=sess[sess.length-1],LP=sess.length>1?sess[sess.length-2]:null,lpc=new Set(LP?LP.rows.map(r=>r.code):[]);
+  $('#sn-n').textContent=L.rows.length;$('#sn-new').textContent=LP?L.rows.filter(r=>!lpc.has(r.code)).length:'–';$('#sn-open').textContent=L.rows.filter(r=>r.gap>=70).length;
+  const k=sn.sort,typeOf=r=>me?r.best:r.want;
+  let all=cur.rows.map(r=>Object.assign({},r,{_new:!!prev&&!pc.has(r.code)})).sort((a,b)=>b[k]-a[k]||b.att-a.att);
+  all.forEach((r,i)=>r._rank=i+1);
+  const q=_nz(sn.q);let rows=all.filter(r=>(sn.tf==='all'||typeOf(r)===sn.tf)&&(!q||_nz(r.name).includes(q)||_nz(r.code).includes(q)));
+  const nv=me?rows.length:gateN('sns',rows.length),hidden=rows.length-nv;rows=rows.slice(0,nv);
+  body.innerHTML=rows.map(r=>{const t=typeOf(r),st=snStreak(sess,idx,r.code),dt=latest&&SNS.detail?SNS.detail[r.code]:null;
+    const attSub=`候補${r.sug}件${r.tr!=null?` ・ 検索×${(+r.tr).toFixed(1)}`:''}`;
+    const supSub=r.solo==null?'':(r.solo+r.multi)?`専用${r.solo}本・まとめ${r.multi}本`:'動画なし';
+    const gapSub=dt&&dt.bonus?'<span class="down">伸びている動画あり</span>':'';
+    const tg=dt&&me?` <span class="sn-cs" style="display:inline">空き+${dt.tgap[SN_T.indexOf(t)]}pt</span>`:'';
+    return `<tr data-code="${esc(r.code)}" class="${r._new?'new':''} ${sn.open===r.code?'on':''}" style="cursor:pointer">
+      <td class="num" style="text-align:right;color:var(--faint)">${r._rank}</td>
+      <td class="nm"><b>${esc(r.name)}</b><small>${esc(r.code)}</small><span class="sn-cs">${esc(r.sector||'')}</span></td>
+      <td>${(r.reasons||[]).map(snRsn).join('')}</td>
+      <td><span class="sn-tl" style="--tc:var(--sn-${t})">${TL[t]}</span>${tg}<div style="margin-top:4px">${snTbar(r.need)}</div></td>
+      ${snCell('att',r.att,attSub)}${snCell('sup',r.sup,supSub)}${snCell('gap',r.gap,gapSub)}
+      <td class="num sn-hide" style="text-align:right">${r._new||!prev?'<b class="down">新規</b>':st+'日'}</td></tr>${sn.open===r.code?snDetail(r,dt,me):''}`;}).join('')
+    ||'<tr><td colspan="8" class="muted" style="text-align:center;padding:24px">該当なし</td></tr>';
+  body.querySelectorAll('tr[data-code]').forEach(tr=>tr.onclick=()=>{sn.open=sn.open===tr.dataset.code?null:tr.dataset.code;drawSns();});
+  $('#sn-lock').innerHTML=me?'':lockHTML('sns',hidden,7);
+}
+function snDetail(r,dt,me){
+  const TL=snTL(),need=r.need;
+  const three=`<div class="sn-three">
+    <div style="--sc:var(--sn-att)"><small>注目度</small><b>${r.att}</b><em>${dt?`予測候補 ${dt.parts.sug}/40 ・ 検索の伸び ${dt.parts.tr==null?'取得なし':dt.parts.tr+'/30'} ・ 株価の動き ${dt.parts.move}/30`:`予測候補 ${r.sug}件`}</em></div>
+    <div style="--sc:var(--sn-sup)"><small>解説動画の多さ</small><b>${r.sup}</b><em>${r.solo!=null?`直近7日 専用${r.solo}本・まとめ${r.multi}本`:''}${dt?` ・ 合計${snFmtV(dt.views_sum)}回`:''}</em></div>
+    <div style="--sc:var(--sn-gap)"><small>穴場度</small><b>${r.gap}</b><em>${dt&&dt.bonus?`伸びている専用動画で +${dt.bonus}点`:'注目度と（100 − 解説の多さ）の両方で決まる'}</em></div></div>`;
+  if(!dt)return `<tr class="sn-detail"><td colspan="8">${three}<div class="sn-cs">動画の一覧と検索されている言葉は、最新日だけ表示します。</div></td></tr>`;
+  const base=(dt.q||'').toLowerCase(),kindOf=w=>SN_T.find(t=>SN_KW[t].some(x=>w.includes(x)));
+  const words=(dt.words||[]).map(w=>{const k=kindOf(w.replace(base,''));return `<span class="${k?'k':''}" style="${k?`--tc:var(--sn-${k})`:''}">${esc(w)}</span>`;}).join('')||'<span class="muted">株の話の予測候補なし</span>';
+  const cmp=SN_T.map((t,i)=>`<span>${TL[t]}</span><span class="bars" style="--tc:var(--sn-${t})"><i style="width:${need[i]}%"></i>${me?`<i class="have" style="width:${dt.have[i]}%"></i>`:''}</span>
+    <span class="g ${me&&dt.tgap[i]>0?'up':'muted'}">${me?(dt.tgap[i]>0?'+':'')+dt.tgap[i]:need[i]+'%'}</span>`).join('');
+  const vids=(dt.top||[]).map((v,i)=>`<li class="${i===0&&!v.multi?'first':''}"><span class="t">${v.multi?'<span class="sn-rsn">まとめ</span>':'<span class="sn-rsn earn">専用</span>'}<a class="sn-vl" href="https://www.youtube.com/watch?v=${encodeURIComponent(v.id)}" target="_blank" rel="noopener">${esc(v.title)} ↗</a></span><span class="num">${snFmtV(v.views)}回</span>
+    <span class="m">${i===0&&!v.multi?'<b style="color:var(--brand)">まず見るならこの動画</b> ・ ':''}${esc(v.ch)} ・ 登録者 ${snFmtV(v.subs)} ・ 再生÷登録者 <span class="${v.ratio>=1?'hot':''}">${(+v.ratio).toFixed(2)}倍</span></span></li>`).join('')||'<li class="muted">直近7日の解説動画はまだありません（穴場）</li>';
+  const pct=x=>x==null?'–':`<span class="${x>=0?'up':'down'}">${(x*100).toFixed(1)}%</span>`;
+  const idea={news:`「${dt.q}は${/ストップ高|急騰/.test(r.reasons.join(''))?'なぜ急騰した':/ストップ安|急落/.test(r.reasons.join(''))?'なぜ急落した':'なぜ動いた'}のか」— 材料と、続くかどうかを解説`,
+    earn:`「${dt.q} 決算の中身」— 何が良くて何が悪かったかを数字で`,anal:`「${dt.q}の今後」— 事業の稼ぎ方と成長が続く条件（銘柄分析の型）`,
+    chart:`「${dt.q} どこで買う・どこで逃げる」— 出来高とチャートの節目`,div:`「${dt.q} 配当・優待・株式分割」— 長期で持つ価値があるか`}[r.best];
+  return `<tr class="sn-detail"><td colspan="8">
+    <div class="sn-kpi"><span>終値<b>${Number(dt.close).toLocaleString()}</b>円</span><span>前日比<b>${pct(dt.r1)}</b></span><span>5日<b>${pct(dt.r5)}</b></span><span>売買代金<b>${dt.to}</b>億円</span><span>出来高<b>${dt.vr}</b>倍（20日中央値比）</span>${dt.earn?`<span>決算<b>${dt.earn.slice(5).replace('-','/')}</b> ${esc(dt.earn_kind||'')}</span>`:''}<a class="sn-vl" href="tools/stock.html?code=${encodeURIComponent(r.code)}" style="color:var(--brand)">銘柄詳細 ↗</a></div>
+    ${three}
+    <div class="sn-dgrid">
+      <div class="sn-dbox"><h4>${me?'見たい型と、出ている動画の型':'みんなが知りたいこと'} <small>${me?'濃い＝見たい割合／薄い＝既存動画の割合／右＝空き（pt）':'予測候補の言葉と話題の理由から'}</small></h4>
+        <div class="sn-cmp">${cmp}</div>
+        <h4 style="margin-top:14px">YouTubeで検索されている言葉 <small>色つき＝知りたいことの手がかり</small></h4><div class="sn-words">${words}</div>
+        ${me?`<div class="sn-idea"><b>動画の切り口（本人だけに表示）：</b>${esc(idea)}</div>`:''}</div>
+      <div class="sn-dbox"><h4>なぜ話題かを確かめる動画 <small>直近7日 ・ 専用を先に再生の多い順 ・ <a class="sn-vl" href="https://www.youtube.com/results?search_query=${encodeURIComponent(dt.q+' 株')}&sp=EgIIAw%253D%253D" target="_blank" rel="noopener">YouTubeで今週の動画を全部見る ↗</a></small></h4>
+        <ul class="sn-vids">${vids}</ul></div>
+    </div></td></tr>`;
+}
+$$('.sn-sub button').forEach(b=>b.onclick=()=>setScTab(b.dataset.t));
+$('#sn-sort').onclick=e=>{const b=e.target.closest('button');if(!b)return;sn.sort=b.dataset.k;snStore.set('sns_sort',sn.sort);drawSns();};
+$$('#sntbl th.sn-th').forEach(th=>th.onclick=()=>{sn.sort=th.dataset.k;snStore.set('sns_sort',sn.sort);drawSns();});
+$('#sn-tf').onclick=e=>{const b=e.target.closest('button');if(!b)return;sn.tf=b.dataset.k;drawSns();};
+$('#sn-prev').onclick=()=>{if(sn.idx>0){sn.idx--;sn.open=null;drawSns();}};
+$('#sn-next').onclick=()=>{const s=(SNS&&SNS.sessions)||[];if(sn.idx<s.length-1){sn.idx++;sn.open=null;drawSns();}};
+$('#sn-day').addEventListener('input',e=>{sn.idx=+e.target.value;sn.open=null;drawSns();});
+
 
 /* ================= 全体 ================= */
 function renderAll(){
@@ -599,6 +708,7 @@ function wireSearch(inputId,clearId,fn){const el=$('#'+inputId),x=$('#'+clearId)
 wireSearch('hsearch','hsearch-x',v=>{state.hquery=v;drawHeat();});
 wireSearch('rksearch','rksearch-x',v=>{state.rkQuery=v;drawRkList();});
 wireSearch('vcpsearch','vcpsearch-x',v=>{state.vcpQuery=v;drawVcp();});
+wireSearch('snsearch','snsearch-x',v=>{sn.q=v;drawSns();});
 $('#vcp-prev').onclick=()=>{if(state.vcpIdx>0){state.vcpIdx--;drawVcp();}};
 $('#vcp-next').onclick=()=>{const D=VCP_DATA[market];if(D&&D.sessions&&state.vcpIdx<D.sessions.length-1){state.vcpIdx++;drawVcp();}};
 $('#vcp-day').addEventListener('input',e=>{state.vcpIdx=+e.target.value;drawVcp();});
@@ -618,7 +728,7 @@ const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting)navLink
 $$('section.sec').forEach(s=>io.observe(s));
 
 /* 配色の切り替え(ライト/ダーク)で描き直す */
-function redrawAll(){drawStrip();drawIndexCards();drawBreadth();drawMacro();drawRatios();drawChart();drawRank();drawHeat();drawStock();drawRkBump();drawStockCard();if(RK&&rkTop().length)drawRkList();if(VCP_DATA[market])drawVcp();}
+function redrawAll(){drawStrip();drawIndexCards();drawBreadth();drawMacro();drawRatios();drawChart();drawRank();drawHeat();drawStock();drawRkBump();drawStockCard();if(RK&&rkTop().length)drawRkList();if(VCP_DATA[market])drawVcp();if(sn.tab==='sns')drawSns();}
 matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change',redrawAll);
 new MutationObserver(redrawAll).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
 window.addEventListener('resize',()=>syncPanelHeight());
@@ -627,6 +737,7 @@ window.addEventListener('resize',()=>syncPanelHeight());
 if(!US_ON){const ub=$('#mseg button[data-m="us"]');if(ub)ub.hidden=true;}
 let initMk='jp';try{const p=new URLSearchParams(location.search).get('m');initMk=p||localStorage.getItem('tf_market')||'jp';}catch(e){}
 bindMarket(initMk);marketReset();bindTip();renderAll();
+setScTab(sn.tab==='sns'?'sns':'vcp');
 
 /* 手動更新ボタン & 新しい公開の自動検知 */
 $('#upd-btn').addEventListener('click',()=>{const h=$('#upd-hint');h.hidden=false;h.textContent='GitHubのページで「Run workflow」を押してください。完了（約5〜10分後）を自動で検知して、再読み込みボタンを出します。';});

@@ -406,6 +406,79 @@ footer nav{display:flex;gap:20px;flex-wrap:wrap}
 footer a:hover{color:var(--brand)}
 .foot{font-size:11.5px;color:var(--faint);line-height:1.75;margin-top:12px;border-top:1px solid var(--line);padding-top:12px}
 .foot b{color:var(--muted);font-weight:500}
+
+/* ---------- スクリーニング: サブタブ / SNS話題銘柄 ---------- */
+:root{--sn-news:var(--c2);--sn-earn:var(--c3);--sn-anal:var(--c1);--sn-chart:var(--c4);--sn-div:var(--c5);--sn-att:var(--c2);--sn-sup:var(--c3);--sn-gap:var(--brand)}
+.sn-sub{display:flex;border-bottom:1px solid var(--line);margin:-4px 0 18px;overflow-x:auto;scrollbar-width:none}
+.sn-sub button{border:0;background:transparent;font:500 14px var(--f-body);color:var(--muted);padding:9px 16px;border-bottom:2px solid transparent;cursor:pointer;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.sn-sub button[aria-pressed="true"]{color:var(--ink);border-bottom-color:var(--brand);font-weight:700}
+.sn-mem{font-size:10.5px;border:1px solid var(--line-strong);border-radius:999px;padding:0 7px;color:var(--muted);font-weight:500}
+.sn-sort{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:14px 0 12px}
+@media (max-width:700px){.sn-sort{grid-template-columns:minmax(0,1fr)}}
+.sn-sort button{text-align:left;border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:10px 14px;cursor:pointer;font-family:inherit;color:var(--ink);display:flex;flex-direction:column;gap:2px}
+.sn-sort button b{font-size:14px;display:flex;align-items:center;gap:7px}
+.sn-sort button b::before{content:"";width:10px;height:10px;border-radius:3px;background:var(--sc)}
+.sn-sort button span{font-size:11.5px;color:var(--muted);line-height:1.5}
+.sn-sort button[aria-pressed="true"]{border-color:var(--sc);box-shadow:inset 0 0 0 1px var(--sc);background:color-mix(in srgb,var(--sc) 6%,var(--surface))}
+.sn-legend{display:flex;gap:6px 14px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin:2px 0 10px}
+.sn-legend span{display:inline-flex;align-items:center;gap:5px}
+.sn-legend i{width:10px;height:10px;border-radius:2px;display:inline-block}
+.sn-rsn{display:inline-block;font-size:11px;padding:0 7px;border-radius:999px;background:var(--surface-2);color:var(--ink-2);margin:1px 3px 1px 0;white-space:nowrap}
+.sn-rsn.hot{background:var(--down-soft);color:var(--down)}
+.sn-rsn.earn{background:color-mix(in srgb,var(--sn-earn) 14%,var(--surface));color:var(--sn-earn)}
+.sn-tbar{display:flex;height:8px;border-radius:4px;overflow:hidden;width:120px;background:var(--surface-2)}
+.sn-tbar i{display:block;height:100%}
+.sn-tl{font-size:12px;font-weight:700;display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+.sn-tl::before{content:"";width:8px;height:8px;border-radius:2px;background:var(--tc)}
+.sn-cs{display:block;font-size:11px;color:var(--faint);line-height:1.45}
+#sntbl td.nm b{font-weight:700} #sntbl td.nm small{color:var(--faint);font-size:11px;margin-left:4px}
+#sntbl tr.new td.nm b{color:var(--down)}
+#sntbl td{vertical-align:middle}
+.sn-sc{display:flex;align-items:center;gap:7px;justify-content:flex-end;white-space:nowrap}
+.sn-sc .n{font:600 16px var(--f-num);min-width:26px;text-align:right}
+.sn-bar{width:54px;height:6px;border-radius:3px;background:var(--surface-2);overflow:hidden}
+.sn-bar i{display:block;height:100%;background:var(--sc)}
+.sn-lv{font-size:10.5px;border-radius:4px;padding:0 5px;line-height:1.6;font-weight:600}
+.sn-lv.h{background:color-mix(in srgb,var(--sc) 16%,var(--surface));color:var(--sc)}
+.sn-lv.m{background:var(--surface-2);color:var(--muted)}
+.sn-lv.l{color:var(--faint)}
+th.sn-th{cursor:pointer;user-select:none}
+th.sn-th:hover{color:var(--ink)}
+th.sn-th.on{color:var(--brand);font-weight:700}
+th.sn-th.on::after{content:" ▼";font-size:9px}
+td.sn-on{background:color-mix(in srgb,var(--brand) 5%,transparent)}
+tr.sn-detail td{background:var(--bg)!important;cursor:default;padding:14px 12px 16px}
+.sn-kpi{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-bottom:10px}
+.sn-kpi b{font:600 14px var(--f-num);color:var(--ink);margin-left:3px}
+.sn-three{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:12px}
+@media (max-width:640px){.sn-three{grid-template-columns:minmax(0,1fr)}}
+.sn-three div{border:1px solid var(--line);border-radius:10px;padding:8px 10px;background:var(--surface)}
+.sn-three small{display:block;font-size:11px;color:var(--muted)}
+.sn-three b{font:600 22px var(--f-num);color:var(--sc)}
+.sn-three em{display:block;font-style:normal;font-size:11px;color:var(--faint);line-height:1.45;margin-top:2px}
+.sn-dgrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:18px}
+@media (max-width:860px){.sn-dgrid{grid-template-columns:minmax(0,1fr)}}
+.sn-dbox{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px;min-width:0}
+.sn-dbox h4{margin:0 0 8px;font-size:13px}
+.sn-dbox h4 small{font-weight:400;color:var(--faint);margin-left:6px}
+.sn-cmp{display:grid;grid-template-columns:120px 1fr 40px;gap:5px 10px;align-items:center;font-size:12px}
+.sn-cmp .bars{display:flex;flex-direction:column;gap:3px}
+.sn-cmp .bars i{display:block;height:7px;border-radius:3px;background:var(--tc)}
+.sn-cmp .bars i.have{opacity:.35}
+.sn-cmp .g{font:600 12px var(--f-num);text-align:right}
+.sn-words{display:flex;flex-wrap:wrap;gap:5px}
+.sn-words span{font-size:12px;border:1px solid var(--line);border-radius:999px;padding:1px 9px;background:var(--surface)}
+.sn-words span.k{border-color:color-mix(in srgb,var(--tc) 50%,var(--line));background:color-mix(in srgb,var(--tc) 10%,var(--surface))}
+.sn-vids{list-style:none;margin:0;padding:0;font-size:12.5px}
+.sn-vids li{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 10px;padding:7px 0;border-bottom:1px solid var(--line)}
+.sn-vids li:last-child{border-bottom:0}
+.sn-vids li.first{background:color-mix(in srgb,var(--brand) 6%,transparent);margin:0 -8px;padding:8px}
+.sn-vl{color:inherit;text-decoration:none}.sn-vl:hover{color:var(--brand);text-decoration:underline}
+.sn-vids .t{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sn-vids .m{grid-column:1/-1;font-size:11px;color:var(--faint)}
+.sn-vids .hot{color:var(--down);font-weight:600}
+.sn-idea{margin-top:12px;padding:10px 12px;border-radius:10px;background:var(--warn-bg);font-size:12.5px;color:var(--warn-ink)}
+@media (max-width:760px){.sn-hide{display:none}}
 </style>
 
 <header class="top">
@@ -615,6 +688,11 @@ footer a:hover{color:var(--brand)}
     <div class="meta num" id="sc-meta"></div>
   </div>
   <div class="panel">
+    <div class="sn-sub" role="tablist">
+      <button type="button" data-t="vcp" aria-pressed="true">VCP ・ トレンドテンプレート</button>
+      <button type="button" data-t="sns" aria-pressed="false">SNS話題銘柄 <span class="sn-mem">会員限定</span></button>
+    </div>
+    <div id="vcp-pane">
     <div class="method">
       <div>
         <h3>VCP ・ トレンドテンプレート <span class="tag" id="vcp-sched"></span></h3>
@@ -635,6 +713,53 @@ footer a:hover{color:var(--brand)}
     <div class="foot">
       <b>データ</b>：ミネルヴィニ式トレンドテンプレート（ステージ2）＋VCP判定。米国は業績成長（EDGAR）、日本は増収15%以上・増益15%以上（EDINET）で絞り込み。<br>
       <b>優先度</b>＝買い点の近くでVCPが有効な銘柄を、VCP・買い点への近さ・RS・該当ソース数で採点（監視は空欄）。<b>Buy</b>＝買い点の上抜け。<b>VCP</b>＝収縮のタイトさ等（0〜100）。<b>ピボット</b>＝買い点までの距離。
+    </div>
+    </div>
+
+    <!-- SNS話題銘柄(日本株のみ・17_sns_buzz.py → sns_jp.json) -->
+    <div id="sns-pane" hidden>
+      <div class="method">
+        <div>
+          <h3>SNS話題銘柄 <span class="tag">毎日 17:00 JST 更新</span></h3>
+          <p style="margin:6px 0 0;color:var(--muted);max-width:70ch;font-size:13px">YouTubeで<b>いま急に検索されている日本株</b>のリストです。なぜ話題なのか（材料・決算・急騰）を解説動画ですぐ確かめて、<b>上がっている理由・調べられている理由</b>をつかみ、トレンドの初動をいち早く追いかけましょう。</p>
+        </div>
+        <div class="stats"><div><small>掲載</small><b id="sn-n">–</b></div><div><small>新規</small><b id="sn-new" class="down">–</b></div><div><small>穴場（70点以上）</small><b id="sn-open" style="color:var(--brand)">–</b></div></div>
+      </div>
+      <div id="sn-usnote" class="pdesc" hidden style="margin-top:12px">SNS話題銘柄は日本株だけです。画面上の「日本株」に切り替えると表示します。</div>
+      <div id="sn-main">
+        <div class="sn-sort" id="sn-sort">
+          <button type="button" data-k="att" style="--sc:var(--sn-att)"><b>注目度順</b><span>いちばん調べられている銘柄。話題の中心をつかむ</span></button>
+          <button type="button" data-k="sup" style="--sc:var(--sn-sup)"><b>解説が多い順</b><span>解説動画がそろっている銘柄。理由をすぐ確かめられる</span></button>
+          <button type="button" data-k="gap" style="--sc:var(--sn-gap)"><b>穴場順</b><span>話題なのに解説がまだ少ない銘柄。先回りできる</span></button>
+        </div>
+        <div class="ctlrow" style="gap:12px;margin:0 0 8px">
+          <button class="daybtn" id="sn-prev" type="button" aria-label="前の日">◁</button>
+          <input id="sn-day" type="range" min="0" max="0" value="0" step="1" style="flex:1;min-width:140px">
+          <button class="daybtn" id="sn-next" type="button" aria-label="次の日">▷</button>
+          <span id="sn-daylabel" class="num" style="font-weight:600;min-width:92px;text-align:right">–</span>
+          <span class="search"><input id="snsearch" type="text" placeholder="銘柄名・コード" autocomplete="off"><span class="x" id="snsearch-x" hidden>✕</span></span>
+        </div>
+        <div class="ctlrow">
+          <span style="font-size:12px;color:var(--muted)" id="sn-tflabel">みんなが知りたいこと</span>
+          <span class="seg" id="sn-tf"></span>
+        </div>
+        <div class="sn-legend" id="sn-legend"></div>
+        <div class="rank" style="max-height:none;overflow:visible"><table class="rk" id="sntbl">
+          <thead><tr>
+            <th>順位</th><th class="l">銘柄</th><th class="l">話題の理由</th><th class="l" id="sn-thtype">みんなが知りたいこと</th>
+            <th class="sn-th" data-k="att">注目度</th><th class="sn-th sn-hide" data-k="sup">解説動画の多さ</th><th class="sn-th" data-k="gap">穴場度</th><th class="sn-hide">継続</th>
+          </tr></thead>
+          <tbody id="sn-body"></tbody>
+        </table></div>
+        <div id="sn-lock"></div>
+      </div>
+      <div class="foot">
+        <b>注目度</b>（0〜100）＝どれだけ調べられているか。YouTube検索の予測候補に出る株の話の言葉の数（〇〇 決算／〇〇 なぜ など・40点）＋YouTube検索の伸び（Googleトレンド・30点）＋株価の動き（出来高・値動き・ストップ高・決算の近さ・30点）。検索の伸びが取れない銘柄は残り2つを100点に換算。<br>
+        <b>解説動画の多さ</b>（0〜100）＝直近7日に出た、その銘柄名を含む動画の本数（専用動画1本・複数銘柄のまとめ動画0.3本・70点）＋合計再生数（30点）。高いほど理由をすぐ確かめられます。<br>
+        <b>穴場度</b>（0〜100）＝注目度と「解説の少なさ（100 − 解説動画の多さ）」の両方が高いほど高い点。小さなチャンネルの専用動画が登録者数以上に再生されていれば最大15点を加点。<br>
+        <b>高・中・低</b>＝70点以上・40〜69点・40点未満。<b>赤字</b>＝新規掲載。<b>みんなが知りたいこと</b>＝予測候補の言葉と話題の理由から見た、調べられている内容の割合。<br>
+        データ：YouTube Data API・Google（予測候補・トレンド）・JPX決算発表予定日・株価。動画はYouTubeへのリンクです。動画の一覧は最新日だけ表示します。投資助言ではありません。
+      </div>
     </div>
   </div>
 </section>
