@@ -535,10 +535,11 @@ function drawVcp(){
   $('#vs-n').textContent=L.rows.length;$('#vs-new').textContent=LP?L.rows.filter(r=>!lpc.has(r.code)).length:'–';$('#vs-gone').textContent=LP?LP.rows.filter(r=>!lc.has(r.code)).length:'–';
   const idx=state.vcpIdx,cur=sess[idx],prev=idx>0?sess[idx-1]:null,prevCodes=new Set(prev?prev.rows.map(r=>r.code):[]),curCodes=new Set(cur.rows.map(r=>r.code)),prevMap=new Map(prev?prev.rows.map(r=>[r.code,r]):[]);
   $('#vcp-daylabel').textContent=cur.date;$('#vcp-prev').disabled=idx<=0;$('#vcp-next').disabled=idx>=sess.length-1;
-  let rows=cur.rows.map(r=>{const pr=prevMap.get(r.code);return Object.assign({},r,{_new:!!prev&&!prevCodes.has(r.code),_gone:false,_newprio:!!prev&&r.prio!=null&&!(pr&&pr.prio!=null)});});
+  let rows=cur.rows.map((r,i)=>{const pr=prevMap.get(r.code);return Object.assign({},r,{_ord:i,_new:!!prev&&!prevCodes.has(r.code),_gone:false,_newprio:!!prev&&r.prio!=null&&!(pr&&pr.prio!=null)});});
   if(prev)prev.rows.filter(r=>!curCodes.has(r.code)).forEach(r=>rows.push(Object.assign({},r,{_gone:true,vcp:null,dist:null,prio:null,buy:false})));
   const q=_nz(state.vcpQuery);if(q)rows=rows.filter(r=>_nz(r.name).includes(q)||_nz(r.code).includes(q));
-  const{k,dir}=state.vcpSort,sgn=dir==='asc'?1:-1,gv=r=>{if(k==='name'||k==='sector')return r[k==='name'?'code':'sector']||'';const v=(k==='mcap'||k==='listing')?(String(r[k]||'').includes('以上')?99:numOf(r[k])):r[k];return v==null?-1e9:v;};
+  // 優先度の並び=スクリーナーの並び(_ord)そのもの。Buy(VCP/FB)→買い場近辺→監視。FBのみBuyは優先度の数字が空欄でも最上段
+  const{k,dir}=state.vcpSort,sgn=dir==='asc'?1:-1,gv=r=>{if(k==='prio')return r._ord==null?-1e9:-r._ord;if(k==='name'||k==='sector')return r[k==='name'?'code':'sector']||'';const v=(k==='mcap'||k==='listing')?(String(r[k]||'').includes('以上')?99:numOf(r[k])):r[k];return v==null?-1e9:v;};
   rows.sort((a,b)=>{if(a._gone!==b._gone)return a._gone?1:-1;const x=gv(a),y=gv(b);return(x<y?-1:x>y?1:0)*sgn;});
   const nv=gateN('vcp',rows.length),hidden=rows.length-nv;rows=rows.slice(0,nv);
   const cols=vcpCols();
