@@ -545,7 +545,10 @@ function drawVcp(){
   head.innerHTML=cols.map(c=>c[0]==='tl'||c[0]==='val'?`<th style="text-align:center">${c[1]}</th>`:`<th class="${c[2]==='l'?'l':''} srt" data-k="${c[0]}">${c[1]}<span class="ar">${c[0]===k?(dir==='asc'?'▲':'▼'):''}</span></th>`).join('');
   const cell=(r,c)=>{
     if(c==='prio'){if(r._gone||r.prio==null)return'<span class="muted">–</span>';return`<span style="font-weight:600;${r._newprio?'background:var(--warn-bg);color:var(--warn-ink);padding:1px 7px;border-radius:5px':''}">${r.prio}</span>`;}
-    if(c==='buy')return(r.buy&&!r._gone)?'<span class="up" style="font-weight:700;font-size:11px">BUY</span>':'';
+    if(c==='buy'){if(!r.buy||r._gone)return'';
+      // buy_type: VCP=段階的な収縮からの上抜け / FB=レンジ(ボックス)からの上抜け。古い履歴は buy_type なし=VCP
+      if(r.buy_type==='FB')return'<span title="レンジブレイク：一定の値幅で持ち合ったあと、出来高を伴って上限を上に抜けた"><span class="up" style="font-weight:700;font-size:11px">BUY</span><span style="display:block;font-size:9.5px;font-weight:700;line-height:1.1;color:var(--brand)">レンジ</span></span>';
+      return'<span class="up" style="font-weight:700;font-size:11px" title="VCPブレイク：値動きの幅が段階的に縮んだあと、買い点を上に抜けた">BUY</span>';}
     if(c==='name')return`<span class="nm"><span class="t" title="${esc(r.name)}" style="${r._new?'color:var(--down)':''}">${esc(r.name)}</span><span class="cat num">${esc(r.code)}</span>${r._new?'<span class="vtag down">●新規</span>':''}${r._gone?'<span class="vtag muted">消失</span>':''}</span>`;
     if(c==='vcp')return r.vcp!=null?`<b>${r.vcp}</b>`:'<span class="muted">–</span>';
     if(c==='dist')return r.dist!=null?`<span class="${r.dist>=0&&r.dist<=2?'up':''}">${r.dist>=0?'+':''}${r.dist.toFixed(1)}%</span>`:'<span class="muted">–</span>';
