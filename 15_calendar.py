@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-Step 15: 決算・経済カレンダー(今日から2週間) → calendar.json
-  ダッシュボードの「今後3日の予定」と tools/calendar.html(一覧・検索)が読む。毎回の定時実行で作り直す。
+Step 15: 決算・経済カレンダー(過去2週間〜今日から2週間) → calendar.json
+  ダッシュボードの「今後3日の予定」と tools/calendar.html(一覧・検索。過去2週間は結果つき)が読む。毎回の定時実行で作り直す。
 
   経済イベント: Nasdaq economicevents API(米国・日本のみ)。英語名 → 日本語名・重要度(1〜3)は下の ECON 表で決める
                 (表に無い指標は出さない)。時刻は米東部時間で来るので日本時間に直す。
@@ -31,6 +31,7 @@ P = lambda f: os.path.join(BASE, f)
 OUT = P("calendar.json")
 JST, ET = ZoneInfo("Asia/Tokyo"), ZoneInfo("America/New_York")
 DAYS = 14
+PAST = 14                                        # 過去の日数(一覧ページの「過去2週間」)
 UA = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0 Safari/537.36",
       "Accept": "application/json, text/plain, */*", "Accept-Language": "en-US,en;q=0.9"}
 NQ = "https://api.nasdaq.com/api/calendar"
@@ -309,8 +310,13 @@ def fetch_us(start, end):
             if m:
                 mon = datetime.strptime(m.group(1), "%b").month
                 qe = f"{m.group(2)}/{mon}"
+            act = money(r.get("eps")) if d <= date.today() else None
+            try:
+                sup = round(float(r.get("surprise")), 1) if act is not None else None
+            except (TypeError, ValueError):
+                sup = None
             out.append([d.strftime("%Y-%m-%d"), slot, tk, (r.get("name") or "").strip(), qe,
-                        round(mc / 1e9, 3) if mc else None, eps])
+                        round(mc / 1e9, 3) if mc else None, eps, [], act, sup])
         time.sleep(0.3)
     if not ok:
         return None
@@ -357,34 +363,49 @@ def closed_days(start, end):
 
 def main():
     now = datetime.now(JST)
-    start = now.date()
-    end = start + timedelta(days=DAYS - 1)
+    today = now.date()
+    start = today - timedelta(days=PAST)
+    end = today + timedelta(days=DAYS - 1)
     prev = {}
     if os.path.exists(OUT):
         try:
             prev = json.load(open(OUT, encoding="utf-8"))
         except Exception:
             prev = {}
-    keep = lambda new, k: new if new is not None else [r for r in prev.get(k, []) if r[0] >= start.strftime("%Y-%m-%d")]
+    s0, s1 = start.strftime("%Y-%m-%d"), end.strftime("%Y-%m-%d")
+
+    def keep(new, k):
+        """取れた分＋取れなかった日(失敗・JPXの過去月ファイルが消えた日)は前回の calendar.json の分で埋める。"""
+        old = [r for r in prev.get(k, []) if s0 <= r[0] <= s1]
+        if new is None:
+            return old
+        got = {r[0] for r in new}
+        return sorted(new + [r for r in old if r[0] not in got], key=lambda r: r[0])
 
     print("経済イベント…"); eco = keep(fetch_econ(start, end), "eco")
     print("日本株の決算…"); jp = keep(fetch_jp(start, end), "jp")
     print("米国株の決算…"); us = keep(fetch_us(start, end), "us")
+    # Nasdaq は発表済みになると寄り前/引け後を返さない → 前回の calendar.json に残っている値を引き継ぐ
+    slot0 = {(r[0], r[2]): r[1] for r in prev.get("us", []) if r[1]}
+    for r in us:
+        if not r[1]:
+            r[1] = slot0.get((r[0], r[2]), "")
     fl = flags()
     for r in jp:
         r[6:] = [fl["jp"].get(r[1], [])]
     for r in us:
-        r[7:] = [fl["us"].get(r[2], [])]
+        r += [None] * (10 - len(r))               # 前回分(実績の列が無い古い形)もそろえる
+        r[7] = fl["us"].get(r[2], [])
 
-    out = {"updated": now.strftime("%Y-%m-%d %H:%M"), "start": start.strftime("%Y-%m-%d"),
+    out = {"updated": now.strftime("%Y-%m-%d %H:%M"), "start": today.strftime("%Y-%m-%d"), "past_start": s0,
            "days": closed_days(start, end), "eco": eco, "jp": jp, "us": us,
            "cols": {"eco": ["date_jst", "time_jst", "country", "name", "importance", "previous", "forecast", "actual"],
                     "jp": ["date", "code", "name", "kind", "mcap_oku_yen", "sector", "flags"],
-                    "us": ["date_et", "slot", "ticker", "name", "quarter_end", "mcap_bil_usd", "eps_forecast", "flags"]},
+                    "us": ["date_et", "slot", "ticker", "name", "quarter_end", "mcap_bil_usd", "eps_forecast", "flags", "eps_actual", "surprise_pct"]},
            "src": "経済=Nasdaq / 日本株=JPX決算発表予定日 / 米国株=Nasdaq"}
     with open(OUT, "w", encoding="utf-8") as f:
         json.dump(out, f, ensure_ascii=False, separators=(",", ":"))
-    print(f"calendar.json: 経済{len(eco)} 日本{len(jp)} 米国{len(us)}  ({start}〜{end})")
+    print(f"calendar.json: 経済{len(eco)} 日本{len(jp)} 米国{len(us)}  ({start}〜{end}・今日={today})")
 
 
 if __name__ == "__main__":

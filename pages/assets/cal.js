@@ -2,9 +2,9 @@
    データ: calendar.json(15_calendar.py が定時実行で作る)
      eco: [日付(日本時間), 時刻(日本時間), 'jp'|'us', 指標名, 重要度1-3, 前回, 予想, 結果]
      jp : [日付, コード, 社名, 区分, 時価総額(億円), 業種, 印[]]
-     us : [日付(米国の現地日付), 'BMO'|'AMC'|'', ティッカー, 社名, 四半期末, 時価総額(十億ドル), EPS予想, 印[]]
+     us : [日付(米国の現地日付), 'BMO'|'AMC'|'', ティッカー, 社名, 四半期末, 時価総額(十億ドル), EPS予想, 印[], EPS実績, サプライズ%]
    EarnCal.mountBlock(箱, {root, list})  … ダッシュボード(3列×3日・各日4件＋ほか○件の展開)
-   EarnCal.mountList(箱, {root})         … 一覧ページ(経済→日本→米国のタブ・14日・検索)
+   EarnCal.mountList(箱, {root})         … 一覧ページ(経済→日本→米国のタブ・今後14日／過去14日の切り替え・検索)
    日付は日本時間の今日から暦どおり(土日も表示)。 */
 (function(){
   const COLS=['eco','jp','us'];
@@ -25,7 +25,8 @@
   const md=s=>(+s.slice(5,7))+'/'+(+s.slice(8,10));
   const dlabel=s=>`${md(s)}(${wd(s)})`;
   const days=n=>{const t=todayJST();return Array.from({length:n},(_,i)=>addDay(t,i));};
-  const rel=s=>['今日','明日','明後日'][Math.round((Date.parse(s)-Date.parse(todayJST()))/864e5)]||'';
+  const pastDays=n=>{const t=todayJST();return Array.from({length:n},(_,i)=>addDay(t,i-n));};
+  const rel=s=>({'-1':'昨日',0:'今日',1:'明日',2:'明後日'})[Math.round((Date.parse(s)-Date.parse(todayJST()))/864e5)]||'';
 
   /* ---------- 書式 ---------- */
   const capJP=v=>v==null?'–':v>=10000?(v/10000).toFixed(v>=100000?0:1)+'兆円':Math.round(v).toLocaleString('ja-JP')+'億円';
@@ -37,6 +38,7 @@
   const imp=n=>`<span class="ek-imp${n>=3?' hi':''}" title="重要度${n}">${[1,2,3].map(i=>`<i class="${i<=n?'on':''}"></i>`).join('')}</span>`;
   const FL={vcp:['vcp','VCP','当サイトのスクリーニング(VCP)に該当'],note:['note','note','note で紹介済み']};
   const flags=f=>(f||[]).map(x=>FL[x]?`<span class="ek-flag ${FL[x][0]}" title="${FL[x][2]}">${FL[x][1]}</span>`:'').join('');
+  const sup=v=>v==null?'<span class="muted">–</span>':`<span class="${v>0?'pos':v<0?'neg':''}">${v>0?'+':v<0?'−':''}${Math.abs(v).toFixed(1)}%</span>`;
   const kindCls=k=>k==='本決算'?' fy':'';
   const hl=(s,q)=>{s=String(s??'');if(!q)return esc(s);const i=nz(s).indexOf(q);return i<0?esc(s):esc(s.slice(0,i))+'<mark>'+esc(s.slice(i,i+q.length))+'</mark>'+esc(s.slice(i+q.length));};
 
@@ -69,7 +71,7 @@
   }
 
   /* ---------- 表(展開・一覧で共通) ---------- */
-  function table(col,rows,q,withDate,limit){
+  function table(col,rows,q,withDate,limit,past){
     let th,row;
     if(col==='eco'){
       th=`<tr><th class="l">時刻</th><th class="l">国</th><th class="l">重要度</th><th class="l">イベント</th><th>前回</th><th>予想</th><th>結果</th></tr>`;
@@ -78,8 +80,8 @@
       th=`<tr><th class="l">銘柄</th><th class="l">区分</th><th class="l">業種</th><th>時価総額</th><th class="l">印</th></tr>`;
       row=r=>`<tr data-mk="jp" data-code="${esc(r[1])}" data-name="${esc(r[2])}" data-sub="${esc(r[5])}"><td><b class="ek-nm">${hl(r[2],q)}</b><span class="ek-sc">${hl(r[1],q)}</span></td><td><span class="ek-kind${kindCls(r[3])}">${esc(r[3])}</span></td><td>${hl(r[5],q)}</td><td class="num">${capJP(r[4])}</td><td>${flags(r[6])}</td></tr>`;
     }else{
-      th=`<tr><th class="l">タイミング</th><th class="l">銘柄</th><th class="l">四半期末</th><th>時価総額</th><th>EPS予想</th><th class="l">印</th></tr>`;
-      row=r=>`<tr data-mk="us" data-code="${esc(r[2])}" data-name="${esc(r[3])}" data-sub=""><td>${slotJ(r[1])}${slotJST(r[1])?` <span class="ek-sc">(${slotJST(r[1])})</span>`:''}</td><td><b class="ek-nm">${hl(r[3],q)}</b><span class="ek-sc">${hl(r[2],q)}</span></td><td class="num">${esc(r[4])||'–'}</td><td class="num">${capUS(r[5])}</td><td class="num">${eps(r[6])}</td><td>${flags(r[7])}</td></tr>`;
+      th=`<tr><th class="l">タイミング</th><th class="l">銘柄</th><th class="l">四半期末</th><th>時価総額</th><th>EPS予想</th>${past?'<th>EPS実績</th><th>サプライズ</th>':''}<th class="l">印</th></tr>`;
+      row=r=>`<tr data-mk="us" data-code="${esc(r[2])}" data-name="${esc(r[3])}" data-sub=""><td>${slotJ(r[1])}${slotJST(r[1])?` <span class="ek-sc">(${slotJST(r[1])})</span>`:''}</td><td><b class="ek-nm">${hl(r[3],q)}</b><span class="ek-sc">${hl(r[2],q)}</span></td><td class="num">${esc(r[4])||'–'}</td><td class="num">${capUS(r[5])}</td><td class="num">${eps(r[6])}</td>${past?`<td class="num"><b>${eps(r[8])}</b></td><td class="num">${sup(r[9])}</td>`:''}<td>${flags(r[7])}</td></tr>`;
     }
     const nc=(th.match(/<th/g)||[]).length;
     let body='',last=null;
@@ -174,41 +176,45 @@
   function mountList(box,opt){
     if(typeof box==='string')box=document.getElementById(box);if(!box)return;
     const root=(opt&&opt.root)||'../';
-    const st={tab:'eco',day:'all',q:'',cap:'all',flag:false,lim:PAGE};
-    // #jp-2026-10-07 のように開くと、そのタブ・日付を選んだ状態にする
-    const m=(location.hash||'').match(/^#(eco|jp|us)(?:-(\d{4}-\d{2}-\d{2}))?$/);
-    if(m){st.tab=m[1];if(m[2])st.day=m[2];}
+    const st={tab:'eco',span:'next',day:'all',q:'',cap:'all',flag:false,lim:PAGE};
+    // #jp-2026-10-07 のように開くと、そのタブ・日付を選んだ状態にする(過去の日付なら「過去2週間」で開く)。#jp-past=過去2週間
+    const m=(location.hash||'').match(/^#(eco|jp|us)(?:-(past|\d{4}-\d{2}-\d{2}))?$/);
+    if(m){st.tab=m[1];if(m[2]==='past')st.span='past';else if(m[2]){st.day=m[2];if(m[2]<todayJST())st.span='past';}}
     box.innerHTML='<div class="phint" style="padding:16px 0">読み込み中…</div>';
     load(root).then(D=>{
       if(!D){box.innerHTML='<div class="phint" style="padding:16px 0">予定データを読み込めませんでした。</div>';return;}
-      const ds=days(14);
-      if(st.day!=='all'&&!ds.includes(st.day))st.day='all';
+      const DS={next:days(14),past:pastDays(14)};
+      if(st.day!=='all'&&!DS[st.span].includes(st.day))st.day='all';
       const meta=document.getElementById('cal-meta');if(meta)meta.textContent='更新 '+(D.updated||'');
       const CAPS={eco:[['all','すべて'],['2','●●以上'],['3','●●●のみ']],jp:[['all','すべて'],['300','300億円以上'],['1000','1000億円以上']],us:[['all','すべて'],['1','$1B以上'],['10','$10B以上']]};
       const render=()=>{
-        const c=st.tab,src=(D[c]||[]).filter(r=>ds.includes(r[0]));
+        const c=st.tab,past=st.span==='past',ds=DS[st.span],src=(D[c]||[]).filter(r=>ds.includes(r[0]));
         const cnt=d=>src.filter(r=>r[0]===d).length,max=Math.max(1,...ds.map(cnt));
         const q=nz(st.q.trim());
         let rows=src.filter(r=>(st.day==='all'||r[0]===st.day)&&match(c,r,q));
         if(st.cap!=='all')rows=rows.filter(r=>c==='eco'?r[4]>=+st.cap:(capOf(c,r)??-1)>=+st.cap);
         if(st.flag&&c!=='eco')rows=rows.filter(r=>(flOf(c,r)||[]).length);
         rows=sortRows(c,rows,'cap');
+        if(past)rows.sort((a,b)=>b[0].localeCompare(a[0]));   // 過去は新しい日から(同じ日の中の並びはそのまま)
         const dayBtn=d=>{const n=cnt(d),h=(D.days||[]).find(x=>x.d===d)||{},hol=c==='jp'?h.jp_hol:c==='us'?h.us_hol:'',rl=rel(d);
           return `<button type="button" class="ek-dbtn${isWE(d)?' we':''}" data-d="${d}" aria-pressed="${st.day===d}"${hol?` title="${esc(hol)}"`:''}><small>${rl||wd(d)+'曜'}</small><b class="num">${md(d)}</b><span class="ek-bar"><i style="width:${n/max*100}%"></i></span><small class="num">${hol?'休場':n+'件'}</small></button>`;};
-        box.innerHTML=`<div class="ek-ltabs" role="group" aria-label="種類">${COLS.map(k=>`<button type="button" data-t="${k}" aria-pressed="${st.tab===k}">${TITLE[k]}<span class="c num">${(D[k]||[]).filter(r=>ds.includes(r[0])).length}</span></button>`).join('')}</div>
-          <div class="ek-days"><button type="button" class="ek-dbtn" data-d="all" aria-pressed="${st.day==='all'}"><small>期間</small><b>2週間</b><span class="ek-bar"><i style="width:100%"></i></span><small class="num">${src.length}件</small></button>${ds.map(dayBtn).join('')}</div>
+        box.innerHTML=`<div class="ek-span"><div class="seg" data-g="span" role="group" aria-label="期間"><button type="button" data-s="past" aria-pressed="${past}">過去2週間</button><button type="button" data-s="next" aria-pressed="${!past}">今後2週間</button></div>
+            <span class="phint">${past?'発表済みの結果（経済＝結果、米国株＝EPS実績・サプライズ）つき。新しい日から順に表示':'今日から2週間の予定'}</span></div>
+          <div class="ek-ltabs" role="group" aria-label="種類">${COLS.map(k=>`<button type="button" data-t="${k}" aria-pressed="${st.tab===k}">${TITLE[k]}<span class="c num">${(D[k]||[]).filter(r=>ds.includes(r[0])).length}</span></button>`).join('')}</div>
+          <div class="ek-days"><button type="button" class="ek-dbtn" data-d="all" aria-pressed="${st.day==='all'}"><small>期間</small><b>${past?'過去':'今後'}2週間</b><span class="ek-bar"><i style="width:100%"></i></span><small class="num">${src.length}件</small></button>${ds.map(dayBtn).join('')}</div>
           <div class="ek-filters">${searchBox('ek-lq',c==='eco'?'指標名（例：雇用統計・CPI・日銀）':c==='jp'?'社名・コード・業種':'社名・ティッカー',st.q)}
             <div class="seg" data-g="cap">${CAPS[c].map(([k,n])=>`<button type="button" data-c="${k}" aria-pressed="${st.cap===k}">${n}</button>`).join('')}</div>
             ${c==='eco'?'':`<label class="ek-chk"><input type="checkbox" id="ek-lflag"${st.flag?' checked':''}>印のある銘柄だけ</label>`}
             <span class="phint">${rows.length}件${q?` ・「${esc(st.q.trim())}」で検索中`:''}</span></div>
-          <div class="ek-tbl ek-tall">${table(c,rows,q,true,st.lim)}</div>`;
+          <div class="ek-tbl ek-tall">${table(c,rows,q,true,st.lim,past)}</div>`;
         const inp=box.querySelector('#ek-lq');
         inp.addEventListener('input',()=>{st.q=inp.value;st.lim=PAGE;keepFocus('ek-lq',render);});
         const fl=box.querySelector('#ek-lflag');if(fl)fl.addEventListener('change',()=>{st.flag=fl.checked;st.lim=PAGE;render();});
-        try{history.replaceState(null,'','#'+c+(st.day!=='all'?'-'+st.day:''));}catch(e){}
+        try{history.replaceState(null,'','#'+c+(st.day!=='all'?'-'+st.day:past?'-past':''));}catch(e){}
       };
       box.addEventListener('click',e=>{
         const t=e.target;
+        const sp=t.closest('[data-g="span"] button');if(sp){st.span=sp.dataset.s;st.day='all';st.lim=PAGE;render();return;}
         const tb=t.closest('.ek-ltabs button');if(tb){st.tab=tb.dataset.t;st.cap='all';st.lim=PAGE;render();return;}
         const db=t.closest('.ek-dbtn');if(db){st.day=db.dataset.d;st.lim=PAGE;render();return;}
         const cb=t.closest('[data-g="cap"] button');if(cb){st.cap=cb.dataset.c;st.lim=PAGE;render();return;}

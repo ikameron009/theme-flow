@@ -11,6 +11,7 @@
 /* 決算・経済カレンダー(一覧)。描画は ../assets/cal.js、見た目は site.css の .ek-*。データは ../calendar.json */
 .jpbadge{font-size:12px;font-weight:700;color:var(--brand);background:var(--brand-soft);border-radius:999px;padding:3px 11px;white-space:nowrap}
 .lead{margin:0 0 14px;color:var(--ink-2);max-width:80ch;font-size:13.5px}
+.ek-span{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 12px}
 </style>
 <script src="../assets/card.js?v=20261016us"></script><script src="../assets/jr.js?v=20261009"></script>
 </head><body>
@@ -57,7 +58,7 @@
     <div><div class="eyebrow">Tools · Calendar</div><h2>決算・経済カレンダー</h2></div>
     <div class="meta num" id="cal-meta"></div>
   </div>
-  <p class="lead">今日から2週間の、日米の経済イベントと決算発表の予定です。経済イベントの時刻は日本時間、米国株の決算は米国の現地日付です（寄り前＝日本の夜、引け後＝日本の翌朝）。銘柄を押すとチャートを表示します。</p>
+  <p class="lead">日米の経済イベントと決算発表の予定です（今後2週間）。「過去2週間」に切り替えると、発表済みの結果（経済指標の結果・米国株のEPS実績とサプライズ）も見られます。経済イベントの時刻は日本時間、米国株の決算は米国の現地日付です（寄り前＝日本の夜、引け後＝日本の翌朝）。銘柄を押すとチャートを表示します。</p>
   <div class="panel" id="cal-list"></div>
   <div class="foot"><b>出所</b>：経済イベント・米国株の決算＝Nasdaq、日本株の決算＝JPX「決算発表予定日」。日本株の決算は発表日のみで、時刻は載せていません。時価総額は直近の終値から算出（日本株）。予定は各社の都合で変わることがあります。<br>
     <b>印</b>：VCP＝当サイトのスクリーニング（VCP）に該当 ・ note＝noteで紹介済み。<b>重要度</b>：●●●＝相場が大きく動きやすい（赤）／●●＝注目／●＝参考。</div>
@@ -71,7 +72,7 @@
   </div>
 </footer>
 
-<script src="../assets/cal.js?v=20261007"></script>
+<script src="../assets/cal.js?v=20261023"></script>
 <script>EarnCal.mountList('cal-list',{root:'../'});</script>
 <script src="../assets/help.js"></script>
 </body></html>
