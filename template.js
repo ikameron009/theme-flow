@@ -519,9 +519,14 @@ const VCP_DATA={};let VCP_VAR='vcp';
 const vcpKey=mk=>VCP_VAR+'_'+mk;
 function loadVcp(mkt){const key=vcpKey(mkt);if(VCP_DATA[key]!=null)return Promise.resolve(VCP_DATA[key]);
   return fetch(key+'.json?cb='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.json():{sessions:[]}).catch(()=>({sessions:[]})).then(j=>{VCP_DATA[key]=j;return j;});}
-function vcpCols(){return [['prio','優先度','r'],['name','銘柄','l'],['sector','セクター','l'],['mcap','時価総額','r'],['listing','上場','r'],['buy','Buy','c'],['vcp','VCP','r'],['dist','ピボット','r'],...(VCP_VAR==='vcp2'?[['order','注文（翌営業日）','l']]:[]),['rs','RS','r'],['streak','継続','r'],['tl','最近の掲載','c'],['val','バリュエーション','c']];}
+function vcpCols(){return [['prio','優先度','r'],...(VCP_VAR==='vcp2'?[['pts','優先点','r']]:[]),['name','銘柄','l'],['sector','セクター','l'],['mcap','時価総額','r'],['listing','上場','r'],['buy','Buy','c'],['vcp','VCP','r'],['dist','ピボット','r'],...(VCP_VAR==='vcp2'?[['order','注文（翌営業日）','l']]:[]),['rs','RS','r'],['streak','継続','r'],['tl','最近の掲載','c'],['val','バリュエーション','c']];}
 // 注文列(VCP2のみ): スクリーナー(vcp_check.make_order)が出す {ok,trig,lim,stop,risk,why}。値段は配当調整前の実際の株価
-const VCP_ORDER_TIP='引けの時点でピボット待ちのVCPだけ。買い＝ピボットを上に抜けたら逆指値で買う（ピボット+3%を超えて始まったら買わない）。損切り＝最後の締まりの安値を下回ったら逆指値で売る。ピボットから損切りまで10%を超える形と、直前の出来高が多い形は見送り。';
+const VCP_ORDER_TIP='引けの時点でピボット待ちのVCPだけ。買い＝ピボットを上に抜けたら逆指値で買う（ピボット+3%を超えて始まったら買わない）。損切り＝最後の締まりの安値を下回ったら逆指値で売る。直前の出来高が多い形は見送り。ピボットから損切りまで10%を超える形は、日本株は見送り・米国株は買う。米国株は新高値−新安値がマイナスの日は買い控え。';
+const VCP_PTS_TIP='同じ日に注文が重なったときの順番。注文できる銘柄を上に、優先点の高い順（同点はRS順）。行にマウスを置くと内訳が出ます。';
+// 市場の広がり(VCP2): スクリーナーが新高値・新安値の数を出す。米国株は差がマイナスなら翌営業日は買い控え
+function vcpBreadth(b,mk){if(!b||b.nhnl==null)return '';const d=(b.nhnl*100).toFixed(1);
+  const st=mk==='us'?(b.gate?'<b class="up">新規の買いOK</b>':'<b class="down">買い控え（新しく買わない）</b>'):'<span class="muted">日本株は買い控えなし</span>';
+  return ` 市場の広がり：新高値 ${b.nh} ・ 新安値 ${b.nl}（差 ${b.nhnl>=0?'+':''}${d}%）→ ${st}`;}
 function vcpOrderCell(o,mk){
   const P=v=>mk==='us'?'$'+Number(v).toFixed(2):Number(v).toLocaleString('ja-JP')+'円';
   const rv=Number(o.risk),rk=rv>10&&rv<10.05?rv.toFixed(2):rv.toFixed(1);   // 10%をわずかに超えた見送りが「10.0%」に見えないように
@@ -536,15 +541,16 @@ function drawVcp(){
   const mk=market,D=VCP_DATA[vcpKey(mk)],head=$('#vcp-head'),body=$('#vcp-body'),slider=$('#vcp-day'),sess=(D&&D.sessions)?D.sessions:[];
   const v2=VCP_VAR==='vcp2';
   $('#vcp-sched').textContent=SCHED[mk];$('#vcp-title').textContent=v2?'VCP2 ・ 翌営業日の注文つき':'VCP ・ トレンドテンプレート';$('#vcp2-foot').hidden=!v2;
-  $('#vcp-lead').textContent=(mk==='us'?'上昇トレンドの条件（トレンドテンプレート）を満たし、値動きの幅が段階的に縮んでいる米国株。業績の成長条件つき。':'上昇トレンドの条件（トレンドテンプレート）を満たし、値動きの幅が段階的に縮んでいる日本株。増収15%以上・増益15%以上の条件つき。')+(v2?'VCPに、翌営業日の逆指値注文（買い・損切り・見送り）を加えたものです。':'');
+  const _lead=(mk==='us'?'上昇トレンドの条件（トレンドテンプレート）を満たし、値動きの幅が段階的に縮んでいる米国株。業績の成長条件つき。':'上昇トレンドの条件（トレンドテンプレート）を満たし、値動きの幅が段階的に縮んでいる日本株。増収15%以上・増益15%以上の条件つき。')+(v2?'VCPに、翌営業日の逆指値注文（買い・損切り・見送り）を加えたものです。':'');
   $('#sc-meta').textContent=D&&D.updated?`${MKNAME[mk]} ・ ${D.updated}まで`:'';
-  if(!sess.length){head.innerHTML='';body.innerHTML='<tr><td style="padding:16px;color:var(--faint)">データを準備中です。</td></tr>';['#vs-n','#vs-new','#vs-gone'].forEach(s=>$(s).textContent='–');
+  if(!sess.length){$('#vcp-lead').textContent=_lead;head.innerHTML='';body.innerHTML='<tr><td style="padding:16px;color:var(--faint)">データを準備中です。</td></tr>';['#vs-n','#vs-new','#vs-gone'].forEach(s=>$(s).textContent='–');
     $('#vcp-daylabel').textContent='–';slider.max=0;$('#vcp-prev').disabled=true;$('#vcp-next').disabled=true;$('#vcp-lock').innerHTML='';return;}
   if(state.vcpIdx==null||state.vcpIdx>sess.length-1)state.vcpIdx=sess.length-1;
   slider.max=sess.length-1;slider.value=state.vcpIdx;
   const L=sess[sess.length-1],LP=sess.length>1?sess[sess.length-2]:null,lc=new Set(L.rows.map(r=>r.code)),lpc=new Set(LP?LP.rows.map(r=>r.code):[]);
   $('#vs-n').textContent=L.rows.length;$('#vs-new').textContent=LP?L.rows.filter(r=>!lpc.has(r.code)).length:'–';$('#vs-gone').textContent=LP?LP.rows.filter(r=>!lc.has(r.code)).length:'–';
   const idx=state.vcpIdx,cur=sess[idx],prev=idx>0?sess[idx-1]:null,prevCodes=new Set(prev?prev.rows.map(r=>r.code):[]),curCodes=new Set(cur.rows.map(r=>r.code)),prevMap=new Map(prev?prev.rows.map(r=>[r.code,r]):[]);
+  $('#vcp-lead').innerHTML=esc(_lead)+(v2?vcpBreadth(cur.breadth,mk):'');
   $('#vcp-daylabel').textContent=cur.date;$('#vcp-prev').disabled=idx<=0;$('#vcp-next').disabled=idx>=sess.length-1;
   let rows=cur.rows.map((r,i)=>{const pr=prevMap.get(r.code);return Object.assign({},r,{_ord:i,_new:!!prev&&!prevCodes.has(r.code),_gone:false,_newprio:!!prev&&r.prio!=null&&!(pr&&pr.prio!=null)});});
   if(prev)prev.rows.filter(r=>!curCodes.has(r.code)).forEach(r=>rows.push(Object.assign({},r,{_gone:true,vcp:null,dist:null,prio:null,buy:false})));
@@ -554,7 +560,7 @@ function drawVcp(){
   rows.sort((a,b)=>{if(a._gone!==b._gone)return a._gone?1:-1;const x=gv(a),y=gv(b);return(x<y?-1:x>y?1:0)*sgn;});
   const nv=gateN('vcp',rows.length),hidden=rows.length-nv;rows=rows.slice(0,nv);
   const cols=vcpCols();
-  head.innerHTML=cols.map(c=>c[0]==='order'?`<th class="l" title="${esc(VCP_ORDER_TIP)}">${c[1]}</th>`:c[0]==='tl'||c[0]==='val'?`<th style="text-align:center">${c[1]}</th>`:`<th class="${c[2]==='l'?'l':''} srt" data-k="${c[0]}">${c[1]}<span class="ar">${c[0]===k?(dir==='asc'?'▲':'▼'):''}</span></th>`).join('');
+  head.innerHTML=cols.map(c=>c[0]==='order'?`<th class="l" title="${esc(VCP_ORDER_TIP)}">${c[1]}</th>`:c[0]==='pts'?`<th class="srt" data-k="pts" title="${esc(VCP_PTS_TIP)}">${c[1]}<span class="ar">${k==='pts'?(dir==='asc'?'▲':'▼'):''}</span></th>`:c[0]==='tl'||c[0]==='val'?`<th style="text-align:center">${c[1]}</th>`:`<th class="${c[2]==='l'?'l':''} srt" data-k="${c[0]}">${c[1]}<span class="ar">${c[0]===k?(dir==='asc'?'▲':'▼'):''}</span></th>`).join('');
   const cell=(r,c)=>{
     if(c==='prio'){if(r._gone||r.prio==null)return'<span class="muted">–</span>';return`<span style="font-weight:600;${r._newprio?'background:var(--warn-bg);color:var(--warn-ink);padding:1px 7px;border-radius:5px':''}">${r.prio}</span>`;}
     if(c==='buy'){if(!r.buy||r._gone)return'';
@@ -565,6 +571,7 @@ function drawVcp(){
     if(c==='vcp')return r.vcp!=null?`<b>${r.vcp}</b>`:'<span class="muted">–</span>';
     if(c==='dist')return r.dist!=null?`<span class="${r.dist>=0&&r.dist<=2?'up':''}">${r.dist>=0?'+':''}${r.dist.toFixed(1)}%</span>`:'<span class="muted">–</span>';
     if(c==='order')return(r._gone||!r.order)?'<span class="muted">–</span>':vcpOrderCell(r.order,mk);
+    if(c==='pts')return(r._gone||r.pts==null)?'<span class="muted">–</span>':`<span title="${esc((r.pts_why||[]).join(' / ')||'該当なし')}" style="font-weight:600">${r.pts>0?'+':''}${r.pts}</span>`;
     if(c==='rs')return r.rs??'';if(c==='mcap')return r.mcap?(typeof r.mcap==='number'?'$'+r.mcap+'B':esc(r.mcap)):'<span class="muted">–</span>';
     if(c==='sector')return `<span class="cat" style="font-size:11.5px">${esc(r.sector||'')}</span>`;
     if(c==='listing')return r.listing?(/[A-Za-z年]/.test(String(r.listing))?esc(String(r.listing).replace(/^(\d+)M$/,'$1か月')):esc(r.listing)+'年'):'<span class="muted">–</span>';
