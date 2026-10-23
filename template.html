@@ -692,12 +692,13 @@ tr.sn-detail td{background:var(--bg)!important;cursor:default;padding:14px 12px 
   <div class="panel">
     <div class="sn-sub" role="tablist">
       <button type="button" data-t="vcp" aria-pressed="true">VCP ・ トレンドテンプレート</button>
+      <button type="button" data-t="vcp2" aria-pressed="false">VCP2</button>
       <button type="button" data-t="sns" aria-pressed="false">SNS話題銘柄 <span class="sn-mem">会員限定</span></button>
     </div>
     <div id="vcp-pane">
     <div class="method">
       <div>
-        <h3>VCP ・ トレンドテンプレート <span class="tag" id="vcp-sched"></span></h3>
+        <h3><span id="vcp-title">VCP ・ トレンドテンプレート</span> <span class="tag" id="vcp-sched"></span></h3>
         <p style="margin:6px 0 0;color:var(--muted);max-width:66ch;font-size:13px" id="vcp-lead"></p>
       </div>
       <div class="stats"><div><small>該当</small><b id="vs-n">–</b></div><div><small>新規</small><b id="vs-new" class="down">–</b></div><div><small>消失</small><b id="vs-gone" style="color:var(--faint)">–</b></div></div>
@@ -715,6 +716,7 @@ tr.sn-detail td{background:var(--bg)!important;cursor:default;padding:14px 12px 
     <div class="foot">
       <b>データ</b>：ミネルヴィニ式トレンドテンプレート（ステージ2）＋VCP判定。米国は業績成長（EDGAR）、日本は増収15%以上・増益15%以上（EDINET）で絞り込み。<br>
       <b>優先度</b>＝買い点の近くでVCPが有効な銘柄を、VCP・買い点への近さ・RS・該当ソース数で採点（監視は空欄）。<b>Buy</b>＝買い点の上抜け（「レンジ」付きは持ち合いの上限を出来高を伴って上抜けたもの。VCP列は空欄）。<b>VCP</b>＝収縮のタイトさ等（0〜100）。<b>ピボット</b>＝買い点までの距離。
+      <span id="vcp2-foot" hidden><br><b>注文（翌営業日）</b>＝引けの時点でピボット待ちのVCPだけ。買い＝ピボット+0.1%以上で逆指値（ピボット+3%まで）、損切り＝最後の締まりの安値。ピボットから損切りまで10%を超える形と、直前の出来高が多い形は見送り。値段は配当調整前の実際の株価です。</span>
     </div>
     </div>
 

@@ -66,7 +66,8 @@ with open(dst, "w", encoding="utf-8") as f:
 # 銘柄カードの「株価・勢い」3行(13_tool_research.py が作る card_{jp,us}.json)も無料なので公開側
 # 読めないJSON(gitの衝突印の混入など)は公開しない=ビルドを止めて前回の公開を残す(2026-10-13 vcp_jp.json 事故)
 # SNS話題銘柄(17_sns_buzz.py が作る sns_jp.json)も表示時に読み込む
-for fn in ("vcp_us.json", "vcp_jp.json", "note_track.json", "calendar.json", "card_jp.json", "card_us.json", "sns_jp.json"):
+# VCP2(翌営業日の注文条件つき・vcp-screener が vcp2_{us,jp}.json を送る)も同じ
+for fn in ("vcp_us.json", "vcp_jp.json", "vcp2_us.json", "vcp2_jp.json", "note_track.json", "calendar.json", "card_jp.json", "card_us.json", "sns_jp.json"):
     if os.path.exists(P(fn)):
         try:
             json.load(open(P(fn), encoding="utf-8"))
