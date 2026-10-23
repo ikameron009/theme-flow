@@ -517,7 +517,15 @@ function drawStockSearch(){
 const VCP_DATA={us:null,jp:null};
 function loadVcp(mkt){if(VCP_DATA[mkt]!==null)return Promise.resolve(VCP_DATA[mkt]);
   return fetch('vcp_'+mkt+'.json?cb='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.json():{sessions:[]}).catch(()=>({sessions:[]})).then(j=>{VCP_DATA[mkt]=j;return j;});}
-function vcpCols(){return [['prio','優先度','r'],['name','銘柄','l'],['sector','セクター','l'],['mcap','時価総額','r'],['listing','上場','r'],['buy','Buy','c'],['vcp','VCP','r'],['dist','ピボット','r'],['rs','RS','r'],['streak','継続','r'],['tl','最近の掲載','c'],['val','バリュエーション','c']];}
+function vcpCols(){return [['prio','優先度','r'],['name','銘柄','l'],['sector','セクター','l'],['mcap','時価総額','r'],['listing','上場','r'],['buy','Buy','c'],['vcp','VCP','r'],['dist','ピボット','r'],['order','注文（翌営業日）','l'],['rs','RS','r'],['streak','継続','r'],['tl','最近の掲載','c'],['val','バリュエーション','c']];}
+// 注文列: スクリーナー(vcp_check.make_order)が出す {ok,trig,lim,stop,risk,why}。値段は配当調整前の実際の株価
+const VCP_ORDER_TIP='引けの時点でピボット待ちのVCPだけ。買い＝ピボットを上に抜けたら逆指値で買う（ピボット+3%を超えて始まったら買わない）。損切り＝最後の締まりの安値を下回ったら逆指値で売る。ピボットから損切りまで10%を超える形と、直前の出来高が多い形は見送り。';
+function vcpOrderCell(o,mk){
+  const P=v=>mk==='us'?'$'+Number(v).toFixed(2):Number(v).toLocaleString('ja-JP')+'円';
+  const rv=Number(o.risk),rk=rv>10&&rv<10.05?rv.toFixed(2):rv.toFixed(1);   // 10%をわずかに超えた見送りが「10.0%」に見えないように
+  const tip=`逆指値で${P(o.trig)}以上になったら、${P(o.lim)}までの指値で買い（${P(o.lim)}より上で始まったら買わない）。損切りは、逆指値で${P(o.stop)}以下になったら売り（ピボットから−${rk}%）。`;
+  if(!o.ok)return `<span class="vord muted" title="${esc('見送り（'+o.why+'）。参考までに条件は：'+tip)}">見送り<small>${esc(o.why)}${String(o.why).includes('10%')?`（−${rk}%）`:''}</small></span>`;
+  return `<span class="vord" title="${esc(tip)}"><b class="up">買</b> ${P(o.trig)}以上で逆指値（${P(o.lim)}まで）<small><b class="down">損切</b> ${P(o.stop)}以下で逆指値（−${rk}%）</small></span>`;}
 function numOf(v){if(v==null||v==='')return null;if(typeof v==='number')return v;const n=parseFloat(String(v).replace(/[^0-9.]/g,''));return isFinite(n)?n:null;}
 function vcpTL(sess,idx,code){const s=Math.max(0,idx-19);let g='<span class="vtl">';for(let i=s;i<=idx;i++){const on=sess[i].rows.some(r=>r.code===code);g+=`<i style="background:${on?'var(--brand)':'var(--surface-2)'}"></i>`;}return g+'</span>';}
 const VALD={};
@@ -543,7 +551,7 @@ function drawVcp(){
   rows.sort((a,b)=>{if(a._gone!==b._gone)return a._gone?1:-1;const x=gv(a),y=gv(b);return(x<y?-1:x>y?1:0)*sgn;});
   const nv=gateN('vcp',rows.length),hidden=rows.length-nv;rows=rows.slice(0,nv);
   const cols=vcpCols();
-  head.innerHTML=cols.map(c=>c[0]==='tl'||c[0]==='val'?`<th style="text-align:center">${c[1]}</th>`:`<th class="${c[2]==='l'?'l':''} srt" data-k="${c[0]}">${c[1]}<span class="ar">${c[0]===k?(dir==='asc'?'▲':'▼'):''}</span></th>`).join('');
+  head.innerHTML=cols.map(c=>c[0]==='order'?`<th class="l" title="${esc(VCP_ORDER_TIP)}">${c[1]}</th>`:c[0]==='tl'||c[0]==='val'?`<th style="text-align:center">${c[1]}</th>`:`<th class="${c[2]==='l'?'l':''} srt" data-k="${c[0]}">${c[1]}<span class="ar">${c[0]===k?(dir==='asc'?'▲':'▼'):''}</span></th>`).join('');
   const cell=(r,c)=>{
     if(c==='prio'){if(r._gone||r.prio==null)return'<span class="muted">–</span>';return`<span style="font-weight:600;${r._newprio?'background:var(--warn-bg);color:var(--warn-ink);padding:1px 7px;border-radius:5px':''}">${r.prio}</span>`;}
     if(c==='buy'){if(!r.buy||r._gone)return'';
@@ -553,6 +561,7 @@ function drawVcp(){
     if(c==='name')return`<span class="nm"><span class="t" title="${esc(r.name)}" style="${r._new?'color:var(--down)':''}">${esc(r.name)}</span><span class="cat num">${esc(r.code)}</span>${r._new?'<span class="vtag down">●新規</span>':''}${r._gone?'<span class="vtag muted">消失</span>':''}</span>`;
     if(c==='vcp')return r.vcp!=null?`<b>${r.vcp}</b>`:'<span class="muted">–</span>';
     if(c==='dist')return r.dist!=null?`<span class="${r.dist>=0&&r.dist<=2?'up':''}">${r.dist>=0?'+':''}${r.dist.toFixed(1)}%</span>`:'<span class="muted">–</span>';
+    if(c==='order')return(r._gone||!r.order)?'<span class="muted">–</span>':vcpOrderCell(r.order,mk);
     if(c==='rs')return r.rs??'';if(c==='mcap')return r.mcap?(typeof r.mcap==='number'?'$'+r.mcap+'B':esc(r.mcap)):'<span class="muted">–</span>';
     if(c==='sector')return `<span class="cat" style="font-size:11.5px">${esc(r.sector||'')}</span>`;
     if(c==='listing')return r.listing?(/[A-Za-z年]/.test(String(r.listing))?esc(String(r.listing).replace(/^(\d+)M$/,'$1か月')):esc(r.listing)+'年'):'<span class="muted">–</span>';
