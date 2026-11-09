@@ -104,6 +104,10 @@ for mk in ("jp", "us"):
     src = os.path.join(BASE, "valuation_pub", f"valuation_{mk}.json")
     if os.path.exists(src):
         shutil.copyfile(src, os.path.join(SITE, f"valuation_{mk}.json"))
+    # note候補の採点(必須条件○/9・急成長スコア仮)。 VCP表の2列で使う(2026-11-09)
+    ns_src = os.path.join(BASE, "valuation_pub", f"note_score_{mk}.json")
+    if os.path.exists(ns_src):
+        shutil.copyfile(ns_src, os.path.join(SITE, f"note_score_{mk}.json"))
     old = os.path.join(SITE, "pro", f"valuation_{mk}.json")
     if os.path.exists(old):
         os.remove(old)
